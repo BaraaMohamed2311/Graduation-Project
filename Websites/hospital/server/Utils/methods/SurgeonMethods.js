@@ -47,6 +47,10 @@ class SurgeonMethods {
         const result = await executeMySqlQuery(query);
         return result[0];
     }
+
+    static async getListedSurgeonsDataForPaitent(){
+        
+    }
     
     // ============================
     //              Update

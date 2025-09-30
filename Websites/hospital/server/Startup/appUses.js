@@ -4,7 +4,7 @@ const hpp = require("hpp")
 // routers
 const listApis = require("../Routers/list.js");
 const authApis = require("../Routers/auth.js");
-const profileApis = require("../Routers/profile.js");
+const filesApis = require("../Routers/files.js");
 const MailApis = require("../Routers/mail.js");
 const RoomsApis = require("../Routers/rooms.js");
 
@@ -35,12 +35,13 @@ function appUses(express ,app){
     // http poluution prevention
     app.use(hpp())
 
+    
 
   
     // Routes
     app.use("/api/list",listApis)
     app.use("/api/user",authApis)
-    app.use("/api/profile",profileApis)
+    app.use("/api/files",filesApis)
     app.use("/api/mail",MailApis)
     app.use("/api/rooms",RoomsApis)
 

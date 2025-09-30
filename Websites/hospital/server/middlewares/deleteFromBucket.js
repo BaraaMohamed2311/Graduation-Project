@@ -1,21 +1,21 @@
 
-const Employees_Img_module = require("../Models/Profile_Pic");
+const Profile_Pic_module = require("../Models/Profile_Pic");
 const mongoose = require("mongoose")
 async function deleteFromBucket(bucket ,req , res , next){
     if(bucket){
 
-        // we search for employee to be image updated
-        let old_employee = await Employees_Img_module.findOne({emp_email:req.query["emp_email"]});
+        // we search for user to be image updated
+        let old_user = await Profile_Pic_module.findOne({user_email:req.query["user_email"]});
         // if user hasn't had an image before go next and do not try to delete
 
-        if(!old_employee.emp_pic.ImgId){
+        if(!old_user || !old_user.user_pic.ImgId){
             return  next();
         }
         // if user had image get id & name of it
         /*use if condition before pass it to mongoose to prevent  BSONError: input must be a 24 character hex string, 12 byte Uint8Array, or an integer*/
-        const fileID = old_employee.emp_pic.ImgId ? new  mongoose.Types.ObjectId(old_employee.emp_pic.ImgId) : null;
+        const fileID = old_user.user_pic.ImgId ? new  mongoose.Types.ObjectId(old_user.user_pic.ImgId) : null;
 
-        const fileName = old_employee.emp_pic.file_name
+        const fileName = old_user.user_pic.file_name
 
         /* we use cursor to retrieve file docs and check if file exists before deletion
            we use name to find certain file instead if getting all files*/

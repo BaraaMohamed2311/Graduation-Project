@@ -28,6 +28,99 @@ class PatientMethods {
         const result = await executeMySqlQuery(query,[limit, offset]);
         return result;
     }
+
+        static async getListedDoctorDataForPaitent(restFilters = null,limit=null, offset=null) {
+            let query = `
+                SELECT 
+                    d.doctor_id,
+                    d.hosp_emp_id,
+                    d.initial_consultation_price,
+                    d.followup_consultation_price,
+                    d.years_of_exp,
+                    e.emp_specialty,
+                    e.emp_email AS user_email, -- You MUST Rename Column For fetchImagesForListedUsers function to work
+                    GROUP_CONCAT(
+                        CONCAT(da.day_of_week, ': ', da.start_time, '-', da.end_time)
+                        ORDER BY FIELD(da.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                        SEPARATOR '; '
+                    ) AS availability_schedule
+                FROM doctors d
+                JOIN employees e 
+                    ON d.hosp_emp_id = e.emp_id
+                LEFT JOIN availability da 
+                    ON d.doctor_id = da.hosp_emp_id
+            `;
+
+            const params = [];
+            if (restFilters) {
+                query += ` WHERE ${restFilters}`;
+            }
+
+            query += `
+                GROUP BY 
+                    d.doctor_id,
+                    d.hosp_emp_id,
+                    d.initial_consultation_price,
+                    d.followup_consultation_price,
+                    d.years_of_exp,
+                    e.emp_specialty,
+                    e.emp_email
+                    ${ limit ? `LIMIT ${limit}`:""}
+                    ${ offset ? `OFFSET ${offset}`:""}
+            `;
+            
+            const result = await executeMySqlQuery(query, params);
+            console.log("query",query, "\n",result)
+            return result;
+        }
+
+        static async getListedSurgeonDataForPaitent(restFilters = null,limit=null, offset=null) {
+            let query = `
+                SELECT 
+                    s.surgeon_id,
+                    s.hosp_emp_id,
+                    s.initial_consultation_price,
+                    s.followup_consultation_price,
+                    s.surgery_price,
+                    s.years_of_exp,
+                    e.emp_specialty,
+                    e.emp_email AS user_email, -- You MUST Rename Column For fetchImagesForListedUsers function to work
+                    GROUP_CONCAT(
+                        CONCAT(sa.day_of_week, ': ', sa.start_time, '-', sa.end_time)
+                        ORDER BY FIELD(sa.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                        SEPARATOR '; '
+                    ) AS availability_schedule
+                FROM surgeons s
+                JOIN employees e 
+                    ON s.hosp_emp_id = e.emp_id
+                LEFT JOIN availability sa 
+                    ON s.surgeon_id = sa.hosp_emp_id
+            `;
+
+            const params = [];
+            if (restFilters) {
+                query += ` WHERE ${restFilters}`;
+            }
+
+            query += `
+                GROUP BY 
+                    s.surgeon_id,
+                    s.hosp_emp_id,
+                    s.initial_consultation_price,
+                    s.followup_consultation_price,
+                    s.surgery_price,
+                    s.years_of_exp,
+                    e.emp_specialty,
+                    e.emp_email
+                    ${ limit ? `LIMIT ${limit}` :""}
+                    ${ offset ? `OFFSET ${offset}` :""}
+            `;
+
+            const result = await executeMySqlQuery(query, params);
+            return result;
+        }
+
+
     
     // ============================
     //              Update

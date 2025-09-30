@@ -12,6 +12,8 @@
 
 
 
+
+
         // IT titles and specialties
 const global_title = [
     { value: "Developer", text: "Developer" },

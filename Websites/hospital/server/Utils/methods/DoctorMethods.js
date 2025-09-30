@@ -71,6 +71,8 @@ class DoctorMethods {
         return result[0];
     }
 
+    
+
 
     static async getDoctorAllPatients(doctor_id){
         const query = `SELECT 

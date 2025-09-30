@@ -2,8 +2,6 @@ const router = require("express").Router();
 const NodeCache = require("node-cache");
 const jwtVerify = require("../middlewares/jwtVerify.js");
 const User = require("../Classes/User.js");
-const executeMySqlQuery = require("../Utils/executeMySqlQuery.js");
-const JoinFiltering = require("../Utils/JoinFiltering.js");
 const consoleLog = require("../Utils/consoleLog.js");
 const mailer = require("../Utils/mailer.js")
 const  ModifyOtherUserData  = require("../Utils/ControlUsers/ModifyOtherUserData.js");
@@ -14,110 +12,90 @@ const deletePatient = require("../Utils/ControlUsers/deletePatient.js");
 const RemoveFixedFields = require("../Utils/RemoveFixedFields.js");
 const Tables = require("../Tables/data.js");
 const DoctorMethods = require("../Utils/methods/DoctorMethods.js");
+const PatientMethods = require("../Utils/methods/PatientMethods.js");
+const fetchImagesForListedUsers = require("../Utils/fetchImagesForListedUsers");
+const stringifyFields = require("../Utils/stringifyFields.js");
+const JoinFiltering = require("../Utils/JoinFiltering.js")
 const myCache = new NodeCache({ stdTTL: 3600 }); // default TTL 1hr
 
 // =================================
-//  Get All Employees Data (for Admins or SuperAdmins)
+//  Get All doctors Data and Images (for Admins or SuperAdmins)
 // =================================
-router.get("/employees",jwtVerify,async (req,res)=>{
+router.get("/list-doctors",async (req,res)=>{
     try{
-        const { pagination, size , emp_id, role_name, emp_perms, ...restFilters } = req.query;
+        const { pagination, size , user_id, ...restFilters } = req.query;
         
-        //Bad Request if modifier id or others doesn't exist
-        if(!pagination || !size || !emp_id ) return res.status(400).json({success:false,message:"Bad Request"});
+        const filtering_for_query = JoinFiltering(Object.entries(restFilters),"d")
 
-        // Ceck if list page can be accessible
-        const Modifier_role = await User.getUserRole(emp_id);
-        const Modifier_perms = await User.getSetUserperms(emp_id);
-
-        if (Modifier_role === "Employee") return res.status(401).json({ success: false, message: "Employee Role cannot access The list" });
-        // Cache total number of employees
-        let totalNumOfEmployees = [{ count: 0 }];
-        if (myCache.has("totalNumOfEmployees")) {
-            totalNumOfEmployees = [{ count: myCache.get("totalNumOfEmployees") }];
+        const doctors = await PatientMethods.getListedDoctorDataForPaitent(filtering_for_query , parseInt(size) , parseInt((pagination - 1) * size ));
+        const doctorsRespone = await fetchImagesForListedUsers(doctors);
+        console.log("with images", doctorsRespone)
+        if(doctorsRespone && doctorsRespone.length > 0 ){
+            res.status(200).json({
+                success:true,
+                doctors:doctorsRespone,
+                 message:"Fetching Doctors List Was Successful"
+                })
         }
         else{
-            totalNumOfEmployees = await executeMySqlQuery(`SELECT COUNT(*) as count FROM employees`);
-            myCache.set("totalNumOfEmployees", totalNumOfEmployees[0].count); 
+            res.status(404).json({
+                success:false,
+                 message:"Doctors List Wasn't Found"
+                })
         }
 
-        const numOfPages = Math.ceil(totalNumOfEmployees[0].count / size);
-
-
-    /** Define Joining TYPE  **/
-    // if we left joining no need to add on conditions as not all users are going to exist in employee and other tables
-    const roles_JOIN = !role_name || role_name === "Employee"  ? " LEFT JOIN roles r ON e.emp_id = r.emp_id " : " JOIN roles r ON e.emp_id = r.emp_id " ;
-    const perms_JOIN = emp_perms ? " JOIN employee_perms ep ON e.emp_id = ep.emp_id \n JOIN perms p  ON ep.perm_id = p.perm_id " : "  LEFT JOIN employee_perms ep ON e.emp_id = ep.emp_id \n LEFT JOIN perms p ON ep.perm_id = p.perm_id  ";
-
-    /**  Filter Conditions **/
-    const Rest_CONDITION = restFilters ? JoinFiltering(Object.entries(restFilters),"e") : "" ;
-    const roles_CONDITION = !role_name || role_name === "Employee" ? "" : JoinFiltering(Object.entries({role_name:role_name}),"r") ;
-    // filtering gouped values on perms will be done using HAVING keyword & FIND_IN_SET which searches for string in string seperated by ", "
-    const perms_CONDITION = emp_perms ? `
-            HAVING 
-            FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT p.perm_name)) > 0 ` : "";
-
-    /**  Is Accessible Conditions **/
-    // default value of those columns would be '' if user doen't have their perms
-    // logically if user have permission to modify salary then he could see it but other props like roles, perms he can see it anyway even with no role to modify
-    const access_salary = (Modifier_perms.isPermExist("Modify Salary") || Modifier_perms.isPermExist("Display Salary")) ? " e.emp_salary, e.emp_bonus " : " '' AS emp_salary , '' AS emp_bonus "
-
-    // Build the final query
-    /* roles filtering exists any way no need to check*/
-    /* we group rows instead of repeating for each new perm */
-    const query = `
-      SELECT 
-        e.emp_id, 
-        e.emp_name, 
-        COALESCE(NULLIF(GROUP_CONCAT(DISTINCT p.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms, 
-        COALESCE(NULLIF(r.role_name, ''), 'Employee') AS role_name, 
-        e.emp_abscence, 
-        e.emp_rate, 
-        e.emp_title, 
-        e.emp_specialty, 
-        e.emp_email,
-        ${access_salary} 
-        FROM employees e 
-        ${roles_JOIN}
-        ${perms_JOIN}
-        ${roles_CONDITION || Rest_CONDITION ? " WHERE " : ""} 
-        ${Rest_CONDITION}
-        ${roles_CONDITION && Rest_CONDITION ? " AND " : ""}
-        ${roles_CONDITION}
-        GROUP BY 
-            e.emp_id, e.emp_name, r.role_name, e.emp_abscence, e.emp_rate, e.emp_title, e.emp_specialty , e.emp_email, e.emp_salary, e.emp_bonus
-        ${perms_CONDITION}
-        LIMIT ? OFFSET ?`;
-        // last to parameters are linilt & offset
-      const users = await executeMySqlQuery(query , [ parseInt(size) , parseInt((pagination - 1) * size )]);
-
-      if( users && users.length > 0){
-        res.status(200).json({success : true , body:users, message:"Successfully Fetched Data",numOfPages: numOfPages})
-      }
-      else{
-        res.status(404).json({success : false , message:"No Users Found !"})
-      }
-    
-        
-        
     }
     catch(err){
-        console.error("Error List Employees Profile Data",err);
+        console.error("Error List Doctors Profile Data and Images",err);
         res.status(500).json({
             success:false,
-            message:"Error List Employees Data"
+            message:"Error List Doctors Data and Images"
+        })
+    }
+})
+
+// =================================
+//  Get All surgeons Data and Images (for Admins or SuperAdmins)
+// =================================
+router.get("/list-surgeons",async (req,res)=>{
+    try{
+        const { pagination, size , user_id, ...restFilters } = req.query;
+        
+        const filtering_for_query = JoinFiltering(Object.entries(restFilters),"s")
+        const surgeons = await PatientMethods.getListedSurgeonDataForPaitent(filtering_for_query , parseInt(size) , parseInt((pagination - 1) * size ));
+        const surgeonsRespone = await fetchImagesForListedUsers(surgeons)
+
+        if(surgeonsRespone && surgeonsRespone.length > 0 ){
+            res.status(200).json({
+                success:true,
+                surgeons:surgeonsRespone,
+                 message:"Fetching Surgeons List Was Successful"
+                })
+        }
+        else{
+            res.status(404).json({
+                success:false,
+                 message:"Surgeons List Wasn't Found"
+                })
+        }
+    }
+    catch(err){
+        console.error("Error List surgeons Data and Images",err);
+        res.status(500).json({
+            success:false,
+            message:"Error List surgeons Data and Images"
         })
     }
 })
 // =================================
 //  Get All Patients Data (for Admins or SuperAdmins)
 // =================================
-router.get("/patients",jwtVerify,async (req,res)=>{
+router.get("/patients",async (req,res)=>{
     try{
-        const { pagination, size , user_id, ...restFilters } = req.query;
+        const { pagination, size , ...restFilters } = req.query;
         
         //Bad Request if modifier id or others doesn't exist
-        if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
+        if(!pagination || !size  ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
         const allpatients = await PatientMethods.getAllPatientsCOUNT();
