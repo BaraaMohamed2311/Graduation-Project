@@ -2,9 +2,9 @@
 
 const nextConfig = {
     env: {
-        // APIKEY: process.env.APIURL,
-        // for local development 
-        APIKEY: process.env.APIURL || "http://localhost:5500/api",
+        // "http://localhost:3050/api" so localhost uses nginx to communcate between containers inside docker
+        
+        APIKEY: process.env.NODE_ENV === "production" ? "http://localhost:3050/api" : "http://localhost:5500/api",
       },
       
       reactStrictMode: false,

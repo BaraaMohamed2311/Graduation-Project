@@ -19,6 +19,7 @@
 -- Table structure for table `employee_perms`
 --
 
+USE ems_db
 
 DROP TABLE IF EXISTS `employee_perms`;
 
@@ -517,7 +518,7 @@ INSERT INTO hospital_perms VALUES
  (4,'Modify Employee Perms'),
  (5,'Modify Employee Role'),
  (6,'Delete Patient'),
- (7,'Access Rooms')و
+ (7,'Access Rooms'),
  (8,'Modify Rooms'),
 (9,'Modify Other Patient'),
 (10,'Modify Patient Data');

@@ -1,15 +1,14 @@
 version: '3.8'
 
-# Due to using mongo atlas cloud no need to add service for it
 
-# docker-compose --env-file <path-to env file> up -d --build
 
 services:
 
+# So host can resolve services names "ems_server" & "ems_client" 
   nginx:
     depends_on:
-      - server
-      - client
+      - ems_server
+      - ems_client
     restart: on-failure
     build:
       dockerfile: Dockerfile.dev
@@ -19,14 +18,13 @@ services:
       
 
     networks:
-      - app-net
-
+      - grad-net
 
 
 # server does envirmonet checking at server.js code
-  server:
+  ems_server:
     build: 
-      context: ./Server/
+      context: ./ems/Server
       dockerfile: Dockerfile.backend
       args:
         - NODE_ENV=${NODE_ENV:-development}
@@ -36,15 +34,15 @@ services:
       - 5500:5500
 
     networks:
-      - app-net
+      - grad-net
 
 
 
 
 # client has to be provided with enviroment or by default it will build development env
-  client:
+  ems_client:
     build: 
-      context: ./ems/
+      context: ./ems/client
       dockerfile: Dockerfile.frontend
       target: ${NODE_ENV:-development}
       args:
@@ -55,13 +53,26 @@ services:
       - 3000:3000
 
     networks:
-      - app-net 
+      - grad-net 
+
+  mysql_db:
+    build: 
+      context: ./db
+      dockerfile: Dockerfile
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    container_name: cenralized_mysql
+
+
+    networks:
+      - grad-net 
 
 
 
 
 networks:
-  app-net :
+  grad-net :
     driver : bridge
 
 

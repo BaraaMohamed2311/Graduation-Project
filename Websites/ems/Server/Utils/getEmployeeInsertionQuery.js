@@ -1,16 +1,16 @@
 
-
+// !!!! IMPORTANT : MUST INSERT IN employees_hospital FIRST CUZ OTHER TABLES ARE REFRENCING hosp_emp_id FROM IT
 function DoctorInsertionQuery(registered_user_id){
-    return[ `INSERT INTO doctors (doctor_id,hosp_emp_id ) VALUES (${registered_user_id},${registered_user_id});`,` INSERT INTO employees_hospital (hosp_emp_id,emp_id,emp_title) VALUES (${registered_user_id},${registered_user_id},'Doctor');`]
+    return[` INSERT INTO employees_hospital (hosp_emp_id,emp_id,emp_title) VALUES (${registered_user_id},${registered_user_id},'Doctor');`, `INSERT INTO doctors (doctor_id,hosp_emp_id ) VALUES (${registered_user_id},${registered_user_id});`]
 }
 
 function NurseInsertionQuery(registered_user_id){
-    return [`INSERT INTO nurses (nurse_id,hosp_emp_id) VALUES (${registered_user_id},${registered_user_id});`,` INSERT INTO employees_hospital (hosp_emp_id,emp_id,emp_title) VALUES (${registered_user_id},${registered_user_id},'Nurse');`]
+    return [` INSERT INTO employees_hospital (hosp_emp_id,emp_id,emp_title) VALUES (${registered_user_id},${registered_user_id},'Nurse');`,`INSERT INTO nurses (nurse_id,hosp_emp_id) VALUES (${registered_user_id},${registered_user_id});`]
 }
 
 
 function SurgeonInsertionQuery(registered_user_id){
-    return [`INSERT INTO surgeons (surgeon_id,hosp_emp_id) VALUES (${registered_user_id},${registered_user_id});`,` INSERT INTO employees_hospital (hosp_emp_id,emp_id,emp_title) VALUES (${registered_user_id},${registered_user_id},'Surgeon');`]
+    return [` INSERT INTO employees_hospital (hosp_emp_id,emp_id,emp_title) VALUES (${registered_user_id},${registered_user_id},'Surgeon');`,`INSERT INTO surgeons (surgeon_id,hosp_emp_id) VALUES (${registered_user_id},${registered_user_id});`]
 }
 
 function EmployeeInsertionQuery(registered_user_id){
