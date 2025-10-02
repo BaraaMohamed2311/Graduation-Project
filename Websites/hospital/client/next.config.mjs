@@ -1,9 +1,10 @@
 /** @type {import('next').NextConfig} */
+
 const nextConfig = {
     env: {
-        // APIKEY: process.env.APIURL,
-        // for local development 
-        APIKEY: "http://localhost:8080/api" ,
+        // "http://localhost:3050/api" so localhost uses nginx to communcate between containers inside docker
+        
+        APIKEY: "http://localhost:8888/api",
       },
       
       reactStrictMode: false,

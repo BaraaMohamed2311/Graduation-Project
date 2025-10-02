@@ -9,7 +9,7 @@ import Loading from "./loading";
 import { Suspense } from "react";
 import { ToastContainer } from "react-toastify";
 import Script from "next/script";
-import 'react-toastify/dist/ReactToastify.css';
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {

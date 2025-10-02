@@ -45,7 +45,7 @@ export default function Nav() {
     return (
         <nav className={styles.nav}>
             <div className={`wrapper ${styles["nav-wrapper"]}`}>
-                <h1><Link   className={styles.logo} href="/">Hospital</Link></h1>
+                <h1><Link   className={styles.logo} href="/">EMS</Link></h1>
                 <ul
                     ref={NAV_UL_REF}
                     className={`${styles["nav-ul"]} ${displayed ? styles.displayed : ""}`}
@@ -55,10 +55,10 @@ export default function Nav() {
                     }}
                 >
                 
-                    <li className={styles["nav-li"]}><Link href="/private_routes/patients_list"><ion-icon name="people-outline"></ion-icon></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/patients_list_all"><ion-icon name="file-tray-outline"></ion-icon></Link></li>
+                    <li className={styles["nav-li"]}><Link href="/private_routes/registered-approve"><ion-icon name="add-outline"></ion-icon></Link></li>
+                    <li className={styles["nav-li"]}><Link href="/private_routes/list"><ion-icon name="list-outline"></ion-icon></Link></li>
                     <li className={styles["nav-li"]}><Link href="/private_routes/mailer"><ion-icon name="mail-outline"></ion-icon></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/book"><ion-icon name="book-outline"></ion-icon></Link></li>
+                    <li className={styles["nav-li"]}><Link href="/private_routes/dashboard"><ion-icon name="analytics-outline"></ion-icon></Link></li>
                     {isLogin ? (
                         <li className={styles["nav-li"]}><Link href="/private_routes/profile"><ion-icon name="person-outline"></ion-icon></Link></li>
                     ) : (
