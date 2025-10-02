@@ -446,7 +446,7 @@ router.get("/my-patients",async (req,res)=>{
 // =================================
 //  Delete Patient (by Admin or SuperAdmin)
 // =================================
-router.delete("/delete-patient", jwtVerify, async (req, res) => {
+router.delete("/delete-patient", async (req, res) => {
     try {
         const { modifier_email, modifier_id, modifier_name, patient_email, patient_name } = req.body;
         

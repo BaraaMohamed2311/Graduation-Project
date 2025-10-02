@@ -1,92 +1,6 @@
 use ems_db;
 show tables;
 
-CREATE INDEX idx_emp_title ON employees(emp_title);
-CREATE INDEX idx_emp_email ON employees(emp_email);
-CREATE INDEX idx_pat_email ON patients(patient_email);
-
-SELECT * FROM employees where emp_title = "Nurse";
-SELECT * FROM hospital_roles where hosp_emp_id = 1016;
-
-SELECT COALESCE((SELECT COALESCE(GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', ') , 'None') FROM hospital_perms hp JOIN hospital_emp_perms hep ON hp.perm_id = hep.perm_id WHERE hep.hosp_emp_id =1016), 'None') AS perm_name;
-SELECT hp.perm_name FROM hospital_perms hp JOIN hospital_emp_perms hep ON hp.perm_id = hep.perm_id WHERE hep.hosp_emp_id = 1016;
-
-SELECT * FROM doctors ;
-
-SELECT * FROM surgeons;
-
-SELECT * FROM nurses;
-
-SELECT * FROM patients ;
-
-SELECT * FROM patients where patient_email = "nourhan.adel8149@gmail.com";
-SELECT * FROM surgeons where surgeon_id = 1004;
-SELECT * FROM nurses where nurse_id = 1003;
-
-SELECT * FROM doctor_patient;
-
-SELECT * FROM doctor_availability;
-
-SELECT * FROM employees_hospital where hosp_emp_id = 1204;
-
-SELECT * FROM hospital_perms;
-
-
-SELECT * FROM hospital_emp_perms;
-
-
-SELECT * FROM hospital_roles;
-
-SELECT 
-        -- Doctor info
-        d.doctor_id,
-        d.hosp_emp_id,
-        d.initial_consultation_price,
-        d.followup_consultation_price,
-        d.years_of_exp,
-		GROUP_CONCAT(
-        CONCAT(da.day_of_week, ': ', da.start_time, '-', da.end_time)
-        ORDER BY FIELD(da.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
-        SEPARATOR '; '
-		) AS availability_schedule
-    FROM doctors d
-    JOIN doctor_availability da
-    ON d.doctor_id = da.doctor_id
-
-    WHERE d.doctor_id = 1016  GROUP BY d.doctor_id, d.hosp_emp_id, d.initial_consultation_price, d.followup_consultation_price, d.years_of_exp;
-
-
-SELECT 
-    d.doctor_id,
-    da.day_of_week,
-    da.start_time,
-    da.end_time
-FROM doctors d
-JOIN doctor_availability da 
-    ON d.doctor_id = da.doctor_id
-WHERE d.doctor_id = 1016
-ORDER BY FIELD(da.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday');
-
-
-SELECT 
-    p.patient_id,
-    p.patient_name,
-    p.patient_email,
-    p.patient_phone,
-    p.patient_address,
-    p.isAssignedToRoom,
-    p.floor_number,
-    p.room_number,
-    p.date_of_birth,
-    p.next_check_date,
-    p.patient_gender,
-    p.emergency_contact,
-    p.created_at,
-    dp.assigned_date
-FROM doctor_patient dp
-JOIN patients p 
-    ON dp.patient_id = p.patient_id
-WHERE dp.doctor_id = 1016;
 
 -- ==========================================
 -- Employees_Hospital (Bridge Table)
@@ -921,3 +835,11 @@ INSERT INTO hospital_emp_perms (perm_id, hosp_emp_id) VALUES
 (6,1172),(7,1172),(8,1172),
 (6,1175),(7,1175),(8,1175),
 (6,1196),(7,1196),(8,1196);
+
+
+
+
+
+CREATE INDEX idx_emp_title ON employees(emp_title);
+CREATE INDEX idx_emp_email ON employees(emp_email);
+CREATE INDEX idx_pat_email ON patients(patient_email);
