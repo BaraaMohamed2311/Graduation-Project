@@ -1,4 +1,4 @@
-import { global_title, global_speciality } from "@/global_data";
+import { global_title, global_specialty } from "@/global_data";
 
 let inputs_info = [ 
     {
@@ -36,15 +36,15 @@ let select_title_options ={
 
 }
 
-let select_speciality_options ={
-    key:"Select Job Speciality",
-    label:"Select Job Speciality",
+let select_specialty_options ={
+    key:"Select Job specialty",
+    label:"Select Job specialty",
     name:"emp_specialty",
-    options:global_speciality,
+    options:global_specialty,
 
 }
 
-let select_options = {select_title_options, select_speciality_options}
+let select_options = {select_title_options, select_specialty_options}
 
 
 export  {inputs_info , select_options}

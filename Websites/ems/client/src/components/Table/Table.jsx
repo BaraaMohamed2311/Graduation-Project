@@ -114,7 +114,7 @@ export default function BasicTable({currPage , setCurrPage , sizeOfPage , isFilt
             <th className={styles.table_col_2}>Email</th>
             {!isSmallScreen && <>
               <th className={styles.table_col_2}>Title</th>
-              <th className={styles.table_col_2}>Speciality</th>
+              <th className={styles.table_col_2}>specialty</th>
               <th className={styles.table_col_1}>Salary</th>
               <th className={styles.table_col_1}>Bonus</th>
               <th className={styles.table_col_1}>Absence</th>

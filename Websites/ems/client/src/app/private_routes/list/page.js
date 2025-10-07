@@ -30,7 +30,7 @@ function ListPage() {
   function handleClearFilterOption(){
     const EMAIL_REF = inputsBoxsRef.current["Email"];
     const ByTitleREF = selectBoxsRef.current["emp_title"];
-    const BySpecialityREF = selectBoxsRef.current["emp_specialty"];
+    const ByspecialtyREF = selectBoxsRef.current["emp_specialty"];
     const ByRoleREF = selectBoxsRef.current["role_name"];
     const ByPermsREF = selectBoxsRef.current["emp_perms"];
     console.log("reset",selectBoxsRef.current["emp_specialty"].value);
@@ -41,7 +41,7 @@ function ListPage() {
     // reset select filters back to no filter
     EMAIL_REF.value = ""
     ByTitleREF.selectedIndex = 0;
-    BySpecialityREF.selectedIndex = 0;
+    ByspecialtyREF.selectedIndex = 0;
     ByRoleREF.selectedIndex = 0;
     ByPermsREF.selectedIndex = 0;
 }
@@ -51,14 +51,14 @@ function handleFilterOption(e , cause){
     // get filter inputs 
     const EMAIL_REF = inputsBoxsRef.current["Email"];
     const ByTitleREF = selectBoxsRef.current["emp_title"];
-    const BySpecialityREF = selectBoxsRef.current["emp_specialty"];
+    const ByspecialtyREF = selectBoxsRef.current["emp_specialty"];
     const ByRoleREF = selectBoxsRef.current["role_name"];
     const ByPermsREF = selectBoxsRef.current["emp_perms"];
     
     const emp_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
     const role_name = ByRoleREF.value === "Role Filter" ? null : ByRoleREF.value;
     const emp_title = ByTitleREF.value === "Title Filter" ? null : ByTitleREF.value;
-    const emp_specialty = BySpecialityREF.value === "Speciality Filter" ? null : BySpecialityREF.value;
+    const emp_specialty = ByspecialtyREF.value === "specialty Filter" ? null : ByspecialtyREF.value;
     const emp_perms = ByPermsREF.value === "Perms Filter" ? null : ByPermsREF.value;
     console.log("handleFilterOption: emp_perms", emp_perms);
     // making sure this checking is applied when only pressing btn 

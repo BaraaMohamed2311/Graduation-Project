@@ -28,10 +28,10 @@ export default function RegisterPage() {
       requestBody[input.name]= inputsBoxsRef.current[input.name].value;
     });
     
-    // Adding Title & Speciality selection
+    // Adding Title & specialty selection
     console.log("selectBoxsRef.current",selectBoxsRef.current);
       requestBody[select_options.select_title_options.name]= selectBoxsRef.current[select_options.select_title_options.name].value;
-      requestBody[select_options.select_speciality_options.name]= selectBoxsRef.current[select_options.select_speciality_options.name].value;
+      requestBody[select_options.select_specialty_options.name]= selectBoxsRef.current[select_options.select_specialty_options.name].value;
     console.log("requestBody",requestBody);
 
 

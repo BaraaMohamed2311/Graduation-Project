@@ -68,7 +68,7 @@ export default function UpdateEmpForm({isEditing , setIsEditing , employee_displ
 
         if ( 
             (selectBoxsRef.current[select_options.select_title_options.name] && !selectBoxsRef.current[select_options.select_title_options.name].value) ||
-            (selectBoxsRef.current[select_options.select_speciality_options.name] && !selectBoxsRef.current[select_options.select_speciality_options.name].value) ||
+            (selectBoxsRef.current[select_options.select_specialty_options.name] && !selectBoxsRef.current[select_options.select_specialty_options.name].value) ||
             (selectBoxsRef.current[select_options.select_role_options.name] && !selectBoxsRef.current[select_options.select_role_options.name].value) 
           ){
             userNotification("error", "Input fields cannot be empty");
@@ -84,11 +84,12 @@ export default function UpdateEmpForm({isEditing , setIsEditing , employee_displ
             if (!actions.includes("Modify Data")) actions.push("Modify Data"); 
           }
 
-          // === 4. Check for changes in Speciality ===
+          // === 4. Check for changes in specialty ===
 
           // we check at first that input element is rendered using current of reference
-          if (selectBoxsRef.current[select_options.select_speciality_options.name] && (selectBoxsRef.current[select_options.select_speciality_options.name].value !== employee_displayed[select_options.select_speciality_options.name])) {
-            updatedEmployeeData[select_options.select_speciality_options.name] = selectBoxsRef.current[select_options.select_speciality_options.name].value;
+          console.log("debugging",selectBoxsRef.current, selectBoxsRef.current[select_options.select_specialty_options.name],employee_displayed[select_options.select_specialty_options.name])
+          if (selectBoxsRef.current[select_options.select_specialty_options.name] && (selectBoxsRef.current[select_options.select_specialty_options.name].value !== employee_displayed[select_options.select_specialty_options.name])) {
+            updatedEmployeeData[select_options.select_specialty_options.name] = selectBoxsRef.current[select_options.select_specialty_options.name].value;
             if (!actions.includes("Modify Data")) actions.push("Modify Data"); 
           }
 
@@ -156,7 +157,7 @@ export default function UpdateEmpForm({isEditing , setIsEditing , employee_displ
                     employee_displayed = {employee_displayed} 
                     // removes Role selection if no permission
                     select_options={  
-                    user_data.emp_perms && user_data.emp_perms.has("Modify Role") ? select_options : {select_title_options :select_options.select_title_options , select_speciality_options: select_options.select_speciality_options}} 
+                    user_data.emp_perms && user_data.emp_perms.has("Modify Role") ? select_options : {select_title_options :select_options.select_title_options , select_specialty_options: select_options.select_specialty_options}} 
                     /*removes check box of perms for user who\s not allowed to edit others perms */
                     check_box={ user_data.emp_perms && user_data.emp_perms.has("Modify Perms") ?
                                 check_box : null } 

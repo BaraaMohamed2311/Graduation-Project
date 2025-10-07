@@ -7,6 +7,7 @@ const authApis = require("../Routers/auth.js");
 const filesApis = require("../Routers/files.js");
 const MailApis = require("../Routers/mail.js");
 const RoomsApis = require("../Routers/rooms.js");
+const BookingApis = require("../Routers/booking.js");
 
 
 function appUses(express ,app){
@@ -44,6 +45,7 @@ function appUses(express ,app){
     app.use("/api/files",filesApis)
     app.use("/api/mail",MailApis)
     app.use("/api/rooms",RoomsApis)
+    app.use("/api/booking",BookingApis)
 
 
 }

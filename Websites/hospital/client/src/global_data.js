@@ -28,7 +28,7 @@ const global_title = [
     { value: "Surgeon", text: "Surgeon" }
 ];
 
-const global_speciality = [
+const global_specialty = [
     // IT specialities
     { value: "Front-End", text: "Front-End"  },
     { value: "Back-End", text: "Back-End"  },
@@ -134,4 +134,4 @@ const global_mapped_specialities = {
             {value:"Employee", text:"Employee"},
     ]
 
-        export  {global_perms  ,global_roles,global_title, global_speciality , global_mapped_specialities};
+        export  {global_perms  ,global_roles,global_title, global_specialty , global_mapped_specialities};

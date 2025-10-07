@@ -14,7 +14,7 @@ function RegisterFormFields({
     const [selectedTitleValue, setSelectedTitleValue] = useState(employee_displayed?.emp_title ?? "");
 
     /* Get Corresponding specialities for title */
-    const specialities_for_title = {...select_options.select_speciality_options, options: global_mapped_specialities[selectedTitleValue]};
+    const specialities_for_title = {...select_options.select_specialty_options, options: global_mapped_specialities[selectedTitleValue]};
     console.log("select_options xxxxasdd",select_options)
     console.log(select_options.select_title_options , specialities_for_title)
     return (
@@ -41,7 +41,7 @@ function UpdateUserFormFields({
     const [selectedTitleValue, setSelectedTitleValue] = useState(employee_displayed?.emp_title ?? "");
 
     /* Get Corresponding specialities for title */
-    const specialities_for_title = {label:"Speciality",options: global_mapped_specialities[selectedTitleValue]};
+    const specialities_for_title = {label:"specialty",options: global_mapped_specialities[selectedTitleValue]};
     console.log("specialities_for_title",specialities_for_title ,"\n", select_options.select_title_options);
 
     return (

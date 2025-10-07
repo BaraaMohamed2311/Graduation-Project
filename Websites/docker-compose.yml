@@ -27,7 +27,7 @@ services:
       context: ./ems/Server
       dockerfile: Dockerfile.backend
       args:
-        - NODE_ENV=${NODE_ENV:-development}
+        - NODE_ENV=${NODE_ENV:-development} # defined in .env
     container_name: ems_server
 
     ports:
@@ -44,7 +44,7 @@ services:
     build: 
       context: ./ems/client
       dockerfile: Dockerfile.frontend
-      target: ${NODE_ENV:-development}
+      target: ${NODE_ENV:-development} # defined in .env
       args:
         - NODE_ENV=${NODE_ENV}
     container_name: ems_client

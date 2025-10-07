@@ -14,14 +14,13 @@ function RegisterFormFields({
     const [selectedTitleValue, setSelectedTitleValue] = useState(employee_displayed?.emp_title ?? "");
 
     /* Get Corresponding specialities for title */
-    const specialities_for_title = {...select_options.select_speciality_options, options: global_mapped_specialities[selectedTitleValue]};
-    console.log("select_options xxxxasdd",select_options)
-    console.log(select_options.select_title_options , specialities_for_title)
+    const specialities_for_title =  global_mapped_specialities[selectedTitleValue];
+
     return (
         <>
         {/*display select for positions */}
         <Select styles={styles} select_options={select_options.select_title_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
-        <Select styles={styles} select_options={specialities_for_title} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
+        <Select styles={styles} select_options={{name:select_options.select_specialty_options.name,options:specialities_for_title}} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
         </>
     )
 }
@@ -41,14 +40,13 @@ function UpdateUserFormFields({
     const [selectedTitleValue, setSelectedTitleValue] = useState(employee_displayed?.emp_title ?? "");
 
     /* Get Corresponding specialities for title */
-    const specialities_for_title = {label:"Speciality",options: global_mapped_specialities[selectedTitleValue]};
-    console.log("specialities_for_title",specialities_for_title ,"\n", select_options.select_title_options);
+    const specialities_for_title =  global_mapped_specialities[selectedTitleValue];
 
     return (
         <>
         {/* display select for positions */}
         <Select styles={styles} select_options={select_options.select_title_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
-        <Select styles={styles} select_options={specialities_for_title} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
+        <Select styles={styles} select_options={{name:select_options.select_specialty_options.name,options:specialities_for_title}} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
         {/* display select for Role */}
         <Select styles={styles} select_options={select_options.select_role_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
         {/* Update Role If you have permission*/}

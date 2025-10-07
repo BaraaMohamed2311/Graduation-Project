@@ -8,6 +8,7 @@ import { UserDataProvider } from "@/contexts/user_data";
 import Loading from "./loading";
 import { Suspense } from "react";
 import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
