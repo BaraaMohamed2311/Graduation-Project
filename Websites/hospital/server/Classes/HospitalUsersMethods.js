@@ -3,8 +3,19 @@ const NurseMethods = require("../Utils/methods/NurseMethods");
 const SurgeonMethods = require("../Utils/methods/SurgeonMethods");
 const PatientMethods = require("../Utils/methods/PatientMethods");
 
+
 class HospitalUsersMethods   {
     static #hospital_users = new Set(["doctor", "nurse", "surgeon","patient"]);
+
+    // ========================================
+    // GET ALL HOSPITAL EMPLOYEES DATA
+    // ========================================
+    static async MapUserToIsMyPatientFunction(user_id, user_title,patient_id) {
+        const doctors = await DoctorMethods.getAllDoctorsSpecificData();
+        const surgeons = await SurgeonMethods.getAllSurgeonsSpecificData();
+        const nurses = await NurseMethods.getAllNursesSpecificData();
+        return []
+    }
 
     static isHospitalUser(user_title){
         if(!user_title) return false;
@@ -68,21 +79,10 @@ class HospitalUsersMethods   {
         return await fn.call(this, user_id, data, actions);
     }
 
-    // ========================================
-    // Delete Data By Title
-    // ========================================
-
-        static #titleDeleteMap = { 
-        "Patient": PatientMethods.deletePatientCoreData,
-    };
 
 
-    static async MapUserToDeleteFunction(user_id, title, data , actions) {
-        const fn = HospitalUsersMethods.#titleDeleteMap[title];
-        if (!fn) throw new Error(`No update function defined for role: ${title}`);
-        
-        return await fn.call(this, user_id, data, actions);
-    }
+    
+    
 
 
 }

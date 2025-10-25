@@ -86,4 +86,11 @@ function LoginFormFields({
     )
 }
 
-export {LoginFormFields, UpdateUserFormFields, RegisterFormFields};
+
+const FormFieldsMap = {
+    register_form: RegisterFormFields,
+    update_form: UpdateUserFormFields,
+    login_form: LoginFormFields,
+};
+
+export {FormFieldsMap};

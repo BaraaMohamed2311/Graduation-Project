@@ -9,41 +9,78 @@ const RoomsMethods = require("../Utils/methods/RoomsMethods.js");
 // Get all rooms
 router.get("/", async function (req, res) {
     try {
-        const rooms = await RoomsMethods.getRooms();
-        res.json(rooms);
+        const {pagination, size} = req.query
+        console.log(pagination, size)
+        const rooms = await RoomsMethods.getRooms(parseInt(size) , parseInt((pagination - 1) * size));
+        res.json({success:true, rooms});
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.log("Error Fetching All Rooms")
+        console.log(error)
+        res.status(500).json({success:false, message:"Error Fetching All Rooms"});
+    }
+});
+
+router.get("/room/:roomId", async function (req, res) {
+    try {
+        const { roomId } = req.params;
+        const { patientId } = req.query;
+
+        const room = await RoomsMethods.getRoomByRoomID(roomId);
+        const patient = patientId ? await RoomsMethods.getPatientInRoom(patientId) : {};
+        console.log("room and patient ",room,patient)
+        res.json({success:true, room,patient});
+    } catch (error) {
+        console.log("Error Fetching All Rooms")
+        console.log(error)
+        res.status(500).json({success:false, message:"Error Fetching All Rooms"});
+    }
+});
+
+
+router.get("/room/room_number/:roomNum", async function (req, res) {
+    try {
+        const { roomNum } = req.params;
+        const {pagination, size,status} = req.query
+        const rooms = await RoomsMethods.getRoomsByRoomsNumber(roomNum,parseInt(size) , parseInt((pagination - 1) * size),status);
+        res.json({success:true, rooms});
+    } catch (error) {
+        console.log("Error Fetching All Rooms")
+        console.log(error)
+        res.status(500).json({success:false, message:"Error Fetching All Rooms"});
     }
 });
 
 // Get empty rooms
 router.get("/empty", async function (req, res) {
     try {
-        const rooms = await RoomsMethods.getEmptyRooms();
-        res.json(rooms);
+        const {pagination, size} = req.query
+        const rooms = await RoomsMethods.getEmptyRooms(parseInt(size) , parseInt((pagination - 1) * size));
+        res.json({success:true, rooms});
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({success:false, message:"Error Fetching Empty Rooms"});
     }
 });
 
 // Get occupied rooms
 router.get("/occupied", async function (req, res) {
     try {
-        const rooms = await RoomsMethods.getOccupiedRooms();
-        res.json(rooms);
+        const {pagination, size} = req.query
+        const rooms = await RoomsMethods.getOccupiedRooms(parseInt(size) , parseInt((pagination - 1) * size));
+        res.json({success:true, rooms});
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({success:false, message:"Error Fetching Occupied Rooms"});
     }
 });
 
 // Get rooms by floor
-router.get("/floor/:floorId", async function (req, res) {
+router.get("/floor/floor_number/:floorNum", async function (req, res) {
     try {
-        const { floorId } = req.params;
-        const rooms = await RoomsMethods.getRoomsByFloor(floorId);
-        res.json(rooms);
+        const { floorNum } = req.params;
+        const {pagination, size,status} = req.query
+        const rooms = await RoomsMethods.getRoomsByFloor(floorNum,parseInt(size) , parseInt((pagination - 1) * size),status);
+        res.json({success:true, rooms});
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({success:false, message:"Error Fetching Rooms By Floor"});
     }
 });
 
@@ -52,9 +89,9 @@ router.get("/patient/:patientId", async function (req, res) {
     try {
         const { patientId } = req.params;
         const room = await RoomsMethods.getRoomByPatient(patientId);
-        res.json(room);
+        res.json({success:true, room});
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({success:false, message:"Error Fetching Room By Patient"});
     }
 });
 
@@ -63,9 +100,9 @@ router.get("/patient/:patientId/details", async function (req, res) {
     try {
         const { patientId } = req.params;
         const patient = await RoomsMethods.getPatientInRoom(patientId);
-        res.json(patient);
+        res.json({success:true,patient});
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({success:false, message:"Error Fetching Patient By Room"});
     }
 });
 
@@ -109,13 +146,13 @@ router.put("/:roomId/assign", async function (req, res) {
         const updated = await RoomsMethods.assignPatientToRoom(patient_id, roomId);
 
         if (updated) {
-            res.json({ message: "Room updated successfully" });
+            res.json({success:true, message: "Room updated successfully" });
         } else {
-            res.status(400).json({ error: "Failed to update room" });
+            res.status(400).json({ message: "Failed to update room" });
         }
     } catch (error) {
         console.error("Error updating room:", error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ success:false, message: error.message });
     }
 });
 
@@ -127,13 +164,13 @@ router.put("/:roomId/empty", async function (req, res) {
         const result = await RoomsMethods.emptyRoom(roomId);
         const room = await RoomsMethods.getRoomByRoomID(roomId);
         if (result && !room.isOccupied && room.patient_id === null) {
-            res.json({ message: `Room ${room.room_number} floor ${room.floor_id} has been emptied successfully.` });
+            res.json({success:true, message: `Room ${room.room_number} floor ${room.floor_id} has been emptied successfully.` });
         } else {
-            res.status(404).json({ error: "Room not found or already empty." });
+            res.status(404).json({ success:false,message: "Room not found or already empty." });
         }
     } catch (error) {
         console.error("Error emptying room:", error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ success:false,message: "Error Emptying Room" });
     }
 });
 
@@ -147,7 +184,7 @@ router.post("/:floor_number/:room_number", async function (req, res) {
         //====3. send state data to client-side
 
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ success:false, message: error.message });
     }
 });
 

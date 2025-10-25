@@ -121,7 +121,7 @@ router.get("/prof-img", async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Error GET Profile Picture",
+      message: err.message || "Error GET Profile Picture",
     });
   }
 });
@@ -139,7 +139,7 @@ router.get("/patient-file", async (req, res) => {
     }
 
     const patientFile = await Patient_File_Module.findOne({
-      patient_email: req.query["patient_email"],
+      patient_id: req.query["patient_id"],
       "file.file_name": req.query["file_name"],
     });
 
@@ -165,49 +165,30 @@ router.get("/patient-file", async (req, res) => {
     }
   } catch (err) {
     console.error("Error GET Patient File", err);
-    res.status(500).json({ success: false, message: "Error GET Patient File" });
+    res.status(500).json({ success: false, message: err.message || "Error GET Patient File" });
   }
 });
 
 // ==============================================
 //                Get Patient Files
 // ==============================================
-router.get("/patient-files", async (req, res) => {
+router.get("/patient-files/view/:fileId", async (req, res) => {
   try {
-    if (!gfs_bucket) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Mongo Bucket is undefined" });
-    }
+    const { fileId } = req.params;
+    const db = mongoose.connection.db;
 
-    const patientFile = await Patient_File_Module.findOne({
-      patient_email: req.query["patient_email"],
-      "file.file_name": req.query["file_name"],
+
+    const downloadStream = gfs_bucket.openDownloadStream(new mongoose.Types.ObjectId(fileId));
+
+    downloadStream.on("error", (err) => {
+      console.error("Error reading file", err);
+      res.status(404).send("File not found");
     });
 
-    if (!patientFile || !patientFile.file.file_name) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Patient has no such file" });
-    }
-
-    const cursor = await gfs_bucket.find({
-      filename: patientFile.file.file_name,
-    });
-    const docsArray = await cursor.toArray();
-
-    if (docsArray[0] && docsArray[0].filename) {
-      res.set(
-        "Content-Type",
-        docsArray[0].contentType || patientFile.file.file_type
-      );
-      gfs_bucket.openDownloadStreamByName(docsArray[0].filename).pipe(res);
-    } else {
-      res.status(404).json({ success: false, message: "File not found" });
-    }
+    downloadStream.pipe(res);
   } catch (err) {
-    console.error("Error GET Patient File", err);
-    res.status(500).json({ success: false, message: "Error GET Patient File" });
+    console.error("Error retrieving file", err);
+    res.status(500).json({ success: false, message: err.message || "Error retrieving file"});
   }
 });
 
@@ -234,7 +215,7 @@ router.post(
 
       // Save/update file record in Patients_Files collection
       await Patient_File_Module.findOneAndUpdate(
-        { patient_email: req.query["patient_email"] },
+        { patient_id: req.query["patient_id"] },
         {
           file: {
             file_name: req.file.filename,
@@ -257,7 +238,7 @@ router.post(
       console.error("Error UPDATE Patient File", err);
       res
         .status(500)
-        .json({ success: false, message: "Error Update Patient File" });
+        .json({ success: false, message: err.message || "Error Update Patient File" });
     }
   }
 );
@@ -314,7 +295,7 @@ router.put(
       console.log("Error Update Profile Picture", err);
       res.status(500).json({
         success: false,
-        message: "Error Update Profile Picture",
+        message: err.message || "Error Update Profile Picture",
       });
     }
   }

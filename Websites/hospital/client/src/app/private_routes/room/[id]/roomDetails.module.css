@@ -1,0 +1,64 @@
+.room-details-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: .5rem;
+}
+
+.chartWrapper {
+  margin-top: 1rem;
+}
+
+.patientInfo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: .5rem;
+}
+
+.buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.actionBtn {
+  padding: .75rem 1.5rem;
+  border-radius: .5rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.emptyBtn {
+  background: #ef4444;
+  color: white;
+}
+
+.emptyBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.assignBtn {
+  background: #2563eb;
+  color: white;
+}
+
+.loader {
+  text-align: center;
+  margin-top: 3rem;
+  font-weight: 500;
+}

@@ -1,51 +1,49 @@
  const global_perms = [
-    { value: "Modify Data", text: "Modify Data" },
-    { value: "Modify Salary", text: "Modify Salary" },
-    { value: "Display Salary", text: "Display Salary" },
-    { value: "Modify Perms", text: "Modify Perms" },
+    { value: "Modify Employee Data", text: "Modify Employee Data" },
+    { value: "Modify Patient Files", text: "Modify Patient Files" },
+    { value: "Modify Employee Perms", text: "Modify Employee Perms" },
+    { value: "Modify Employee Role", text: "Modify Employee Role" },
     { value: "Modify Role", text: "Modify Role" },
-    { value: "Delete User", text: "Delete User" },
-    { value: "Accept Registered", text: "Accept Registered" }
+    { value: "Modify Other Patient", text: "Modify Other Patient" },
+    { value: "Modify Patient Data", text: "Modify Patient Data" },
+    { value: "Delete Patient", text: "Delete Patient" },
+    { value: "Access Rooms", text: "Access Rooms" },
+    { value: "Modify Rooms", text: "Modify Rooms" }
+
+
+
     ]
     
 
+    const global_rooms = [
+      { value: 1, text: 1 },
+      { value: 2, text: 2 },
+      { value: 3, text: 3 },
+      { value: 4, text: 4 },
+      { value: 5, text: 5 },
+
+    ];
+    const global_floors = [
+      { value: 1, text: 1 },
+      { value: 2, text: 2 },
+      { value: 3, text: 3 },
+      { value: 4, text: 4 },
+      { value: 5, text: 5 },
+
+    ];
 
 
 
         // IT titles and specialties
 const global_title = [
-    { value: "Developer", text: "Developer" },
-    { value: "Engineer", text: "Engineer" },
-    { value: "Designer", text: "Designer" },
-    { value: "Scientist", text: "Scientist" },
     { value: "HR", text: "HR" },
-    { value: "DevOps Engineer", text: "DevOps Engineer" },
-    { value: "Cloud Engineer", text: "Cloud Engineer" },
-    { value: "Intern", text: "Intern" },
-    { value: "CEO", text: "CEO" },
+    { value: "Manager", text: "Manager" },
     { value: "Doctor", text: "Doctor" },
     { value: "Nurse", text: "Nurse" },
     { value: "Surgeon", text: "Surgeon" }
 ];
 
 const global_specialty = [
-    // IT specialities
-    { value: "Front-End", text: "Front-End"  },
-    { value: "Back-End", text: "Back-End"  },
-    { value: "Full-Stack", text: "Full-Stack"  },
-    { value: "Front-End", text: "Front-End" },
-    { value: "Back-End", text: "Back-End" },
-    { value: "Full-Stack", text: "Full-Stack" },
-    { value: "Cloud", text: "Cloud" },
-    { value: "UI/UX", text: "UI/UX" },
-    { value: "Data", text: "Data" },
-    { value: "HR", text: "HR" },
-    { value: "Automation", text: "Automation" },
-    { value: "Cloud", text: "Cloud" },
-    { value: "Front-End", text: "Front-End" },
-    { value: "Back-End", text: "Back-End" },
-    { value: "Full-Stack", text: "Full-Stack" },
-    { value: "Management", text: "Management" },
 
     // Hospital specialities
     { value: "Pediatrics (Kids)", text: "Pediatrics (Kids)" },
@@ -73,35 +71,14 @@ const global_mapped_specialities = {
     { value: "Back-End", text: "Back-End" },
     { value: "Full-Stack", text: "Full-Stack" }
   ],
-  "Engineer": [
-    { value: "Front-End", text: "Front-End" },
-    { value: "Back-End", text: "Back-End" },
-    { value: "Full-Stack", text: "Full-Stack" },
-    { value: "Cloud", text: "Cloud" }
+  "Manager": [
+    { value: "Manager", text: "Manager" },
   ],
-  "Designer": [
-    { value: "UI/UX", text: "UI/UX" }
-  ],
-  "Scientist": [
-    { value: "Data", text: "Data" }
-  ],
+
   "HR": [
     { value: "HR", text: "HR" }
   ],
-  "DevOps Engineer": [
-    { value: "Automation", text: "Automation" }
-  ],
-  "Cloud Engineer": [
-    { value: "Cloud", text: "Cloud" }
-  ],
-  "Intern": [
-    { value: "Front-End", text: "Front-End" },
-    { value: "Back-End", text: "Back-End" },
-    { value: "Full-Stack", text: "Full-Stack" }
-  ],
-  "CEO": [
-    { value: "Management", text: "Management" }
-  ],
+
 
   "Doctor": [
     { value: "Pediatrics (Kids)", text: "Pediatrics (Kids)" },
@@ -131,7 +108,7 @@ const global_mapped_specialities = {
     const global_roles = [
             {value:"SuperAdmin", text:"SuperAdmin"},
             {value:"Admin", text:"Admin"},
-            {value:"Employee", text:"Employee"},
+            {value:"NormalUser", text:"NormalUser"},
     ]
 
-        export  {global_perms  ,global_roles,global_title, global_specialty , global_mapped_specialities};
+        export  {global_perms  ,global_roles,global_title, global_specialty , global_mapped_specialities,global_rooms,global_floors};

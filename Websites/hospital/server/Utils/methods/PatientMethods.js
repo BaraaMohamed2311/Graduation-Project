@@ -23,13 +23,21 @@ class PatientMethods {
         return result[0];
     }
 
-    static async getAllPatientsRangedData(limit, offset){
-        const query = `SELECT * FROM patients LIMIT ? OFFSET ?`;
+    static async getAllPatientsRangedData(limit, offset,restFilters = null){
+        let query = `SELECT * FROM patients `;
+
+        if (restFilters) { 
+                query += ` WHERE ${restFilters} `;
+            }
+        if(limit >0 &&  offset > -1) {
+            query += " LIMIT ? OFFSET ? "
+        }
+        console.log("query",query,limit, offset)
         const result = await executeMySqlQuery(query,[limit, offset]);
         return result;
     }
 
-        static async getListedDoctorDataForPaitent(restFilters = null,limit=null, offset=null) {
+        static async getListedDoctorDataForPaitent(limit=null, offset=null,restFilters=null) {
             let query = `
                 SELECT 
                     d.doctor_id,
@@ -209,6 +217,49 @@ static async deletePatientCoreData(patient_id) {
 
             return results; // return array of results for each action
         }
+
+        
+    // ============================
+    //              Booking
+    // ============================
+
+    static async bookAppointment(doctor_id, patient_id,availability_id,consultation_date,start_time,end_time) {
+        const query = `
+            INSERT INTO consultations  (hosp_emp_id ,patient_id,availability_id,consultation_date,start_time,end_time)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        const params = [doctor_id, patient_id,availability_id,consultation_date,start_time,end_time];
+        const result = await executeMySqlQuery(query, params);
+        return result;
+    }
+
+    static async getAppointmentStatus() {
+        const query = `
+           SELECT status
+            FROM consultations
+            WHERE hosp_emp_id = ?
+            AND consultation_date = ?
+            AND start_time = ?
+            AND patient_id = ?
+        `;
+        const params = [];
+        const result = await executeMySqlQuery(query, params);
+        return result;
+    }
+
+
+    static async updateAppointmentStatus() {
+        const query = `
+           UPDATE consultations
+            SET 
+            status = ?
+            WHERE consultation_id = ? 
+        `;
+        const params = [];
+        const result = await executeMySqlQuery(query, params);
+        return result;
+    }
+
 }
 
 module.exports = PatientMethods;

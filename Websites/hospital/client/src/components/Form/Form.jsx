@@ -4,13 +4,8 @@ import Inputs from "../Inputs/Inputs"
 
 import { useUserDataContext } from "@/contexts/user_data";
 
-import {LoginFormFields, UpdateUserFormFields, RegisterFormFields} from "./FormFields.js";
+import {FormFieldsMap} from "./FormFields.js";
 
-const FormFieldsMap = {
-    register_form: RegisterFormFields,
-    update_form: UpdateUserFormFields,
-    login_form: LoginFormFields,
-};
 
 export default function Form({
     references, form_handler , formBtnState ,
@@ -25,7 +20,7 @@ export default function Form({
         <form className={formKind === "update_form" ? styles.sided_form :""} method="post" onSubmit={form_handler}>
             
             {/* for any page display input fields with corresponding label and type */}
-            <Inputs formKind={formKind} inputs_info={inputs_info} employee_displayed={employee_displayed} references = {references.inputsBoxsRef}/>
+            <Inputs  styles={styles } type={"labled_input"} formKind={formKind} inputs_info={inputs_info} employee_displayed={employee_displayed} references = {references.inputsBoxsRef}/>
 
             {/* Form-kind-specific fields */}
             <Fields

@@ -1,0 +1,71 @@
+.card {
+  background-color: #fff;
+  border-radius: 1rem;
+  padding: 1.2rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s, box-shadow 0.2s;
+  width: 260px;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.roomNumber {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.floor {
+  font-size: 0.95rem;
+  color: #777;
+}
+
+.statusWrapper {
+  margin-bottom: 1rem;
+}
+
+.statusLabel {
+  font-weight: 600;
+  margin-right: 0.4rem;
+}
+
+.statusValue {
+  color: #444;
+}
+
+.viewButton {
+  background-color: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  align-self: flex-end;
+}
+
+.viewButton:hover {
+  background-color: #1e4ed8;
+}
+
+/* Occupied / Available color indicators */
+.occupied {
+  border-left: 6px solid #dc2626; /* red */
+}
+
+.available {
+  border-left: 6px solid #16a34a; /* green */
+}

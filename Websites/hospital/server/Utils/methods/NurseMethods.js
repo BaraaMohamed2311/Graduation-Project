@@ -15,6 +15,34 @@ class NurseMethods {
     //              GET
     // ============================
 
+        static async getAllNursesSpecificData(){
+        const query = `SELECT 
+                        e.emp_id,
+                        e.emp_name,
+                        e.emp_abscence,
+                        e.emp_rate,
+                        e.emp_title,
+                        e.emp_specialty,
+                        e.emp_email,
+                        
+                        n.nurse_id,
+                        n.hosp_emp_id,
+                        n.floor_number,
+                        GROUP_CONCAT(
+                        CONCAT(na.day_of_week, ': ', na.start_time, '-', na.end_time)
+                        ORDER BY FIELD(na.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                        SEPARATOR '; '
+                    ) AS availability_schedule
+
+                    FROM nurses n
+                    JOIN employees e ON n.hosp_emp_id = e.emp_id
+                    LEFT JOIN availability na ON n.nurse_id = na.hosp_emp_id
+                    GROUP BY e.emp_id, n.nurse_id, n.hosp_emp_id, n.floor_number;
+                    `;
+        const result = await executeMySqlQuery(query);
+        return result[0];
+    }
+
     static async getNurseSpecificData(nurse_id){
         const query = `SELECT 
                         e.emp_id,

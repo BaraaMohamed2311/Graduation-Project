@@ -7,27 +7,57 @@ class RoomsMethods {
     //              GET
     // ============================
 
-    static async getRooms(){
-        const query = `SELECT * FROM rooms `;
-        const result = await executeMySqlQuery(query);
+    static async getRooms(limit=null,offset=null){
+        let query = `SELECT * FROM rooms `;
+        const params = [];
+        if(limit > 0 && offset != null ) {
+            query += `limit ? offset ?`
+            params.push(limit, offset);
+        }
+        
+        const result = await executeMySqlQuery(query,params);
         return result;
     }
 
-    static async getEmptyRooms(){
-        const query = `SELECT * FROM rooms WHERE patient_id IS NULL AND isOccupied = FALSE `;
-        const result = await executeMySqlQuery(query);
+    static async getEmptyRooms(limit=null,offset=null){
+        let query = `SELECT * FROM rooms WHERE patient_id IS NULL AND isOccupied = FALSE `;
+        const params = [];
+        if(limit > 0 && offset != null ) {
+            query += `limit ? offset ?`
+            params.push(limit, offset);
+        }
+        const result = await executeMySqlQuery(query,params);
         return result;
     }
 
-    static async getOccupiedRooms(){
-        const query = `SELECT * FROM rooms WHERE patient_id IS NOT NULL AND isOccupied = TRUE `;
-        const result = await executeMySqlQuery(query);
+    static async getOccupiedRooms(limit=null,offset=null){
+        let query = `SELECT * FROM rooms WHERE patient_id IS NOT NULL AND isOccupied = TRUE `;
+        const params = [];
+        if(limit > 0 && offset != null ) {
+            query += `limit ? offset ?`
+            params.push(limit, offset);
+        }
+        const result = await executeMySqlQuery(query,params);
         return result;
     }
 
-    static async getRoomsByFloor(floor_id){
-        const query = `SELECT * FROM rooms WHERE  floor_id = ?`;
-        const result = await executeMySqlQuery(query,[floor_id]);
+    static async getRoomsByFloor(floor_id,limit=null,offset=null , status){
+        let query = `SELECT * FROM rooms `;
+        if(status === "occupied"){
+            query+= `WHERE  floor_id = ? AND  isOccupied = TRUE `
+        }
+        else if (status === "empty"){
+            query+= `WHERE  floor_id = ? AND  isOccupied = FALSE `
+        }
+        else{
+            query+= `WHERE  floor_id = ?`
+        }
+        const params = [floor_id];
+        if(limit > 0 && offset != null ) {
+            query += `limit ? offset ?`
+            params.push(limit, offset);
+        }
+        const result = await executeMySqlQuery(query,params);
         return result;
     }
 
@@ -35,6 +65,26 @@ class RoomsMethods {
         const query = `SELECT * FROM rooms WHERE patient_id = ?`;
         const result = await executeMySqlQuery(query,[patient_id]);
         return result[0];
+    }
+
+    static async getRoomsByRoomsNumber(room_number,limit=null,offset=null , status){
+        let query = `SELECT * FROM rooms `;
+        const params = [room_number];
+        if(status === "occupied"){
+            query+= `WHERE  room_number = ? AND  isOccupied = TRUE `
+        }
+        else if (status === "empty"){
+            query+= `WHERE  room_number = ? AND  isOccupied = FALSE `
+        }
+        else{
+            query+= `WHERE  room_number = ?`
+        }
+        if(limit > 0 && offset != null ) {
+            query += `limit ? offset ?`
+            params.push(limit, offset);
+        }
+        const result = await executeMySqlQuery(query,params);
+        return result;
     }
 
     static async getRoomByRoomID(room_id){

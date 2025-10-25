@@ -17,6 +17,8 @@ const fetchImagesForListedUsers = require("../Utils/fetchImagesForListedUsers");
 const stringifyFields = require("../Utils/stringifyFields.js");
 const JoinFiltering = require("../Utils/JoinFiltering.js")
 const myCache = new NodeCache({ stdTTL: 3600 }); // default TTL 1hr
+const PatientFile = require("../Models/Patient_file.js");
+const PatientHealthState = require("../Models/Patient_health_state.js");
 
 // =================================
 //  Get All doctors Data and Images (for Admins or SuperAdmins)
@@ -27,7 +29,7 @@ router.get("/list-doctors",async (req,res)=>{
         
         const filtering_for_query = JoinFiltering(Object.entries(restFilters),"d")
 
-        const doctors = await PatientMethods.getListedDoctorDataForPaitent(filtering_for_query , parseInt(size) , parseInt((pagination - 1) * size ));
+        const doctors = await PatientMethods.getListedDoctorDataForPaitent(  parseInt(size) , parseInt((pagination - 1) * size ),filtering_for_query);
         const doctorsRespone = await fetchImagesForListedUsers(doctors);
         console.log("with images", doctorsRespone)
         if(doctorsRespone && doctorsRespone.length > 0 ){
@@ -49,7 +51,7 @@ router.get("/list-doctors",async (req,res)=>{
         console.error("Error List Doctors Profile Data and Images",err);
         res.status(500).json({
             success:false,
-            message:"Error List Doctors Data and Images"
+            message: err.message || "Error List Doctors Data and Images"
         })
     }
 })
@@ -83,7 +85,7 @@ router.get("/list-surgeons",async (req,res)=>{
         console.error("Error List surgeons Data and Images",err);
         res.status(500).json({
             success:false,
-            message:"Error List surgeons Data and Images"
+            message: err.message || "Error List surgeons Data and Images"
         })
     }
 })
@@ -92,16 +94,13 @@ router.get("/list-surgeons",async (req,res)=>{
 // =================================
 router.get("/patients",async (req,res)=>{
     try{
-        const { pagination, size , ...restFilters } = req.query;
+        const { pagination, size , user_id, ...restFilters } = req.query;
         
         //Bad Request if modifier id or others doesn't exist
         if(!pagination || !size  ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
         const allpatients = await PatientMethods.getAllPatientsCOUNT();
-
-
-
 
         // Cache total number of all patients
         let totalNumOfPatients = 0;
@@ -116,9 +115,9 @@ router.get("/patients",async (req,res)=>{
 
         const numOfPages = Math.ceil(totalNumOfPatients / size);
 
-
-
-      const my_rangedpatients = await PatientMethods.getAllPatientsRangedData(parseInt(size),parseInt((pagination - 1) * size ));
+        const REST_CONDITIONS = JoinFiltering(Object.entries(restFilters))  
+        console.log("Patients Reest CONDITIONS",REST_CONDITIONS)
+      const my_rangedpatients = await PatientMethods.getAllPatientsRangedData(parseInt(size),parseInt((pagination - 1) * size ),REST_CONDITIONS);
 
       if( my_rangedpatients && my_rangedpatients.length > 0){
         res.status(200).json({success : true , body:my_rangedpatients, message:"Successfully Fetched Data",numOfPages: numOfPages})
@@ -134,7 +133,7 @@ router.get("/patients",async (req,res)=>{
         console.error("Error List All Patient Data",err);
         res.status(500).json({
             success:false,
-            message:"Error List All Patient Data"
+            message: err.message || "Error List All Patient Data"
         })
     }
 })
@@ -150,7 +149,8 @@ router.get("/my-patients",async (req,res)=>{
         if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
-        const my_allpatients = await DoctorMethods.getDoctorAllPatientsCOUNT(user_id);
+        const REST_CONDITIONS = JoinFiltering(Object.entries(restFilters),"p")  
+        const my_allpatients = await DoctorMethods.getDoctorAllPatientsCOUNT(user_id,parseInt(size),parseInt((pagination - 1) * size ),REST_CONDITIONS);
 
 
 
@@ -185,9 +185,60 @@ router.get("/my-patients",async (req,res)=>{
         console.error("Error List Your Patient Data",err);
         res.status(500).json({
             success:false,
-            message:"Error List Your Patient Data"
+            message: err.message || "Error List Your Patient Data"
         })
     }
+})
+
+// =================================
+//  Get Patient MongoDB Data 
+// =================================
+router.get("/patient-health-state/:patientId",async (req,res)=>{
+    try{
+        const {patientId} = req.params
+
+        const record = await PatientHealthState.findOne({ patient_id: patientId });
+
+        if (!record) {
+            return res.status(404).json({ success: false, message: "Patient not found" });
+        }
+
+        res.json({ success: true, body: record });
+    
+        
+        
+    }
+    catch(err){
+        console.error("Error List All Patient Data",err);
+        res.status(500).json({
+            success:false,
+            message: err.message || "Error List All Patient Data"
+        })
+    }
+})
+
+router.get("/patient-files/:patientId",async (req,res)=>{
+     try {
+        const { patientId } = req.params;
+
+        const records = await PatientFile.find({ patient_id: patientId });
+
+        if (!records || records.length === 0) {
+        return res.status(404).json({ success: false, message: "No files found for this patient" });
+        }
+
+        // Extract file names and ids
+        const files = records.map(r => ({
+            file_name: r.file.file_name,
+            file_id: r.file.file_id,
+            file_type: r.file.file_type
+        }));
+
+        res.json({ success: true, files });
+  } catch (err) {
+    console.error("Error listing patient files", err);
+    res.status(500).json({ success: false, message: err.message || "Error listing patient files" });
+  }
 })
 
 // =============================================================================================================================
@@ -277,7 +328,7 @@ router.get("/my-patients",async (req,res)=>{
             console.log(err)
             res.status(500).json({
                 success:false,
-                message:"Error In Update Others Api Path "
+                message: err.message || "Error In Update Others Api Path "
             })
         }
     })
@@ -357,7 +408,7 @@ router.get("/my-patients",async (req,res)=>{
             console.log(err)
             res.status(500).json({
                 success:false,
-                message:"Error In Update Others Api Path "
+                message: err.message || "Error In Update Others Api Path "
             })
         }
     })
@@ -436,7 +487,7 @@ router.get("/my-patients",async (req,res)=>{
             console.log(err)
             res.status(500).json({
                 success:false,
-                message:"Error In Update Others Api Path "
+                message: err.message || "Error In Update Others Api Path "
             })
         }
     })
@@ -503,7 +554,7 @@ router.delete("/delete-patient", async (req, res) => {
         consoleLog(`Error Delete Patient Data ${err}`, "error");
         res.json({
             success: false,
-            message: "Error Delete Patient Data"
+            message: err.message || "Error Delete Patient Data"
         });
     }
 });

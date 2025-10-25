@@ -173,7 +173,7 @@ export default function UpdateEmpForm({isEditing , setIsEditing , employee_displ
                     isLoginPage={false} 
                     isEditing={isEditing}  
                     setIsEditing={setIsEditing} 
-                    formKind={"update_form"}/>
+                    formKind={"sided_inputs"}/>
             </div>
         </div>
     )

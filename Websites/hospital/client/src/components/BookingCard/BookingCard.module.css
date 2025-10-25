@@ -1,0 +1,56 @@
+.card {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  width: 280px;
+  margin: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transition: 0.3s;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.image {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.info {
+  flex: 1;
+}
+
+.sub {
+  color: gray;
+  font-size: 0.9rem;
+}
+
+.body {
+  margin-top: 0.8rem;
+  font-size: 0.95rem;
+}
+
+.footer {
+  margin-top: 0.8rem;
+  text-align: center;
+}
+
+.bookBtn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+.bookBtn:hover {
+  background: #0056b3;
+}

@@ -12,6 +12,39 @@ class SurgeonMethods {
     // ============================
     //              GET
     // ============================
+
+    static async getAllSurgeonsSpecificData(){
+        const query = `SELECT 
+                        e.emp_id,
+                        e.emp_name,
+                        e.emp_abscence,
+                        e.emp_rate,
+                        e.emp_title,
+                        e.emp_specialty,
+                        e.emp_email,
+                        
+                        s.surgeon_id,
+                        s.hosp_emp_id,
+                        s.initial_consultation_price,
+                        s.followup_consultation_price,
+                        s.surgery_price,
+                        s.years_of_exp,
+
+                        GROUP_CONCAT(
+                        CONCAT(sa.day_of_week, ': ', sa.start_time, '-', sa.end_time)
+                        ORDER BY FIELD(sa.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                        SEPARATOR '; '
+                    ) AS availability_schedule
+
+                    FROM surgeons s
+                    JOIN employees e ON s.hosp_emp_id = e.emp_id
+                    LEFT JOIN availability sa ON s.surgeon_id = sa.hosp_emp_id
+
+                    GROUP BY e.emp_id, s.surgeon_id, s.hosp_emp_id, s.initial_consultation_price, s.followup_consultation_price, s.surgery_price, s.years_of_exp;
+                    `;
+        const result = await executeMySqlQuery(query);
+        return result[0];
+    }
     static async getSurgeonSpecificData(user_id){
         const query = `SELECT 
                         e.emp_id,
@@ -98,6 +131,14 @@ class SurgeonMethods {
 
                 return results; // return array of results for each action
         }
+
+        
+
+
+
+
+
+
 }
 
 module.exports = SurgeonMethods;

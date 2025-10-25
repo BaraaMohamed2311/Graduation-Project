@@ -38,3 +38,34 @@ Changes to reflect to previous ems
 - rename function at perms to be  executeRemoveOther instead of executeRemoveOtherPerm
 - move the queries inside the executeRemoveOther and pass the id as parameter
 - let Modify Perms at list.js use the User.getPerms function instead of executleSQLQueries()
+
+
+
+// Booking
+patient can update status to Cancelled only if it was Scheduled with him
+employee can update any consultion data , can get any data about consultion
+
+Check isVaildEmployeeTitleForAppointments and doctor and surgeon methods
+
+
+ADD PERM Logic TO 
+
+/room:id/empty 
+
+/room:id/assign
+
+
+ADD Title CHeck at uploading files to check user is patient
+
+
+
+Replace THese lines : 
+// --2. See if user exists at one of the tables
+        const query_emp = `SELECT EXISTS(SELECT * FROM employees WHERE emp_email =?) AS data_exists`
+        const userIsEmployee = await isExist(query_emp,[user_email]);
+        // search for user inside patients table
+        const query_pat = `SELECT EXISTS(SELECT * FROM patients WHERE patient_email =?) AS data_exists`
+        const userIsPatient = await isExist(query_pat,[user_email]);
+
+
+        with a function that execute first query and if not found then it goes to next query, for better performance

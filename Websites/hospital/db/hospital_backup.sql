@@ -1,5 +1,11 @@
 use ems_db;
 show tables;
+describe employees;
+describe  unregistered_employees;
+
+CREATE INDEX idx_emp_title ON employees(emp_title);
+CREATE INDEX idx_emp_email ON employees(emp_email);
+CREATE INDEX idx_pat_email ON patients(patient_email);
 
 
 -- ==========================================
@@ -101,7 +107,7 @@ CREATE TABLE doctor_patient (
 );
 
 -- ==========================================
--- doctor_availability
+-- availability
 -- ==========================================
 
 DROP TABLE IF EXISTS availability;
@@ -125,6 +131,40 @@ CREATE TABLE availability (
 
 );
 
+-- ==========================================
+-- consultations
+-- ==========================================
+DROP TABLE IF EXISTS consultations;
+DROP TABLE IF EXISTS consultations;
+CREATE TABLE consultations (
+    consultation_id INT AUTO_INCREMENT PRIMARY KEY,
+    hosp_emp_id INT NOT NULL,                       -- unified reference for doctor/surgeon
+    patient_id INT NULL,                            -- patient assigned (if any)
+    availability_id INT NOT NULL,                   -- link to shift slot
+    consultation_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    status ENUM('Available','Scheduled','Completed','Cancelled') DEFAULT 'Available',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (hosp_emp_id)
+        REFERENCES employees_hospital(hosp_emp_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    FOREIGN KEY (patient_id)
+        REFERENCES patients(patient_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    FOREIGN KEY (availability_id)
+        REFERENCES availability(availability_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    -- prevent double-booking same hospital employee at same time
+    UNIQUE (hosp_emp_id, consultation_date, start_time)
+);
 
 
 
@@ -145,7 +185,7 @@ INSERT INTO hospital_perms VALUES
  (4,'Modify Employee Perms'),
  (5,'Modify Employee Role'),
  (6,'Delete Patient'),
- (7,'Access Rooms')و
+ (7,'Access Rooms'),
  (8,'Modify Rooms'),
 (9,'Modify Other Patient'),
 (10,'Modify Patient Data');
@@ -463,6 +503,26 @@ VALUES
 
 
 
+INSERT INTO consultations
+(doctor_id, availability_id, consultation_date, start_time, end_time, status)
+VALUES
+-- Doctor 1016 (Monday 08:00–12:00) — all available 1-hour slots
+(1016, 1, '2025-10-06', '08:00:00', '09:00:00', 'Available'),
+(1016, 1, '2025-10-06', '09:00:00', '10:00:00', 'Available'),
+(1016, 1, '2025-10-06', '10:00:00', '11:00:00', 'Available'),
+(1016, 1, '2025-10-06', '11:00:00', '12:00:00', 'Available'),
+
+-- Doctor 1045 (Tuesday 09:00–13:00)
+(1045, 2, '2025-10-07', '09:00:00', '10:00:00', 'Available'),
+(1045, 2, '2025-10-07', '10:00:00', '11:00:00', 'Available'),
+(1045, 2, '2025-10-07', '11:00:00', '12:00:00', 'Available'),
+(1045, 2, '2025-10-07', '12:00:00', '13:00:00', 'Available'),
+
+-- Doctor 1065 (Wednesday 10:00–14:00)
+(1065, 3, '2025-10-08', '10:00:00', '11:00:00', 'Available'),
+(1065, 3, '2025-10-08', '11:00:00', '12:00:00', 'Available'),
+(1065, 3, '2025-10-08', '12:00:00', '13:00:00', 'Available'),
+(1065, 3, '2025-10-08', '13:00:00', '14:00:00', 'Available');
 
 
 
@@ -835,11 +895,3 @@ INSERT INTO hospital_emp_perms (perm_id, hosp_emp_id) VALUES
 (6,1172),(7,1172),(8,1172),
 (6,1175),(7,1175),(8,1175),
 (6,1196),(7,1196),(8,1196);
-
-
-
-
-
-CREATE INDEX idx_emp_title ON employees(emp_title);
-CREATE INDEX idx_emp_email ON employees(emp_email);
-CREATE INDEX idx_pat_email ON patients(patient_email);

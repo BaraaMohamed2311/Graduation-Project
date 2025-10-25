@@ -30,6 +30,7 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
              // search for user inside patients table
             const query_pat = `SELECT EXISTS(SELECT * FROM patients WHERE patient_email =?) AS data_exists`
             const userIsPatient = await isExist(query_pat,[user_email]);
+
             if(!userIsEmployee.exists && !userIsPatient.exists){
                 return res.status(404).json({
                     success:false,
@@ -44,7 +45,8 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
             const result =await User.getUserIDAndTable(user_email);
             const user_id = result.user_id;
             const user_title =await User.getUserTitle(user_email);
-            if(userIsEmployee.exists){
+            const isHospitalEmployee = HospitalUsersMethods.isHospitalUser(user_title)
+            if(userIsEmployee.exists && isHospitalEmployee){
                 user = await HospitalUsersMethods.MapUserToGETFunction(user_id, user_title);
                 console.log("userIsEmployee user",user)
                 user.emp_perms =  Array.from (await User.getSetUserperms(user_id));
@@ -58,6 +60,12 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
                 user.user_id =  user.patient_id;
                 delete user.patient_id;
                 match = await bcrypt.compare(password, user.patient_password);
+            }
+            else{
+                return res.status(404).json({
+                    success: false,
+                    message: 'Please, Register As Patient First'
+                });
             }
             
             console.log("user from login",user)
@@ -88,7 +96,7 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
             console.log(err)
             res.status(500).json({
                 success: false,
-                message: "Error in Logining"
+                message: err.message || "Error in Logining"
             });
         }
     });
@@ -156,7 +164,7 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
             console.error("Error In Registering New User" ,err)
             res.json({
                 success:false,
-                message:"Error In Registering New User"
+                message:err.message || "Error In Registering New User"
             })
         }
     })
@@ -245,7 +253,7 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
             console.log(err)
             res.status(500).json({
                 success:false,
-                message:"Error Updating Your Data Path"
+                message:err.message || "Error Updating Your Data Path"
             })
         }
     })
@@ -328,7 +336,7 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
             console.log(err)
             res.status(500).json({
                 success: false ,
-                message : `Error Sending Reset Password Link`
+                message : err.message || "Error Sending Reset Password Link"
                 })
         }
     })
@@ -427,7 +435,7 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
             console.log("reset password Error : " , err );
             res.status(500).json({
                 success: false ,
-                message : `Error Updating Password`
+                message : err.message || "Error Updating Password"
                 })
         }
     })
@@ -449,7 +457,7 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
             res.status(200).json({success:true , message:"You Are Authorized"})
         }
         catch(err){
-            res.status(500).json({success:false , message:"Error In Private Routes"})
+            res.status(500).json({success:false , message: err.message || "Error In Private Routes"})
         }
     })
 

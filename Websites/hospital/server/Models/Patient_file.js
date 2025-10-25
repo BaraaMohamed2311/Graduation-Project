@@ -16,7 +16,7 @@ const Patient_File_Schema = new mongoose.Schema({
     
     
         
-        patient_email: {type:String, required:true},
+        patient_id: {type:String, required:true},
         file: File_Schema 
       
     

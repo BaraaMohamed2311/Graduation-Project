@@ -28,6 +28,45 @@ class DoctorMethods {
     // ============================
     //              GET
     // ============================
+
+    static async getAllDoctorsSpecificData(){
+        
+        const query = `
+         
+                SELECT 
+                -- from employees
+                e.emp_id,
+                e.emp_name,
+                e.emp_abscence,
+                e.emp_rate,
+                e.emp_title,
+                e.emp_specialty,
+                e.emp_email,
+                
+                -- from doctors
+                d.doctor_id,
+                d.hosp_emp_id,
+                d.initial_consultation_price,
+                d.followup_consultation_price,
+                d.years_of_exp,
+                GROUP_CONCAT(
+                    CONCAT(da.day_of_week, ': ', da.start_time, '-', da.end_time)
+                    ORDER BY FIELD(da.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                    SEPARATOR '; '
+                ) AS availability_schedule
+
+            FROM doctors d
+            JOIN employees e ON d.hosp_emp_id = e.emp_id
+            LEFT JOIN availability da ON d.doctor_id = da.hosp_emp_id
+            GROUP BY e.emp_id, d.doctor_id, d.hosp_emp_id, d.initial_consultation_price, d.followup_consultation_price, d.years_of_exp;
+
+`;
+
+        const result = await executeMySqlQuery(query);
+        console.log("result",result);
+        return result[0];
+    }
+
     static async getDoctorSpecificData(doctor_id){
         
         const query = `
@@ -99,8 +138,8 @@ class DoctorMethods {
             return result;
     }
 
-    static async getDoctorRangedPatients(doctor_id,limit, offset){
-        const query = `SELECT 
+    static async getDoctorRangedPatients(doctor_id,limit, offset,restfilters=null){
+        let query = `SELECT 
                         p.patient_id,
                         p.patient_name,
                         p.patient_email,
@@ -117,22 +156,28 @@ class DoctorMethods {
                     FROM doctor_patient dp
                     JOIN patients p 
                         ON dp.patient_id = p.patient_id
-                    WHERE dp.doctor_id = ? LIMIT ? OFFSET ?;
+                    WHERE dp.doctor_id = ? 
                     `;
+            if(restfilters){
+                
+            }
+            if(limit> 0 &&  offset > -1){
+                query += "LIMIT ? OFFSET ?"
+            }
             const result = await executeMySqlQuery(query,[doctor_id,limit, offset]);
             console.log("result",result);
             return result;
     }
 
-    static async getDoctorAllPatientsCOUNT(doctor_id,limit, offset){
+    static async getDoctorAllPatientsCOUNT(doctor_id){
         const query = `SELECT 
                         COUNT(p.patient_id) as count
                     FROM doctor_patient dp
                     JOIN patients p 
                         ON dp.patient_id = p.patient_id
-                    WHERE dp.doctor_id = ? LIMIT ? OFFSET ?;
+                    WHERE dp.doctor_id = ? ;
                     `;
-            const result = await executeMySqlQuery(query,[doctor_id,limit, offset]);
+            const result = await executeMySqlQuery(query,[doctor_id]);
             console.log("result",result);
             return result[0];
     }
@@ -252,6 +297,10 @@ class DoctorMethods {
 
                 return results; // return array of results for each action
             }
+
+
+
+   
 
 }
 

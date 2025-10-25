@@ -1,7 +1,6 @@
-import styles from "./inputs.module.css"; 
-// default value for type is regular input
+import styles from "./inputs.module.css"
 
-function CheckBoxInput({inputs_info , references , employee_displayed }){
+function CheckBoxInput({inputs_info , references , employee_displayed  }){
     // convert perms to set for easier checking
     const employee_permsSet = employee_displayed? new Set(employee_displayed.emp_perms.split(", ")) : "";
     
@@ -24,10 +23,10 @@ function CheckBoxInput({inputs_info , references , employee_displayed }){
     )
 }
 
-function RegularInput({inputs_info  , formKind , employee_displayed , references} ){
-    console.log("inpuut_info", inputs_info,"references",references);
+function LabeledInput({inputs_info  , formKind , employee_displayed , references } ){
+    console.log("inpuut_info", inputs_info,"references",references , formKind);
     return (
-        <div className={formKind === "update_form"   ? styles.sided_inputs_wrapper : styles.colm_inputs_wrapper}>
+        <div className={ inputsWrapperClassMap[formKind] || inputsWrapperClassMap["default"]}>
             
                 {
                     
@@ -46,14 +45,45 @@ function RegularInput({inputs_info  , formKind , employee_displayed , references
     )
 }
 
+function NormalInput({inputs_info  , formKind , employee_displayed , references } ){
+    console.log("inpuut_info", inputs_info,"references",references , formKind);
+    return (
+        <div className={ inputsWrapperClassMap[formKind] || inputsWrapperClassMap["default"]}>
+            
+                {
+                    
+                    inputs_info && inputs_info.map((input,indx)=>{
+                        return (
+                            <div key={input.name} className={styles.txt_field }>
+                                {/* if input is checkbox then add value attribute with same Value as Name*/}
+                                <input required={input.isRequired || false} name={input.name} placeholder={input.label? input.label : "Type Here"} ref={(el)=>references.current[input.name] = el} type={input.type} defaultValue={employee_displayed ? employee_displayed[input.name]:""} />
+                                <span></span>
+                            </div>
+                        )
+                    })
+                }
+            </div>
+    )
+}
+
 const InputMaps = {
     "checkbox": CheckBoxInput,
-    "input": RegularInput,
+    "labeled_input": LabeledInput,
+    "normal_input": NormalInput
 }
+
+
+const inputsWrapperClassMap = {
+  "sided_inputs": styles.sided_inputs_wrapper,
+  "col_inputs": styles.colm_inputs_wrapper,
+  "row_inputs": styles.row_inputs_wrapper,
+  "default": styles.colm_inputs_wrapper
+};
+
 
  export default function Inputs({inputs_info ,type , formKind , employee_displayed , references }){
     
-    const InputComponent = InputMaps[type] || RegularInput; // Default to RegularInput if type is not found
+    const InputComponent = InputMaps[type] || NormalInput; // Default to RegularInput if type is not found
     return ( 
         <InputComponent inputs_info={inputs_info} formKind={formKind}  employee_displayed={employee_displayed}  references ={references }></InputComponent>
         

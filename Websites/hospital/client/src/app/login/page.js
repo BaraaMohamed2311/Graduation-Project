@@ -47,7 +47,7 @@ export default function LoginPage() {
                 'Content-Type': 'application/json'
               },
               body:JSON.stringify({
-                  emp_email:EMAIL_REF.value,
+                  user_email:EMAIL_REF.value,
                   password:PASSWORD_REF.value
               })
             }

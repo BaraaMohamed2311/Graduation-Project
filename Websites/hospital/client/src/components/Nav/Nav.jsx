@@ -45,7 +45,7 @@ export default function Nav() {
     return (
         <nav className={styles.nav}>
             <div className={`wrapper ${styles["nav-wrapper"]}`}>
-                <h1><Link   className={styles.logo} href="/">EMS</Link></h1>
+                <h1><Link   className={styles.logo} href="/">Hospital</Link></h1>
                 <ul
                     ref={NAV_UL_REF}
                     className={`${styles["nav-ul"]} ${displayed ? styles.displayed : ""}`}
@@ -55,12 +55,14 @@ export default function Nav() {
                     }}
                 >
                 
-                    <li className={styles["nav-li"]}><Link href="/private_routes/registered-approve"><ion-icon name="add-outline"></ion-icon></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/list"><ion-icon name="list-outline"></ion-icon></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/mailer"><ion-icon name="mail-outline"></ion-icon></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/dashboard"><ion-icon name="analytics-outline"></ion-icon></Link></li>
+                    <li className={styles["nav-li"]}><Link href="/private_routes/rooms"><i className="fa-solid fa-bed-pulse"></i></Link></li>
+                    <li className={styles["nav-li"]}><Link href="/private_routes/list"><i className="fa-solid fa-head-side-cough"></i></Link></li>
+                    <li className={styles["nav-li"]}><Link href="/private_routes/list-for-patient"><i className="fa-solid fa-user-doctor"></i></Link></li>
+                    <li className={styles["nav-li"]}><Link href="/private_routes/book-appointment"><i className="fa-solid fa-calendar-days"></i></Link></li>
+                    <li className={styles["nav-li"]}><Link href="/private_routes/booking-list"><i class="fa-solid fa-id-card-clip"></i></Link></li>
+
                     {isLogin ? (
-                        <li className={styles["nav-li"]}><Link href="/private_routes/profile"><ion-icon name="person-outline"></ion-icon></Link></li>
+                        <li className={styles["nav-li"]}><Link href="/private_routes/profile"><i className="fa-solid fa-user"></i></Link></li>
                     ) : (
                         <li className="pink-button"><Link href="/login">Sign In</Link></li>
                     )}
