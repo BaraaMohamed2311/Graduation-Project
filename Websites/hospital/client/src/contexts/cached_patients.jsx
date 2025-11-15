@@ -1,5 +1,8 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from "react";
+import { getAllFromStore } from "@/utils/indexDB/getCacheMethods";
+import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
+import { clearStore } from "@/utils/indexDB/deleteCacheMethods";
 
 let cached_patients_context = createContext();
 
@@ -11,23 +14,30 @@ let cached_patients_context = createContext();
   // Initialize with empty array
   const [cached_patients, setCached_Patients] = useState([]);
   const [fetched_patient_pages, setFetched_Patient_Pages] = useState(new Set());
- // ===============================
-  // Load from localStorage once on mount
+
+
+  // ===============================
+  // Load cached patients (from IndexedDB)
+  // ===============================
+  useEffect(() => {
+    (async () => {
+      try {
+        const storedPatients = await getAllFromStore("patients");
+
+        if (Array.isArray(storedPatients)) {
+          setCached_Patients(storedPatients);
+        }
+      } catch (err) {
+        console.error("Failed to load patients from IndexedDB:", err);
+      }
+    })();
+  }, []);
+
+  // ===============================
+  // Load fetched pages (from localStorage)
   // ===============================
   useEffect(() => {
     try {
-      // Load patients
-      const storedPatients = localStorage.getItem("cached_patients");
-      if (storedPatients && storedPatients !== "undefined" && storedPatients !== "null") {
-        const parsedPatients = JSON.parse(storedPatients);
-        if (Array.isArray(parsedPatients)) {
-          setCached_Patients(parsedPatients);
-        } else {
-          localStorage.removeItem("cached_patients");
-        }
-      }
-
-      // Load fetched pages
       const storedPages = localStorage.getItem("fetched_patient_pages");
       if (storedPages && storedPages !== "undefined" && storedPages !== "null") {
         const parsedPages = JSON.parse(storedPages);
@@ -44,20 +54,6 @@ let cached_patients_context = createContext();
     }
   }, []);
 
-  // ===============================
-  // Persist cached patients
-  // ===============================
-  useEffect(() => {
-    try {
-      if (Array.isArray(cached_patients) && cached_patients.length > 0) {
-        localStorage.setItem("cached_patients", JSON.stringify(cached_patients));
-      } else {
-        localStorage.removeItem("cached_patients");
-      }
-    } catch (err) {
-      console.error("Failed to save cached_patients:", err);
-    }
-  }, [cached_patients]);
 
   // ===============================
   // Persist fetched pages

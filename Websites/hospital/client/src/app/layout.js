@@ -5,6 +5,7 @@ import LayoutProvider from "@/components/LayoutProvider/LayoutProvider";
 import { CachedEmployeesProvider } from "@/contexts/cached_employees";
 import { CachedPatientsProvider } from "@/contexts/cached_patients";
 import { CachedMyPatientsProvider } from "@/contexts/cached_my_patients";
+import { CachedBookingListProvider } from "@/contexts/cached_booking_list";
 import { IsLoginProvider} from "@/contexts/isLogin"
 import { UserDataProvider } from "@/contexts/user_data";
 import Loading from "./loading";
@@ -36,9 +37,11 @@ export default function RootLayout({ children }) {
             <CachedEmployeesProvider>
               <CachedMyPatientsProvider>
               <CachedPatientsProvider>
+              <CachedBookingListProvider>
               <Suspense fallback={<Loading />}>
                 <LayoutProvider>{children}</LayoutProvider>
               </Suspense>
+              </CachedBookingListProvider>
               </CachedPatientsProvider>
               </CachedMyPatientsProvider>
             </CachedEmployeesProvider>

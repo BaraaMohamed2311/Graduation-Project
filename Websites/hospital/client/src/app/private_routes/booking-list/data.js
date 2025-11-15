@@ -1,4 +1,4 @@
-import { global_title } from "@/global_data"
+import { global_title ,global_bookable_hospital_title} from "@/global_data"
 
 let selectsElementsData = [
     {   
@@ -6,7 +6,7 @@ let selectsElementsData = [
         key:"Title",
         label:"Title",
         name:"emp_title",
-        options:[],
+        options:global_bookable_hospital_title,
         
     },
     {   

@@ -7,7 +7,7 @@ import deleteFetch from "@/utils/deleteFetch";
 import { useUserDataContext } from "@/contexts/user_data";
 import { useRouter } from "next/navigation";
 import getUserImage from "@/utils/getUserImg";
-import UpdateEmpForm from "@/components/UpdateEmpForm/UpdateEmpForm";
+import UpdateEmpForm from "@/components/UpdateUserForm/UpdateEmpForm";
 import { useState ,useEffect} from "react";
 import userNotification from "@/utils/userNotification";
 import Image from "next/image";

@@ -114,8 +114,8 @@ router.get("/patient/:patientId/details", async function (req, res) {
 router.put("/:roomId/assign", async function (req, res) {
     try {
         const { roomId } = req.params;
-        const data = req.body; // fields to update sent in request body
-        const { patient_id, floor_id, room_number } = data;
+        const { patient_id, floor_id, room_number } = req.body; // fields to update sent in request body
+
 
         // ==== 1. If patient assignment is requested
         if (patient_id) {

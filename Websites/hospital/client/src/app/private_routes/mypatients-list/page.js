@@ -10,9 +10,9 @@ import stringifyFields from "@/utils/stringifyFields";
 import statusNotification from "@/utils/statusNotification";
 import { useUserDataContext } from "@/contexts/user_data";
 import {useCachedMyPatientsContext} from "@/contexts/cached_my_patients"
-import Table from '@/components/Table/Table';
+import BasicTable from '@/components/BasicTable/BasicTable';
 import { useRouter } from "next/navigation";
-
+import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
 
 function MyPatientsListPage() {
   
@@ -61,11 +61,25 @@ useEffect(() => {
           updated.add(currPage);
           return updated;
         });
+        // Append new my-patients to IndexedDB
+      try {
+            appendToIndexDB("mypatients", data.body)
+            .then(() => {
+              console.log("Successfully appended new mypatients to IndexDB");
+            }) 
+            .catch((err) => {
+                  console.error("Failed to append new mypatients to IndexDB:", err);
+                });
+                
+      } catch (error) {
+            console.error("Failed to append IndexDB:", error);
+            }
         
         } else if (data && !data.success) {
           userNotification("error", data.message);
         }
       });
+
   } 
 
   
@@ -190,7 +204,7 @@ useEffect(() => {
           inputs_info={inputs_info}
           />
       <Suspense fallback={<LoaderForComponents  styling={styles.loader_for_components_wrapper}/>}>
-        <Table 
+        <BasicTable 
           currPage={currPage} 
           sizeOfPage={sizeOfPage}
           setCurrPage={setCurrPage} 

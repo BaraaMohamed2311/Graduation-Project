@@ -9,7 +9,7 @@ import userNotification from "@/utils/userNotification";
 import stringifyFields from "@/utils/stringifyFields";
 import statusNotification from "@/utils/statusNotification";
 import { useUserDataContext } from "@/contexts/user_data";
-import Table from '@/components/Table/Table';
+import BasicTable from '@/components/BasicTable/BasicTable';
 
 
 function EmployeesListPage() {
@@ -120,7 +120,7 @@ function handleFilterOption(e , cause){
           setFilteredResults={setFilteredResults} 
           selectsElementsData={selectsElementsData}/>
       <Suspense fallback={<LoaderForComponents  styling={styles.loader_for_components_wrapper}/>}>
-        <Table currPage={currPage} setCurrPage={setCurrPage} sizeOfPage={sizeOfPage} isFiltered={isFiltered} filteredResults={filteredResults}/>
+        <BasicTable currPage={currPage} setCurrPage={setCurrPage} sizeOfPage={sizeOfPage} isFiltered={isFiltered} filteredResults={filteredResults}/>
       </Suspense>
     </main>
   );

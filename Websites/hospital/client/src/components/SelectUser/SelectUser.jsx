@@ -1,23 +1,9 @@
-"use client"
-import private_routes from "../page";
-import { Suspense , lazy ,useState , useRef , useEffect} from "react";
-import LoaderForComponents from "@/components/LoaderForComponents/LoaderForComponents";
 import SearchOptions from "@/components/SearchOptions/SearchOptions";
-import styles from "./list.module.css"
-import {selectsElementsData , inputs_info} from "./data";
-import userNotification from "@/utils/userNotification";
-import stringifyFields from "@/utils/stringifyFields";
-import statusNotification from "@/utils/statusNotification";
-import { useUserDataContext } from "@/contexts/user_data";
-import {useCachedPatientsContext} from "@/contexts/cached_patients"
-import BasicTable from '@/components/BasicTable/BasicTable';
+import BasicTable from "@/components/BasicTable/BasicTable";
+import { inputs_info } from "./data";
 import { useRouter } from "next/navigation";
-import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
-
-
-function PatientsListPage() {
-  
-
+function SelectUser({ list_url,handleSelectBtn,handleClearFilterOption,handleFilterOption}) {
+    
   // for filtering
   let [isFiltered , setIsFiltered]  = useState(false);
   let [filteredResults , setFilteredResults] = useState([]); // as array not Map cuz we will not cache "pageNum":[{},{},...] like we did with cachedContext
@@ -25,24 +11,22 @@ function PatientsListPage() {
   let [numOfPages , setNumOfPages] = useState(1);
   const [filterTrigger, setFilterTrigger] = useState(0);
   const {user_data} = useUserDataContext();
-  let {cached_patients , setCached_Patients , fetched_patient_pages, setFetched_Patient_Pages} = useCachedPatientsContext();
+  let {cached_my_patients, setCached_My_Patients , fetched_my_patient_pages, setFetched_My_Patient_Pages} = useCachedMyPatientsContext();
    // Refrences
   const inputsBoxsRef= useRef({});
-  const selectBoxsRef= useRef({});
   const router = useRouter()
   const sizeOfPage = 12;
 
 
 // ===========================================
-//         Fetch Pages
+//        Initial Fetch
 // ===========================================
 useEffect(() => {
   console.log("isFiltered",isFiltered)
   if (isFiltered) return;
 
-  if (!fetched_patient_pages.has(currPage)) {
-    console.log("page not fetched")
-    fetch(`${process.env.APIKEY}/list/patients?user_id=${user_data.user_id}&pagination=${currPage}&size=${sizeOfPage}`, {
+  if (!fetched_my_patient_pages.has(currPage)) {
+    fetch(`${process.env.APIKEY}/list/${list_url}`, {
       mode: "cors",
       headers: {
         Authorization: `BEARER ${user_data.token}`,
@@ -55,20 +39,6 @@ useEffect(() => {
       })
       .then((data) => {
         if (data?.success) {
-          console.log("success")
-          setNumOfPages(data.numOfPages || 1);
-          setCached_Patients((prev) => [...prev, ...data.body]);
-          setFetched_Patient_Pages(prev => {
-          const updated = new Set(prev);
-          updated.add(currPage);
-          return updated;
-        });
-          appendToIndexDB("patients", data.body).then(() => {
-                  console.log("Successfully appended new patients to IndexDB");
-                 }) 
-                 .catch((err) => {
-                  console.error("Failed to append new patients to IndexDB:", err);
-                });
         
         } else if (data && !data.success) {
           userNotification("error", data.message);
@@ -80,19 +50,7 @@ useEffect(() => {
 }, [currPage]);
 
 
-useEffect(()=>{console.log("fetched_patient_pages",fetched_patient_pages)},[fetched_patient_pages])
-
-// ===========================================
-//        Table Buttons
-// ===========================================
-
-    function handleVisitBtn(employee){
-      const employeeAsQueries = stringifyFields("anded",Object.entries(employee))
-      router.replace(`/private_routes/patient/${employee.user_id}?${employeeAsQueries}&currPage=${currPage}`)
-    }
-
-
-  
+useEffect(()=>{console.log("fetched_my_patient_pages",fetched_my_patient_pages)},[fetched_my_patient_pages])
 
 
 // ===========================================
@@ -157,7 +115,7 @@ useEffect(() => {
     Object.entries({ patient_email, patient_phone })
   );
 
-  fetch(`${process.env.APIKEY}/list/patients?user_id=${user_data.user_id}&${filter_queries}&pagination=${currPage}&size=${sizeOfPage}`, {
+  fetch(`${process.env.APIKEY}/list/${list_url}`, {
     mode: "cors",
     headers: {
       Authorization: `BEARER ${user_data.token}`,
@@ -180,38 +138,36 @@ useEffect(() => {
 }, [currPage, isFiltered,filterTrigger]);
 
 
-  
   return (
-    <main className={`${styles["list"]} wrapper`}>
-      <SearchOptions 
-          
-          target={"patients"}
-          isFiltered={isFiltered}
-          references ={{ inputsBoxsRef: inputsBoxsRef ,selectBoxsRef: selectBoxsRef}}
-          clearBtn = {handleClearFilterOption} 
-          handleFilterOption={handleFilterOption} 
-          setCurrPage={setCurrPage} 
-          currPage={currPage} 
-          sizeOfPage={sizeOfPage} 
-          setFilteredResults={setFilteredResults} 
-          selectsElementsData={selectsElementsData}
-          inputs_info={inputs_info}
-          />
-      <Suspense fallback={<LoaderForComponents  styling={styles.loader_for_components_wrapper}/>}>
-        <BasicTable 
-          currPage={currPage} 
-          sizeOfPage={sizeOfPage}
-          setCurrPage={setCurrPage} 
-          data={cached_patients} 
-          isFiltered={isFiltered} 
-          filteredResults={filteredResults} 
-          handleActionBtn={handleVisitBtn}   
-          numOfPages={numOfPages} 
-          tableType="patients"
-        />
-      </Suspense>
-    </main>
+    <>
+        <SearchOptions 
+                  
+                    target={"patients"}
+                    isFiltered={isFiltered}
+                    references ={{ inputsBoxsRef: inputsBoxsRef }}
+                    clearBtn = {handleClearFilterOption} 
+                    handleFilterOption={handleFilterOption} 
+                    setCurrPage={setCurrPage} 
+                    currPage={currPage} 
+                    sizeOfPage={sizeOfPage} 
+                    setFilteredResults={setFilteredResults} 
+                    inputs_info={inputs_info}
+                  />
+                    
+                    
+                        <BasicTable 
+                                  currPage={currPage} 
+                                  sizeOfPage={sizeOfPage}
+                                  setCurrPage={setCurrPage} 
+                                  data={cached_patients} 
+                                  isFiltered={isFiltered} 
+                                  filteredResults={filteredResults} 
+                                  handleActionBtn={handleSelectBtn}   
+                                  numOfPages={numOfPages} 
+                                  tableType="patients"
+                                />
+    </>
   );
 }
 
-export default  private_routes(PatientsListPage)
+export default SelectUser;

@@ -34,12 +34,26 @@
 
 
 
-        // IT titles and specialties
+// All titles in the system
 const global_title = [
     { value: "HR", text: "HR" },
     { value: "Manager", text: "Manager" },
     { value: "Doctor", text: "Doctor" },
     { value: "Nurse", text: "Nurse" },
+    { value: "Surgeon", text: "Surgeon" }
+];
+
+// titles of the hospital 
+const global_hospital_title = [
+    { value: "Manager", text: "Manager" },
+    { value: "Doctor", text: "Doctor" },
+    { value: "Nurse", text: "Nurse" },
+    { value: "Surgeon", text: "Surgeon" }
+];
+
+// bookable titles of the hospital
+const global_bookable_hospital_title = [
+    { value: "Doctor", text: "Doctor" },
     { value: "Surgeon", text: "Surgeon" }
 ];
 
@@ -111,4 +125,14 @@ const global_mapped_specialities = {
             {value:"NormalUser", text:"NormalUser"},
     ]
 
-        export  {global_perms  ,global_roles,global_title, global_specialty , global_mapped_specialities,global_rooms,global_floors};
+        export  { 
+          global_perms,
+          global_roles,
+          global_title, 
+          global_specialty, 
+          global_mapped_specialities,
+          global_rooms,
+          global_floors,
+          global_hospital_title,
+          global_bookable_hospital_title
+        };

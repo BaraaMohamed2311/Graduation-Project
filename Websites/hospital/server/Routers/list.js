@@ -23,7 +23,7 @@ const PatientHealthState = require("../Models/Patient_health_state.js");
 // =================================
 //  Get All doctors Data and Images (for Admins or SuperAdmins)
 // =================================
-router.get("/list-doctors",async (req,res)=>{
+router.get("/doctors",async (req,res)=>{
     try{
         const { pagination, size , user_id, ...restFilters } = req.query;
         
@@ -59,7 +59,7 @@ router.get("/list-doctors",async (req,res)=>{
 // =================================
 //  Get All surgeons Data and Images (for Admins or SuperAdmins)
 // =================================
-router.get("/list-surgeons",async (req,res)=>{
+router.get("/surgeons",async (req,res)=>{
     try{
         const { pagination, size , user_id, ...restFilters } = req.query;
         
@@ -95,7 +95,7 @@ router.get("/list-surgeons",async (req,res)=>{
 router.get("/patients",async (req,res)=>{
     try{
         const { pagination, size , user_id, ...restFilters } = req.query;
-        
+        console.log("/patients")
         //Bad Request if modifier id or others doesn't exist
         if(!pagination || !size  ) return res.status(400).json({success:false,message:"Bad Request"});
 
