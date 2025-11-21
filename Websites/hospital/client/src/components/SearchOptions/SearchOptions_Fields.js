@@ -29,7 +29,7 @@ function renderUserFilters({ styles,inputs_info, selectsElementsData, references
 
 
 
- function renderRoomFilters({ styles, selectsElementsData, references }) {
+ function renderRoomFilters({ styles, selectsElementsData, references ,other_btns_actions}) {
   return (
     <>
 
@@ -48,7 +48,7 @@ function renderUserFilters({ styles,inputs_info, selectsElementsData, references
         <button
           type="button"
           className={`${styles["filter"]} ${styles["occupied-btn"]}`}
-          onClick={(e) => references.handleFilterOption(e)}
+          onClick={(e) => other_btns_actions.handleShowAllOccupiedRooms(e)}
         >
           Show All Occupied
         </button>
@@ -56,7 +56,7 @@ function renderUserFilters({ styles,inputs_info, selectsElementsData, references
         <button
           type="button"
           className={`${styles["filter"]} ${styles["empty-btn"]}`}
-          onClick={(e) => references.handleFilterOption(e)}
+          onClick={(e) => other_btns_actions.handleShowAllEmptyRooms(e)}
         >
           Show All Empty
         </button>

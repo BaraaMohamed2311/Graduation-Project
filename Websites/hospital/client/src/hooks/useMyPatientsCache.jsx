@@ -1,24 +1,15 @@
-"use client";
-import { createContext, useContext, useState, useEffect } from "react";
+// hooks/useMyPatientsCache.js
+import { useState, useEffect } from "react";
 import { getAllFromStore } from "@/utils/indexDB/getCacheMethods";
-import { updateStoreData } from "@/utils/indexDB/updateCacheMethods";
+import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
 import { clearStore } from "@/utils/indexDB/deleteCacheMethods";
 
-let cached_my_patients_context = createContext();
+export const useMyPatientsCache = () => {
+  const [cached_my_patients, setCached_My_Patients] = useState([]);
+  const [fetched_my_patient_pages, setFetched_My_Patient_Pages] = useState(new Set());
+  const [isIndexedDBLoaded, setIsIndexedDBLoaded] = useState(false);
 
-let useCachedMyPatientsContext = function() {
-  return useContext(cached_my_patients_context);
-};
-
-function CachedMyPatientsProvider({ children }) {
-  // Initialize with empty array
-    const [cached_my_patients, setCached_My_Patients] = useState([]);
-    const [fetched_my_patient_pages, setFetched_My_Patient_Pages] = useState(new Set());
-    
-
-  // ===============================
-  // Load cached_my_patients (from IndexedDB)
-  // ===============================
+  // Load from IndexedDB
   useEffect(() => {
     (async () => {
       try {
@@ -26,15 +17,15 @@ function CachedMyPatientsProvider({ children }) {
         if (Array.isArray(storedPatients)) {
           setCached_My_Patients(storedPatients);
         }
+        // After we try loading, set the flag to true. this fixes 
+        setIsIndexedDBLoaded(true);
       } catch (err) {
         console.error("❌ Failed to load mypatients from IndexedDB:", err);
       }
     })();
   }, []);
 
-  // ===============================
-  // Load fetched_my_patient_pages (from localStorage)
-  // ===============================
+  // Load fetched pages from localStorage
   useEffect(() => {
     try {
       const storedPages = localStorage.getItem("fetched_my_patient_pages");
@@ -47,16 +38,12 @@ function CachedMyPatientsProvider({ children }) {
         }
       }
     } catch (err) {
-      console.error("Failed to parse cached_my_patients or fetched pages:", err);
-      localStorage.removeItem("cached_my_patients");
+      console.error("Failed to parse fetched_my_patient_pages:", err);
       localStorage.removeItem("fetched_my_patient_pages");
     }
   }, []);
 
-  
-// ===============================
-  // Persist fetched pages when updated
-  // ===============================
+  // Persist fetched pages
   useEffect(() => {
     try {
       if (fetched_my_patient_pages && fetched_my_patient_pages.size > 0) {
@@ -71,12 +58,28 @@ function CachedMyPatientsProvider({ children }) {
       console.error("Failed to save fetched_my_patient_pages:", err);
     }
   }, [fetched_my_patient_pages]);
-  
-    return (
-      <cached_my_patients_context.Provider value={{ cached_my_patients, setCached_My_Patients ,fetched_my_patient_pages, setFetched_My_Patient_Pages}}>
-        {children}
-      </cached_my_patients_context.Provider>
-    );
-}
 
-export { useCachedMyPatientsContext, CachedMyPatientsProvider };
+  // Save my patients to IndexedDB
+  const saveMyPatientsToStore = async (patients) => {
+    try {
+      if (Array.isArray(patients) && patients.length > 0) {
+        await appendToIndexDB("mypatients", patients);
+      } else {
+        await clearStore("mypatients");
+      }
+    } catch (err) {
+      console.error("Failed to save my patients to IndexedDB:", err);
+      throw err;
+    }
+  };
+
+  return {
+    cached_my_patients,
+    setCached_My_Patients,
+    fetched_my_patient_pages,
+    setFetched_My_Patient_Pages,
+    saveMyPatientsToStore,
+    isIndexedDBLoaded,
+    setIsIndexedDBLoaded
+  };
+};

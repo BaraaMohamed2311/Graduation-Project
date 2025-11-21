@@ -125,6 +125,22 @@ const global_mapped_specialities = {
             {value:"NormalUser", text:"NormalUser"},
     ]
 
+    // --------------------------------------------------
+//        IndexedDB 
+// --------------------------------------------------
+const global_store_names = [
+  "patients",
+  "mypatients",
+  "employees",
+  "booking-doctors",
+  "booking-surgeons"
+];
+
+const globally_mapped_booking_stores = {
+  doctors: "booking-doctors",
+  surgeons: "booking-surgeons"
+};
+
         export  { 
           global_perms,
           global_roles,
@@ -134,5 +150,8 @@ const global_mapped_specialities = {
           global_rooms,
           global_floors,
           global_hospital_title,
-          global_bookable_hospital_title
+          global_bookable_hospital_title,
+          global_store_names,
+          globally_mapped_booking_stores
         };
+

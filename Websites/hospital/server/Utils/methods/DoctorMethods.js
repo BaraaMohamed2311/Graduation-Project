@@ -2,6 +2,7 @@ const executeMySqlQuery = require("../executeMySqlQuery");
 const sqlTransaction = require("../sqlTransaction")
 const Tables = require("../../Tables/data");
 const stringifyFields = require("../stringifyFields");
+const JoinFiltering = require("../JoinFiltering");
 class DoctorMethods {
 
     // ============================
@@ -26,8 +27,185 @@ class DoctorMethods {
         }
 
     // ============================
+    //              Count
+    // ============================
+
+    static async getAllDoctorsCOUNT(whereClause = "", perms_CONDITION = ""){
+        let query = "";
+        // Optimize query construction based on presence of filters
+        if(!whereClause && !perms_CONDITION){
+                query = "SELECT COUNT(*) as count FROM doctors ";
+            }
+        else if(whereClause && !perms_CONDITION){
+                    query = `
+                SELECT COUNT(DISTINCT d.doctor_id) as count 
+                FROM doctors d
+                JOIN employees e ON d.hosp_emp_id = e.emp_id
+                LEFT JOIN hospital_roles hr ON d.hosp_emp_id = hr.hosp_emp_id
+                ${whereClause}
+            `;
+        }
+        else if(!whereClause && perms_CONDITION){
+            query = `
+                SELECT COUNT(DISTINCT d.doctor_id) as count 
+                FROM doctors d
+                JOIN employees e ON d.hosp_emp_id = e.emp_id
+                LEFT JOIN hospital_emp_perms hep ON d.hosp_emp_id = hep.hosp_emp_id
+                LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+                ${perms_CONDITION}
+            `;
+        
+        }
+        else{
+            query = `
+                SELECT COUNT(DISTINCT d.doctor_id) as count 
+                FROM doctors d
+                JOIN employees e ON d.hosp_emp_id = e.emp_id
+                LEFT JOIN hospital_emp_perms hep ON d.hosp_emp_id = hep.hosp_emp_id
+                LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+                LEFT JOIN hospital_roles hr ON d.hosp_emp_id = hr.hosp_emp_id
+                ${whereClause}
+                ${perms_CONDITION}
+            `;
+        }
+        const result = await executeMySqlQuery(query);
+        return result[0]?.count;
+    }
+
+    // ============================
     //              GET
     // ============================
+
+    
+
+        static async getAllDoctorsFullData(limit=10,offset=0,whereClause='', perms_CONDITION=''){
+
+        
+        const query = `
+        SELECT 
+            -- from employees
+            e.emp_id AS user_id,
+            e.emp_name,
+            e.emp_abscence,
+            e.emp_rate,
+            e.emp_title,
+            e.emp_specialty,
+            e.emp_email AS user_email,
+            
+            -- from doctors
+            d.doctor_id,
+            d.hosp_emp_id,
+            d.initial_consultation_price,
+            d.followup_consultation_price,
+            d.years_of_exp,
+            
+            -- from hospital_perms via hospital_emp_perms
+            COALESCE(NULLIF(GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
+            
+            -- from hospital_roles with COALESCE for default
+            COALESCE(hr.role_name, 'NormalUser') AS role_name,
+            
+            GROUP_CONCAT(
+                CONCAT(da.day_of_week, ': ', da.start_time, '-', da.end_time)
+                ORDER BY FIELD(da.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                SEPARATOR '; '
+            ) AS availability_schedule
+
+        FROM doctors d
+        JOIN employees e ON d.hosp_emp_id = e.emp_id
+        LEFT JOIN availability da ON d.doctor_id = da.hosp_emp_id
+        
+        -- Join with hospital_emp_perms to get perm_id
+        LEFT JOIN hospital_emp_perms hep ON d.hosp_emp_id = hep.hosp_emp_id
+        
+        -- Join with hospital_perms to get perm_name using the perm_id
+        LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+        
+        -- Join with hospital_roles and use COALESCE for default role name
+        LEFT JOIN hospital_roles hr ON d.hosp_emp_id = hr.hosp_emp_id
+
+        ${whereClause } 
+
+        GROUP BY 
+            e.emp_id, 
+            d.doctor_id, 
+            d.hosp_emp_id, 
+            d.initial_consultation_price, 
+            d.followup_consultation_price, 
+            d.years_of_exp,
+            hr.role_name
+        ${perms_CONDITION}
+        LIMIT ${limit} OFFSET ${offset}
+    `;
+
+        const result = await executeMySqlQuery(query);
+        console.log("result",result);
+        return result;
+    }
+
+
+     static async getDoctorFullData(doctor_id){
+
+        
+        const query = `
+        SELECT 
+            -- from employees
+            e.emp_id AS user_id,
+            e.emp_name,
+            e.emp_abscence,
+            e.emp_rate,
+            e.emp_title,
+            e.emp_specialty,
+            e.emp_email AS user_email,
+            
+            -- from doctors
+            d.doctor_id,
+            d.hosp_emp_id,
+            d.initial_consultation_price,
+            d.followup_consultation_price,
+            d.years_of_exp,
+            
+            -- from hospital_perms via hospital_emp_perms
+            COALESCE(NULLIF(GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
+            
+            -- from hospital_roles with COALESCE for default
+            COALESCE(hr.role_name, 'NormalUser') AS role_name,
+            
+            GROUP_CONCAT(
+                CONCAT(da.day_of_week, ': ', da.start_time, '-', da.end_time)
+                ORDER BY FIELD(da.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                SEPARATOR '; '
+            ) AS availability_schedule
+
+        FROM doctors d
+        JOIN employees e ON d.hosp_emp_id = e.emp_id
+        LEFT JOIN availability da ON d.doctor_id = da.hosp_emp_id
+        
+        -- Join with hospital_emp_perms to get perm_id
+        LEFT JOIN hospital_emp_perms hep ON d.hosp_emp_id = hep.hosp_emp_id
+        
+        -- Join with hospital_perms to get perm_name using the perm_id
+        LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+        
+        -- Join with hospital_roles and use COALESCE for default role name
+        LEFT JOIN hospital_roles hr ON d.hosp_emp_id = hr.hosp_emp_id
+
+        WHERE d.doctor_id = ?
+
+        GROUP BY 
+            e.emp_id, 
+            d.doctor_id, 
+            d.hosp_emp_id, 
+            d.initial_consultation_price, 
+            d.followup_consultation_price, 
+            d.years_of_exp,
+            hr.role_name
+    `;
+
+        const result = await executeMySqlQuery(query,[doctor_id]);
+        console.log("result",result);
+        return result;
+    }
 
     static async getAllDoctorsSpecificData(){
         
@@ -35,16 +213,15 @@ class DoctorMethods {
          
                 SELECT 
                 -- from employees
-                e.emp_id,
+                e.emp_id AS user_id,
                 e.emp_name,
                 e.emp_abscence,
                 e.emp_rate,
                 e.emp_title,
                 e.emp_specialty,
-                e.emp_email,
+                e.emp_email AS user_email,
                 
                 -- from doctors
-                d.doctor_id,
                 d.hosp_emp_id,
                 d.initial_consultation_price,
                 d.followup_consultation_price,
@@ -58,12 +235,12 @@ class DoctorMethods {
             FROM doctors d
             JOIN employees e ON d.hosp_emp_id = e.emp_id
             LEFT JOIN availability da ON d.doctor_id = da.hosp_emp_id
-            GROUP BY e.emp_id, d.doctor_id, d.hosp_emp_id, d.initial_consultation_price, d.followup_consultation_price, d.years_of_exp;
+            GROUP BY e.emp_id, d.hosp_emp_id, d.initial_consultation_price, d.followup_consultation_price, d.years_of_exp;
 
 `;
 
         const result = await executeMySqlQuery(query);
-        console.log("result",result);
+
         return result[0];
     }
 
@@ -73,7 +250,7 @@ class DoctorMethods {
          
                 SELECT 
                 -- from employees
-                e.emp_id,
+                e.emp_id AS user_id,
                 e.emp_name,
                 e.emp_salary,
                 e.emp_abscence,
@@ -81,8 +258,8 @@ class DoctorMethods {
                 e.emp_rate,
                 e.emp_title,
                 e.emp_specialty,
-                e.emp_email,
-                e.emp_password,
+                e.emp_email AS user_email,
+                e.emp_password AS user_password, -- include password for authentication purposes
                 
                 -- from doctors
                 d.doctor_id,
@@ -106,7 +283,7 @@ class DoctorMethods {
 `;
 
         const result = await executeMySqlQuery(query);
-        console.log("result",result);
+
         return result[0];
     }
 
@@ -115,9 +292,9 @@ class DoctorMethods {
 
     static async getDoctorAllPatients(doctor_id){
         const query = `SELECT 
-                        p.patient_id,
+                        p.patient_id AS user_id,
                         p.patient_name,
-                        p.patient_email,
+                        p.patient_email AS user_email,
                         p.patient_phone,
                         p.patient_address,
                         p.isAssignedToRoom,
@@ -140,9 +317,9 @@ class DoctorMethods {
 
     static async getDoctorRangedPatients(doctor_id,limit, offset,restfilters=null){
         let query = `SELECT 
-                        p.patient_id,
+                        p.patient_id AS user_id,
                         p.patient_name,
-                        p.patient_email,
+                        p.patient_email AS user_email,
                         p.patient_phone,
                         p.patient_address,
                         p.isAssignedToRoom,

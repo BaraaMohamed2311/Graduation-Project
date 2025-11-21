@@ -20,12 +20,14 @@ export default function BookingCard({ userType, bookingData, handleBookBtn }) {
           className={styles.image}
         />
         <div className={styles.info}>
-          <h3>{bookingData.name || "Unnamed"}</h3>
-          <p className={styles.sub}>{bookingData.specialty || "General"}</p>
+          <h3>{bookingData.user_name || "N/A"}</h3>
+          <p className={styles.sub}>{bookingData.user_title || "N/A"}</p>
+          <p className={styles.sub}>{bookingData.user_specialty || "N/A"}</p>
         </div>
       </div>
 
       <div className={styles.body}>
+
         <CardFields data={bookingData} />
       </div>
 

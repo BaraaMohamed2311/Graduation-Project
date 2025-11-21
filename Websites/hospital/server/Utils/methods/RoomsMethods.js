@@ -3,6 +3,28 @@ const Tables = require("../../Tables/data");
 const stringifyFields = require("../stringifyFields");
 const PatientMethods = require("./PatientMethods");
 class RoomsMethods {
+
+    // ============================
+    //              COUNT
+    // ============================
+
+    static async getAllRoomsCOUNT(){
+        const query = `SELECT COUNT(*) as count FROM rooms `;
+        const result = await executeMySqlQuery(query);
+        return result[0]?.count;
+    }
+
+    static async getEmptyRoomsCOUNT(){
+        const query = `SELECT COUNT(*) as count FROM rooms WHERE patient_id IS NULL AND isOccupied = FALSE `;
+        const result = await executeMySqlQuery(query);
+        return result[0]?.count;
+    }
+
+    static async getOccupiedRoomsCOUNT(){
+        const query = `SELECT COUNT(*) as count FROM rooms WHERE patient_id IS NOT NULL AND isOccupied = TRUE `;
+        const result = await executeMySqlQuery(query);
+        return result[0]?.count;
+    }
     // ============================
     //              GET
     // ============================
@@ -26,7 +48,10 @@ class RoomsMethods {
             query += `limit ? offset ?`
             params.push(limit, offset);
         }
+
         const result = await executeMySqlQuery(query,params);
+
+
         return result;
     }
 

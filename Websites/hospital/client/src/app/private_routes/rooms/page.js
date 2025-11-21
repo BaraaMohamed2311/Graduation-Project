@@ -8,13 +8,14 @@ import {selectsElementsData} from "./data";
 import userNotification from "@/utils/userNotification";
 import statusNotification from "@/utils/statusNotification";
 import RoomCard from "@/components/RoomCard/RoomCard";
-
+import Pagination_Btns from "@/components/Pagination_Btns/Pagination_Btns";
 
 function EmployeesListPage() {
   
   const [rooms , setRooms] = useState([])
   let [isFiltered , setIsFiltered]  = useState(false);
   let [currPage , setCurrPage ] = useState(1);
+    let [numOfPages , setNumOfPages] = useState(1);
   const selectBoxsRef= useRef({});
   const sizeOfPage = 5;
 
@@ -49,7 +50,7 @@ function EmployeesListPage() {
 
 
 useEffect(()=>{
-
+  if(isFiltered) return;
   fetch(`${process.env.APIKEY}/rooms/?pagination=${currPage}&size=${sizeOfPage}`)
   .then(res=>{ 
             statusNotification(res.status)  
@@ -57,6 +58,8 @@ useEffect(()=>{
   .then(data=>{
     if(data.success){
       setRooms(data.rooms)
+      setNumOfPages(data.numOfPages || 1);
+      userNotification("success", data.message);
     }
     else{
       userNotification("error",data.message)
@@ -64,7 +67,7 @@ useEffect(()=>{
   })
 
 
-},[])
+},[currPage])
 
 function handleFilterOption(e, showNotif = true) {
   e && e.preventDefault();
@@ -74,25 +77,30 @@ function handleFilterOption(e, showNotif = true) {
   const statusValue = selectBoxsRef.current["status"]?.value;
 
   let endpoint = `${process.env.APIKEY}/rooms`;
+  const queryParams = new URLSearchParams();
 
-  // Handle button clicks first
-  if (statusValue && statusValue.toLowerCase() === "empty") {
-    endpoint += "/empty";
-  } else if (statusValue && statusValue.toLowerCase() === "occupied") {
-    endpoint += "/occupied";
-  } else if (floorValue && floorValue !== "all") {
-    endpoint += `/floor/floor_number/${floorValue}`;
-  } else if (roomValue && roomValue !== "all") {
-    endpoint += `/room/room_number/${roomValue}`;
-  } 
+  // Add pagination parameters
+  queryParams.append('pagination', currPage);
+  queryParams.append('size', sizeOfPage);
 
-
-  if (statusValue && statusValue !== "all"){
-    endpoint += `?pagination=${currPage}&size=${sizeOfPage}&status=${statusValue}`;
+  // Handle status filter - if status is "empty" or "occupied", use specific endpoints
+  if (statusValue === "empty") {
+    endpoint = `${process.env.APIKEY}/rooms/empty`;
+  } else if (statusValue === "occupied") {
+    endpoint = `${process.env.APIKEY}/rooms/occupied`;
+  } else {
+    // For "all" status or no status, use main endpoint with filters
+    if (roomValue) queryParams.append('room_number', roomValue);
+    if (floorValue) queryParams.append('floor_number', floorValue);
+    if (statusValue && statusValue !== "all") queryParams.append('status', statusValue);
   }
 
-  else if (currPage > 0 && sizeOfPage > 0) {
-    endpoint += `?pagination=${currPage}&size=${sizeOfPage}`;
+  // Only add query params if we're using the main endpoint
+  if (!endpoint.includes('/empty') && !endpoint.includes('/occupied')) {
+    endpoint += `?${queryParams.toString()}`;
+  } else {
+    // For empty/occupied endpoints, still need pagination
+    endpoint += `?${queryParams.toString()}`;
   }
 
   fetch(endpoint)
@@ -102,17 +110,78 @@ function handleFilterOption(e, showNotif = true) {
     })
     .then((data) => {
       if (data.success) {
-        setIsFiltered();
+        setIsFiltered(true);
         setRooms(data.rooms);
-        showNotif && userNotification("success", "Rooms fetched successfully");
+        setNumOfPages(data.numOfPages || 1);
+        if (showNotif) {
+          userNotification("success", data.message || "Filters applied successfully");
+        }
+      } else {
+        if (showNotif) {
+          userNotification("error", data.message);
+        }
+      }
+    })
+    .catch(() => {
+      if (showNotif) {
+        userNotification("error", "Failed to fetch filtered rooms");
+      }
+    });
+}
+
+function handleShowAllOccupiedRooms() {
+  const endpoint = `${process.env.APIKEY}/rooms/occupied?pagination=${currPage}&size=${sizeOfPage}`;
+
+  fetch(endpoint)
+    .then((res) => {
+      statusNotification(res.status);
+      return res.json();
+    })
+    .then((data) => {
+      if (data.success) {
+        setIsFiltered(true);
+        setRooms(data.rooms);
+        setNumOfPages(data.numOfPages || 1);
+        userNotification("success", data.message || "Showing all occupied rooms");
       } else {
         userNotification("error", data.message);
       }
     })
-    .catch(() => userNotification("error", "Failed to fetch filtered rooms"));
+    .catch(() => userNotification("error", "Failed to fetch occupied rooms"));
+}
+
+function handleShowAllEmptyRooms() {
+  const endpoint = `${process.env.APIKEY}/rooms/empty?pagination=${currPage}&size=${sizeOfPage}`;
+
+  fetch(endpoint)
+    .then((res) => {
+      statusNotification(res.status);
+      return res.json();
+    })
+    .then((data) => {
+      if (data.success) {
+        setIsFiltered(true);
+        setRooms(data.rooms);
+        setNumOfPages(data.numOfPages || 1);
+        userNotification("success", data.message || "Showing all empty rooms");
+      } else {
+        userNotification("error", data.message);
+      }
+    })
+    .catch(() => userNotification("error", "Failed to fetch empty rooms"));
 }
 
 
+
+  function handlePagination(e){
+    if(e.target.id === 'prev'){
+      if(currPage > 1)
+        setCurrPage(prev => prev - 1);
+    }
+    else if(e.target.id === 'next'){
+      setCurrPage(prev => prev + 1);
+    }
+  }
 
   
   return (
@@ -122,11 +191,13 @@ function handleFilterOption(e, showNotif = true) {
           references ={{  selectBoxsRef , handleFilterOption}}
           clearBtn = {handleClearFilterOption} 
           handleFilterOption={handleFilterOption} 
+          other_btns_actions ={{ handleShowAllEmptyRooms , handleShowAllOccupiedRooms}}
           setCurrPage={setCurrPage} 
           currPage={currPage} 
           sizeOfPage={sizeOfPage} 
           setIsFiltered= {setIsFiltered} 
-          selectsElementsData={selectsElementsData}/>
+          selectsElementsData={selectsElementsData}
+          />
       <Suspense fallback={<LoaderForComponents  styling={styles.loader_for_components_wrapper}/>}>
       <div className={styles["wrapper"]}>
         
@@ -135,6 +206,10 @@ function handleFilterOption(e, showNotif = true) {
         )) : <></>}
       </div>
       </Suspense>
+
+      <div className={styles.table_btn_wrapper}>
+        <Pagination_Btns handlePagination={handlePagination} currPage={currPage} numOfPages={numOfPages} />
+      </div>
     </main>
   );
 }

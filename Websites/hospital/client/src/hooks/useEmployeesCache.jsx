@@ -1,23 +1,15 @@
-"use client";
-import { createContext, useContext, useState, useEffect } from "react";
+// hooks/useEmployeesCache.js
+import { useState, useEffect } from "react";
 import { getAllFromStore } from "@/utils/indexDB/getCacheMethods";
-import { updateStoreData } from "@/utils/indexDB/updateCacheMethods";
+import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
 import { clearStore } from "@/utils/indexDB/deleteCacheMethods";
 
-const cached_employees_context = createContext();
-
-const useCachedEmployeesContext = function() {
-  return useContext(cached_employees_context);
-};
-
-function CachedEmployeesProvider({ children }) {
-  // Initialize with empty array
+export const useEmployeesCache = () => {
   const [cached_employees, setCached_Employees] = useState([]);
   const [fetched_employee_pages, setFetched_Employee_Pages] = useState(new Set());
+  const [isIndexedDBLoaded, setIsIndexedDBLoaded] = useState(false);
 
-  // ===============================
-  // Load cached_employees (from IndexedDB)
-  // ===============================
+  // Load from IndexedDB
   useEffect(() => {
     (async () => {
       try {
@@ -25,15 +17,15 @@ function CachedEmployeesProvider({ children }) {
         if (Array.isArray(storedEmployees)) {
           setCached_Employees(storedEmployees);
         }
+        // After we try loading, set the flag to true
+        setIsIndexedDBLoaded(true);
       } catch (err) {
         console.error("Failed to load employees from IndexedDB:", err);
       }
     })();
   }, []);
 
-  // ===============================
-  // Load fetched_employee_pages (from localStorage)
-  // ===============================
+  // Load fetched pages from localStorage
   useEffect(() => {
     try {
       const storedPages = localStorage.getItem("fetched_employee_pages");
@@ -46,14 +38,12 @@ function CachedEmployeesProvider({ children }) {
         }
       }
     } catch (err) {
-      console.error("Failed to parse cached_employees or fetched pages:", err);
+      console.error("Failed to parse fetched_employee_pages:", err);
       localStorage.removeItem("fetched_employee_pages");
     }
   }, []);
 
-  // ===============================
-  // Persist fetched pages when updated
-  // ===============================
+  // Persist fetched pages
   useEffect(() => {
     try {
       if (fetched_employee_pages && fetched_employee_pages.size > 0) {
@@ -69,18 +59,27 @@ function CachedEmployeesProvider({ children }) {
     }
   }, [fetched_employee_pages]);
 
-  return (
-    <cached_employees_context.Provider 
-      value={{ 
-        cached_employees, 
-        setCached_Employees,
-        fetched_employee_pages, 
-        setFetched_Employee_Pages 
-      }}
-    >
-      {children}
-    </cached_employees_context.Provider>
-  );
-}
+  // Save employees to IndexedDB
+  const saveEmployeesToStore = async (employees) => {
+    try {
+      if (Array.isArray(employees) && employees.length > 0) {
+        await appendToIndexDB("employees", employees);
+      } else {
+        await clearStore("employees");
+      }
+    } catch (err) {
+      console.error("Failed to save employees to IndexedDB:", err);
+      throw err;
+    }
+  };
 
-export { useCachedEmployeesContext, CachedEmployeesProvider };
+  return {
+    cached_employees,
+    setCached_Employees,
+    fetched_employee_pages,
+    setFetched_Employee_Pages,
+    saveEmployeesToStore,
+    isIndexedDBLoaded,
+    setIsIndexedDBLoaded
+  };
+};

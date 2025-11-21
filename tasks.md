@@ -69,3 +69,7 @@ Replace THese lines :
 
 
         with a function that execute first query and if not found then it goes to next query, for better performance
+
+
+
+// Create a function that deletes indexDB after an hour

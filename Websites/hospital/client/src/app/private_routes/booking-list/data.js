@@ -2,7 +2,7 @@ import { global_title ,global_bookable_hospital_title} from "@/global_data"
 
 let selectsElementsData = [
     {   
-        ref: null,
+
         key:"Title",
         label:"Title",
         name:"emp_title",
@@ -10,7 +10,7 @@ let selectsElementsData = [
         
     },
     {   
-        ref: null,
+
         key:"Consultion Price",
         label:"Consultion Price",
         name:"initial_consultation_price",
@@ -18,7 +18,7 @@ let selectsElementsData = [
         
     },
     {   
-        ref: null,
+
         key:"Surgery Price",
         label:"Surgery Price",
         name:"surgery_price",

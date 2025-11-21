@@ -1,6 +1,7 @@
 "use client"
 import private_routes from "../page";
-import { Suspense , lazy ,useState , useRef} from "react";
+import { Suspense , lazy ,useState , useRef , useEffect} from "react";
+import { useRouter } from "next/navigation";
 import LoaderForComponents from "@/components/LoaderForComponents/LoaderForComponents";
 import SearchOptions from "@/components/SearchOptions/SearchOptions";
 import styles from "./list.module.css"
@@ -10,24 +11,83 @@ import stringifyFields from "@/utils/stringifyFields";
 import statusNotification from "@/utils/statusNotification";
 import { useUserDataContext } from "@/contexts/user_data";
 import BasicTable from '@/components/BasicTable/BasicTable';
+import { useEmployeesCache } from "@/hooks/useEmployeesCache";
 
 
 function EmployeesListPage() {
   
+  const sizeOfPage = 12;
   const {user_data} = useUserDataContext()
-  
-  // for filtering
+  const {cached_employees,setCached_Employees,fetched_employee_pages,setFetched_Employee_Pages,saveEmployeesToStore,isIndexedDBLoaded} = useEmployeesCache()
   let [isFiltered , setIsFiltered]  = useState(false);
   let [filteredResults , setFilteredResults] = useState([]); // as array not Map cuz we will not cache "pageNum":[{},{},...] like we did with cachedContext
-  // 
   let [currPage , setCurrPage ] = useState(1);
-  const sizeOfPage = 12;
+  let [numOfPages , setNumOfPages] = useState(1);
+
+
 
 
   // Refrences
   const inputsBoxsRef= useRef({});
   const selectBoxsRef= useRef({});
+  const router = useRouter()
 
+
+  // ===========================================
+  //         Fetch Pages
+  // ===========================================
+  useEffect(() => {
+    console.log("isFiltered",isFiltered)
+    if (isFiltered) return;
+    if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
+  
+    if (!fetched_employee_pages.has(currPage)) {
+      console.log("page not fetched")
+      fetch(`${process.env.APIKEY}/list/employees?user_id=${user_data.user_id}&pagination=${currPage}&size=${sizeOfPage}`, {
+        mode: "cors",
+        headers: {
+          Authorization: `BEARER ${user_data.token}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((res) => {
+          statusNotification(res.status);
+          return res.json();
+        })
+        .then((data) => {
+          if (data?.success) {
+            console.log("success")
+            setNumOfPages(data.numOfPages || 1);
+            setCached_Employees((prev) => [...prev, ...data.body]);
+            setFetched_Employee_Pages(prev => {
+            const updated = new Set(prev);
+            updated.add(currPage);
+            return updated;
+          });
+          // save to indexedDB
+          saveEmployeesToStore(data.body)
+          
+          } else if (data && !data.success) {
+            userNotification("error", data.message);
+          }
+        });
+    } 
+  
+    
+  }, [currPage,isIndexedDBLoaded]);
+
+  // ===========================================
+//        Table Buttons
+// ===========================================
+
+    function handleVisitBtn(employee){
+      router.replace(`/private_routes/employee/${employee.user_id}?currPage=${currPage}`)
+    }
+
+
+// ===========================================
+//        Clear Filters
+// ===========================================
   function handleClearFilterOption(){
     const EMAIL_REF = inputsBoxsRef.current["Email"];
     const ByTitleREF = selectBoxsRef.current["emp_title"];
@@ -46,7 +106,9 @@ function EmployeesListPage() {
     ByRoleREF.selectedIndex = 0;
     ByPermsREF.selectedIndex = 0;
 }
-
+// ===========================================
+//        Filter Data
+// ===========================================
 function handleFilterOption(e , cause){
     if(e) e.preventDefault();
     // get filter inputs 
@@ -74,10 +136,10 @@ function handleFilterOption(e , cause){
         setCurrPage(1)
 
     // we use stringifyFields function to exclude null values and do not add as query also join them
-    const filter_queries = stringifyFields("anded",Object.entries({emp_email : emp_email , role_name:role_name , emp_title:emp_title, emp_specialty:emp_specialty, emp_perms: emp_perms}))
+    const filter_queries = stringifyFields("anded",Object.entries({isFiltered,emp_email : emp_email , role_name:role_name , emp_title:emp_title, emp_specialty:emp_specialty, emp_perms: emp_perms}))
     
     // fetching data on filter 
-    fetch(`${process.env.APIKEY}/list/employees?emp_id=${user_data.emp_id}&${filter_queries}&pagination=${currPage}&size=${sizeOfPage}`,{
+    fetch(`${process.env.APIKEY}/list/employees?user_id=${user_data.user_id}&${filter_queries}&pagination=${currPage}&size=${sizeOfPage}`,{
         mode:"cors",
         headers:{
             Authorization: `BEARER ${user_data.token}`,
@@ -120,7 +182,17 @@ function handleFilterOption(e , cause){
           setFilteredResults={setFilteredResults} 
           selectsElementsData={selectsElementsData}/>
       <Suspense fallback={<LoaderForComponents  styling={styles.loader_for_components_wrapper}/>}>
-        <BasicTable currPage={currPage} setCurrPage={setCurrPage} sizeOfPage={sizeOfPage} isFiltered={isFiltered} filteredResults={filteredResults}/>
+         <BasicTable 
+                  currPage={currPage} 
+                  sizeOfPage={sizeOfPage}
+                  setCurrPage={setCurrPage} 
+                  data={cached_employees} 
+                  isFiltered={isFiltered} 
+                  filteredResults={filteredResults} 
+                  handleActionBtn={handleVisitBtn}   
+                  numOfPages={numOfPages} 
+                  tableType="employees"
+                />
       </Suspense>
     </main>
   );

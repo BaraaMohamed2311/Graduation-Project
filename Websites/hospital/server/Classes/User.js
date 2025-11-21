@@ -15,28 +15,45 @@ class User {
     // =============================
     //              Get
     // =============================
-    static async getUserIDAndTable(user_email  ){
+    static async getUserIDAndTable(user_email){
         if (user_email) {
-            const query_employees = `
-                SELECT emp_id FROM employees WHERE emp_email = ? LIMIT 1
-            `;
-            const query_patients = `
-                SELECT patient_id FROM patients WHERE patient_email = ? LIMIT 1
-            `;
-            const result_from_employees = await executeMySqlQuery(query_employees,[user_email]);
-            const result_from_patients = await executeMySqlQuery(query_patients,[user_email]);
+            // Use the helper functions instead of direct queries
+            const employeeId = await this.getEmployeeIdByEmail(user_email);
+            const patientId = await this.getPatientIdByEmail(user_email);
 
-            if(result_from_employees.length > 0){
-                return {user_id:result_from_employees[0]?.emp_id, table:"employees"}; 
+            if (employeeId) {
+                return { user_id: employeeId, table: "employees" }; 
             }
-            else if(result_from_patients.length > 0){
-                return {user_id:result_from_patients[0]?.patient_id, table:"patients"}; 
-            }
+            else if (patientId) {
+                return { user_id: patientId, table: "patients" }; 
             } else {
                 console.error("User's Id do not exist in db");
+                return null;
+            }
+        } else {
+            console.error("User email is required");
             return null;
         }
         }
+
+    static async getPatientIdByEmail(patient_email){
+        const query = `
+                SELECT patient_id FROM patients WHERE patient_email = ? LIMIT 1
+            `;
+        const result = await executeMySqlQuery(query,[patient_email]);
+
+        return result[0]?.patient_id || null;
+    }
+
+    static async getEmployeeIdByEmail(emp_email){
+        const query = `
+                SELECT emp_id FROM employees WHERE emp_email = ? LIMIT 1
+            `;
+        const result = await executeMySqlQuery(query,[emp_email]);
+
+        return result[0]?.emp_id || null;
+    }
+
 
 
         static async getUserEmailAndTable(user_id){

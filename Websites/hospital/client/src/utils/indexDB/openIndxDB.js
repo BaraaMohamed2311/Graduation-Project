@@ -3,7 +3,7 @@ const DB_NAME = "hospital";
 const DB_VERSION = 1;
 
 // Object store names
-const STORES = ["mypatients", "patients", "employees"];
+const STORES = ["mypatients", "patients", "employees","booking-doctors","booking-surgeons"];
 
 // ============================
 //  OPEN or CREATE DATABASE

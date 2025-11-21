@@ -11,21 +11,184 @@ class NurseMethods {
                 throw new Error("NurseMethodsv.IsMyPatient is not implemented yet")
     }
 
+
+    // ============================
+    //              COUNT
+    // ============================
+    static async getAllNursesCOUNT(whereClause = "", perms_CONDITION = ""){
+    let query = "";
+    // Optimize query construction based on presence of filters
+    if(!whereClause && !perms_CONDITION){
+        query = "SELECT COUNT(*) as count FROM nurses ";
+    }
+    else if(whereClause && !perms_CONDITION){
+        query = `
+            SELECT COUNT(DISTINCT n.nurse_id) as count 
+            FROM nurses n
+            JOIN employees e ON n.hosp_emp_id = e.emp_id
+            LEFT JOIN hospital_roles hr ON n.hosp_emp_id = hr.hosp_emp_id
+            ${whereClause}
+        `;
+    }
+    else if(!whereClause && perms_CONDITION){
+        query = `
+            SELECT COUNT(DISTINCT n.nurse_id) as count 
+            FROM nurses n
+            JOIN employees e ON n.hosp_emp_id = e.emp_id
+            LEFT JOIN hospital_emp_perms hep ON n.hosp_emp_id = hep.hosp_emp_id
+            LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+            ${perms_CONDITION}
+        `;
+    }
+    else{
+        query = `
+            SELECT COUNT(DISTINCT n.nurse_id) as count 
+            FROM nurses n
+            JOIN employees e ON n.hosp_emp_id = e.emp_id
+            LEFT JOIN hospital_emp_perms hep ON n.hosp_emp_id = hep.hosp_emp_id
+            LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+            LEFT JOIN hospital_roles hr ON n.hosp_emp_id = hr.hosp_emp_id
+            ${whereClause}
+            ${perms_CONDITION}
+        `;
+    }
+    const result = await executeMySqlQuery(query);
+    return result[0]?.count;
+}
+
     // ============================
     //              GET
     // ============================
 
+    static async getAllNursesFullData(limit=10,offset=0,whereClause='', perms_CONDITION=''){
+        
+        const query = `
+            SELECT 
+                -- from employees
+                e.emp_id AS user_id,
+                e.emp_name,
+                e.emp_abscence,
+                e.emp_rate,
+                e.emp_title,
+                e.emp_specialty,
+                e.emp_email AS user_email,
+                
+                -- from nurses
+                n.nurse_id,
+                n.hosp_emp_id,
+                n.floor_number,
+                
+                -- from hospital_perms via hospital_emp_perms
+                COALESCE(NULLIF(GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
+                
+                -- from hospital_roles with COALESCE for default
+                COALESCE(hr.role_name, 'NormalUser') AS role_name,
+                
+                GROUP_CONCAT(
+                    CONCAT(na.day_of_week, ': ', na.start_time, '-', na.end_time)
+                    ORDER BY FIELD(na.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                    SEPARATOR '; '
+                ) AS availability_schedule
+
+            FROM nurses n
+            JOIN employees e ON n.hosp_emp_id = e.emp_id
+            LEFT JOIN availability na ON n.nurse_id = na.hosp_emp_id
+            
+            -- Join with hospital_emp_perms to get perm_id
+            LEFT JOIN hospital_emp_perms hep ON n.hosp_emp_id = hep.hosp_emp_id
+            
+            -- Join with hospital_perms to get perm_name using the perm_id
+            LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+            
+            -- Join with hospital_roles and use COALESCE for default role name
+            LEFT JOIN hospital_roles hr ON n.hosp_emp_id = hr.hosp_emp_id
+
+            ${whereClause} 
+
+            GROUP BY 
+                e.emp_id, 
+                n.nurse_id, 
+                n.hosp_emp_id, 
+                n.floor_number,
+                hr.role_name
+            ${perms_CONDITION}
+            LIMIT ${limit} OFFSET ${offset}
+        `;
+
+        const result = await executeMySqlQuery(query);
+        console.log("result",result);
+        return result;
+    }
+
+    static async getNurseFullData(nurse_id){
+        
+        const query = `
+            SELECT 
+                -- from employees
+                e.emp_id AS user_id,
+                e.emp_name,
+                e.emp_abscence,
+                e.emp_rate,
+                e.emp_title,
+                e.emp_specialty,
+                e.emp_email AS user_email,
+                
+                -- from nurses
+                n.nurse_id,
+                n.hosp_emp_id,
+                n.floor_number,
+                
+                -- from hospital_perms via hospital_emp_perms
+                COALESCE(NULLIF(GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
+                
+                -- from hospital_roles with COALESCE for default
+                COALESCE(hr.role_name, 'NormalUser') AS role_name,
+                
+                GROUP_CONCAT(
+                    CONCAT(na.day_of_week, ': ', na.start_time, '-', na.end_time)
+                    ORDER BY FIELD(na.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                    SEPARATOR '; '
+                ) AS availability_schedule
+
+            FROM nurses n
+            JOIN employees e ON n.hosp_emp_id = e.emp_id
+            LEFT JOIN availability na ON n.nurse_id = na.hosp_emp_id
+            
+            -- Join with hospital_emp_perms to get perm_id
+            LEFT JOIN hospital_emp_perms hep ON n.hosp_emp_id = hep.hosp_emp_id
+            
+            -- Join with hospital_perms to get perm_name using the perm_id
+            LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+            
+            -- Join with hospital_roles and use COALESCE for default role name
+            LEFT JOIN hospital_roles hr ON n.hosp_emp_id = hr.hosp_emp_id
+
+            WHERE n.nurse_id = ?
+
+            GROUP BY 
+                e.emp_id, 
+                n.nurse_id, 
+                n.hosp_emp_id, 
+                n.floor_number,
+                hr.role_name
+
+        `;
+
+        const result = await executeMySqlQuery(query,[nurse_id]);
+        console.log("result",result);
+        return result;
+    }
+
         static async getAllNursesSpecificData(){
         const query = `SELECT 
-                        e.emp_id,
+                        e.emp_id AS user_id,
                         e.emp_name,
                         e.emp_abscence,
                         e.emp_rate,
                         e.emp_title,
                         e.emp_specialty,
-                        e.emp_email,
+                        e.emp_email AS user_email,
                         
-                        n.nurse_id,
                         n.hosp_emp_id,
                         n.floor_number,
                         GROUP_CONCAT(
@@ -45,7 +208,7 @@ class NurseMethods {
 
     static async getNurseSpecificData(nurse_id){
         const query = `SELECT 
-                        e.emp_id,
+                        e.emp_id AS user_id,
                         e.emp_name,
                         e.emp_salary,
                         e.emp_abscence,
@@ -53,8 +216,8 @@ class NurseMethods {
                         e.emp_rate,
                         e.emp_title,
                         e.emp_specialty,
-                        e.emp_email,
-                        e.emp_password,
+                        e.emp_email AS user_email,
+                        e.emp_password AS user_password, -- include password for authentication purposes
                         
                         n.nurse_id,
                         n.hosp_emp_id,

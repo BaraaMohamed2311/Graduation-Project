@@ -6,7 +6,7 @@ import styles from "./update_emp_form.module.css"
 import { useUserDataContext } from "@/contexts/user_data";
 import userNotification from "@/utils/userNotification";
 import { useRouter } from "next/navigation";
-import { useCachedEmployeesContext } from "@/contexts/cached_employees";
+import { useCachedEmployeesContext } from "@/hooks/useEmployeesCache";
 export default function UpdateEmpForm({isEditing , setIsEditing , employee_displayed ,currPage }){
     
     let [formBtnState, setFormBtnState] = useState("Update");

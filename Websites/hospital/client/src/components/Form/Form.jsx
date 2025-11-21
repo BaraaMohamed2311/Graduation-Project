@@ -15,7 +15,7 @@ export default function Form({
 
     let {user_data} = useUserDataContext();
      const Fields = FormFieldsMap[formKind] || (() => null);
-     console.log("references", references,"inputs_info",inputs_info);
+
     return (
         <form className={formKind === "update_form" ? styles.sided_form :""} method="post" onSubmit={form_handler}>
             

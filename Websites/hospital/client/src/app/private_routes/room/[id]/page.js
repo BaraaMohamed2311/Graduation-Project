@@ -1,25 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import styles from "./roomDetails.module.css";
 import userNotification from "@/utils/userNotification";
 import statusNotification from "@/utils/statusNotification";
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
+import { inputs_info } from "./data";
 import SelectUser from "@/components/SelectUser/SelectUser";
+
 export default function RoomDetailsPage() {
 
 
 // ====1. Extract patient_id from query, room_id from params
-  const { room_id } = useParams();
+  const { id  } = useParams();
+  const room_id = id;
   let search_params = useSearchParams();
   const [patient, setPatient] = useState(null);
   const [graphData, setGraphData] = useState([]);
+  let [selectedUser , setSelectedUser] = useState(null); 
   const [isAssigningModalDisplayed, setIsAssigningModalDisplayed] = useState(false);
+  let [isConfirmed , setIsConfirmed] = useState(false)
   const queryString = new URLSearchParams(search_params);
   let {patient_id,...roomData} = Object.fromEntries(queryString.entries());
+  const inputsBoxsRef = useRef({})
 
-
+// In RoomDetailsPage
+useEffect(() => {
+  console.log("selectedUser updated:", selectedUser);
+}, [selectedUser]);
 
   // Separate fetch function
 const fetchPatientDetails = async (patientId, roomId) => {
@@ -82,11 +91,19 @@ const fetchPatientDetails = async (patientId, roomId) => {
       });
   }
 
+  // ===========================================
+//        Display Select User Container
+// ===========================================
+
   function showSelectPatientModal() {
-    setIsAssigningModalDisplayed(true);
+    setIsAssigningModalDisplayed(prev => !prev);
   }
 
-  async function handleAssignPatient() {
+  // ===========================================
+//        Confirm Assign Patient
+// ===========================================
+
+  async function handleConfirmBtn() {
   try {
     // First Assign Patient to Room
     const assignResponse = await fetch(`${process.env.APIKEY}/rooms/${room_id}/assign`, {
@@ -94,7 +111,7 @@ const fetchPatientDetails = async (patientId, roomId) => {
       headers: { "Content-Type": "application/json" },
       mode: "cors",
       body: JSON.stringify({ 
-        patient_id, 
+        patient_id:selectedUser.patient_id, 
         floor_id: roomData.floor_number, 
         room_number: roomData.room_number 
       }),
@@ -122,15 +139,29 @@ const fetchPatientDetails = async (patientId, roomId) => {
   }
 }
 
+// Only send confirm request when it isConfirmed and selectedUser is updated to new user
+useEffect(()=>{
+  if(!isConfirmed) return;
+  if(!selectedUser || !selectedUser.patient_id) return;
+  handleConfirmBtn()
+},[selectedUser,isConfirmed])
+
+
+
 
   return (
     <main className={`${styles["room-details-page"]} wrapper`}>
-      <SelectUser 
-        list_url={}
-        handleSelectBtn={}
-        handleClearFilterOption={}
-        handleFilterOption={}
-      />
+      <div className={styles.selectUserModal}>
+        {isAssigningModalDisplayed && <SelectUser 
+        list_url={`/patient`}
+        handleConfirmBtn={()=> setIsConfirmed(true)}
+        selectedUser= {selectedUser}
+        setSelectedUser={setSelectedUser}
+        references={{inputsBoxsRef}}
+        inputs_info={inputs_info}
+      />}
+      </div>
+      
       {/* === Section 1: Room info + graph === */}
       <section className={styles.section}>
         <h2>Room Information</h2>

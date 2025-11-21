@@ -1,121 +1,55 @@
 import SearchOptions from "@/components/SearchOptions/SearchOptions";
-import BasicTable from "@/components/BasicTable/BasicTable";
-import { inputs_info } from "./data";
-import { useRouter } from "next/navigation";
-function SelectUser({ list_url,handleSelectBtn,handleClearFilterOption,handleFilterOption}) {
+import SelectUserCard from "../UserCard/SelectUserCard";
+import Inputs from "../Inputs/Inputs";
+import Select from "../Select/Select";
+import userNotification from "@/utils/userNotification";
+import  statusNotification  from "@/utils/statusNotification";
+import { useUserDataContext } from "@/contexts/user_data";
+import { Suspense, useState } from "react";
+import LoaderForComponents from "@/components/LoaderForComponents/LoaderForComponents";
+import styles from "./selectuser.module.css";
+
+function SelectUser({ list_url,handleConfirmBtn,inputs_info,selectsElementsData, references ,selectedUser , setSelectedUser}) {
     
-  // for filtering
-  let [isFiltered , setIsFiltered]  = useState(false);
-  let [filteredResults , setFilteredResults] = useState([]); // as array not Map cuz we will not cache "pageNum":[{},{},...] like we did with cachedContext
-  let [currPage , setCurrPage ] = useState(1);
-  let [numOfPages , setNumOfPages] = useState(1);
-  const [filterTrigger, setFilterTrigger] = useState(0);
-  const {user_data} = useUserDataContext();
-  let {cached_my_patients, setCached_My_Patients , fetched_my_patient_pages, setFetched_My_Patient_Pages} = useCachedMyPatientsContext();
-   // Refrences
-  const inputsBoxsRef= useRef({});
-  const router = useRouter()
-  const sizeOfPage = 12;
-
-
-// ===========================================
-//        Initial Fetch
-// ===========================================
-useEffect(() => {
-  console.log("isFiltered",isFiltered)
-  if (isFiltered) return;
-
-  if (!fetched_my_patient_pages.has(currPage)) {
-    fetch(`${process.env.APIKEY}/list/${list_url}`, {
-      mode: "cors",
-      headers: {
-        Authorization: `BEARER ${user_data.token}`,
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => {
-        statusNotification(res.status);
-        return res.json();
-      })
-      .then((data) => {
-        if (data?.success) {
-        
-        } else if (data && !data.success) {
-          userNotification("error", data.message);
-        }
-      });
-  } 
 
   
-}, [currPage]);
+  const {user_data} = useUserDataContext();
+  
+
+  console.log("references in SelectUser:", references,inputs_info);
+
+function fetchUser(e)  {
+  if(e) e.preventDefault();
 
 
-useEffect(()=>{console.log("fetched_my_patient_pages",fetched_my_patient_pages)},[fetched_my_patient_pages])
+      // Build individual parameter sets first to check if any filters exist
+      console.log("chheee",inputs_info, references?.inputsBoxsRef)
+      const inputParams = buildQueryParams(inputs_info, references?.inputsBoxsRef);
+      const selectParams = buildQueryParams(selectsElementsData, references?.selectsBoxsRef);
+
+      // Check if any filters were actually provided
+      const hasInputFilters = Array.from(inputParams.entries()).length > 0;
+      const hasSelectFilters = Array.from(selectParams.entries()).length > 0;
+      console.log(inputParams.entries(),selectParams.entries())
+      if (!hasInputFilters && !hasSelectFilters) {
+          return userNotification("error", "Please provide at least one filter option");
+      }
+
+      // Only build the full query if we have filters
+      let queryParams = new URLSearchParams();
+
+      inputParams.forEach((value, key) => queryParams.append(key, value));
+      selectParams.forEach((value, key) => queryParams.append(key, value));
+
+      // Append Current Logged In user Data
+      queryParams.append("user_id",user_data.user_id)
+      const queryString = queryParams.toString();
+
+      
 
 
-// ===========================================
-//        Clear Filters
-// ===========================================
-  function handleClearFilterOption(){
-    const EMAIL_REF = inputsBoxsRef.current["Email"];
-    const ByPhoneREF = inputsBoxsRef.current["Phone"];
-
-    setIsFiltered(false) // set to false to render cached employees with no filters
-    setFilteredResults([]); //to remove all
-    setCurrPage(1);
-
-    // reset select filters back to no filter
-    EMAIL_REF.value = ""
-    ByPhoneREF.value = ""
-}
-
-// ===========================================
-//        Filter Data
-// ===========================================
-
-// 1. This Function Checks Inputs Then Update isFiltered state
-function handleFilterOption(e){
-    if(e) e.preventDefault();
-    // get filter inputs 
-    const EMAIL_REF = inputsBoxsRef.current["Email"];
-    const Phone_REF = inputsBoxsRef.current["Phone"];
-
-    
-    const patient_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
-    const patient_phone = Phone_REF.value === "" ? null : Phone_REF.value;
-
-
-    // making sure this checking is applied when only pressing btn 
-    if(!patient_email && !patient_phone && isFiltered){
-        userNotification("error","No Filters Entered");
-        handleClearFilterOption(); // resets if no filtering specified
-        return; 
-    }
-
-
-    // save filters for useEffect to pick up
-  setIsFiltered(true);
-  setFilterTrigger(prev => prev + 1)
-
-}
-
-// 2. Then this useEffect gets triggered on isFiltered and currPage to fetch new filtered data
-useEffect(() => {
-  if (!isFiltered) return;
-
-    const EMAIL_REF = inputsBoxsRef.current["Email"];
-    const Phone_REF = inputsBoxsRef.current["Phone"];
-
-    
-    const patient_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
-    const patient_phone = Phone_REF.value === "" ? null : Phone_REF.value;
-
-  const filter_queries = stringifyFields(
-    "anded",
-    Object.entries({ patient_email, patient_phone })
-  );
-
-  fetch(`${process.env.APIKEY}/list/${list_url}`, {
+  //        Fetch Filtered Data
+  fetch(`${process.env.APIKEY}/list${list_url}${queryString ? `?${queryString}` : ''}`, {
     mode: "cors",
     headers: {
       Authorization: `BEARER ${user_data.token}`,
@@ -127,45 +61,109 @@ useEffect(() => {
       return res.json();
     })
     .then((data) => {
+      console.log("data from fetch",data)
       if (data?.success) {
-        setFilteredResults(data.body);
+        console.log("setSelectedUser",data.body)
+        setSelectedUser(data.body);
         setNumOfPages(data.numOfPages || 1);
       } else {
         userNotification("error", data.message);
+        setSelectedUser(null);
       }
     })
-    .catch(() => userNotification("error", "Network error"));
-}, [currPage, isFiltered,filterTrigger]);
+    .catch((err) => {userNotification("error", "Network error");console.log("err",err)});
+};
+
+
+  //============================================
+  // buildQueryParams helper function
+  //============================================
+    const buildQueryParams = (array,reference) => {
+
+      // Check if array exists and is not empty
+    if (!array || !Array.isArray(array) || array.length === 0) {
+      return new URLSearchParams();
+    }
+    
+    // Check if reference exists
+    if (!reference || !reference.current) {
+      return new URLSearchParams();
+    }
+
+
+      let queryParams = new URLSearchParams();
+
+      // Iterate through array to get all configured fields
+      array.forEach(fieldConfig => {
+        const inputRef = reference.current[fieldConfig.name]; // Use label as ref key
+        if (inputRef && inputRef.value !== "" && inputRef.value != null) {
+          // Use the 'name' property from array as the query parameter name
+          queryParams.append(fieldConfig.name, inputRef.value);
+        }
+      });
+      
+      return queryParams;
+    };
+
+  //============================================
+  // handleClearFilterOption
+  //============================================
+  function handleClearFilterOption(e) {
+    if (e) e.preventDefault();
+
+    // Clear all input fields
+    if (references?.inputsBoxsRef?.current) {
+      Object.values(references.inputsBoxsRef.current).forEach(inputRef => {
+        if (inputRef && typeof inputRef.value !== 'undefined') {
+          inputRef.value = "";
+        }
+      });
+    }
+
+    // Reset all select fields to their default value (usually the first option)
+    if (references?.selectsBoxsRef?.current) {
+      Object.values(references.selectsBoxsRef.current).forEach(selectRef => {
+        if (selectRef && selectRef.options && selectRef.options.length > 0) {
+          selectRef.selectedIndex = 0; // Reset to first option
+        }
+      });
+    }
+
+    // Also clear any selected user and reset pagination if needed
+    setSelectedUser(null);
+    userNotification("success", "All filters cleared successfully");
+  }
 
 
   return (
-    <>
-        <SearchOptions 
-                  
-                    target={"patients"}
-                    isFiltered={isFiltered}
-                    references ={{ inputsBoxsRef: inputsBoxsRef }}
-                    clearBtn = {handleClearFilterOption} 
-                    handleFilterOption={handleFilterOption} 
-                    setCurrPage={setCurrPage} 
-                    currPage={currPage} 
-                    sizeOfPage={sizeOfPage} 
-                    setFilteredResults={setFilteredResults} 
-                    inputs_info={inputs_info}
-                  />
+    <>  
+        <div className={styles["table-search-options"]}>
+            {inputs_info && <Inputs 
+              styles={styles}
+              inputs_info={inputs_info}
+              type="normal_input"
+              references={references.inputsBoxsRef}
+              formKind={"row_inputs"}
+            />}
+            {selectsElementsData &&
+        selectsElementsData.map((selectData) => (
+            <Select 
+              key={selectData.key}
+              styles={styles}
+              isLabeld={false}
+              select_options={selectData}
+              reference={references.selectBoxsRef}
+            />))}
+            <button onClick={fetchUser} className={`${styles["filter"]} `}>Get User</button>
+            <button onClick={handleClearFilterOption} className={`${styles["filter"]} ${styles["clear-filter"]}`}>Clear Filters</button>
+        </div>
+        
                     
                     
-                        <BasicTable 
-                                  currPage={currPage} 
-                                  sizeOfPage={sizeOfPage}
-                                  setCurrPage={setCurrPage} 
-                                  data={cached_patients} 
-                                  isFiltered={isFiltered} 
-                                  filteredResults={filteredResults} 
-                                  handleActionBtn={handleSelectBtn}   
-                                  numOfPages={numOfPages} 
-                                  tableType="patients"
-                                />
+        <Suspense fallback={<LoaderForComponents  styling={styles.loader_for_components_wrapper}/>}>
+            <SelectUserCard selectedUser={selectedUser} />
+        </Suspense>
+        {selectedUser && <button className={styles.select_btn} onClick={handleConfirmBtn}>Confirm</button>}
     </>
   );
 }

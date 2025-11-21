@@ -150,7 +150,7 @@
   }
   
   .activity-list li:not(.buttons-wrapper) {
-    background-color: #f9f9f9;
+
     border-radius: 0.5rem;
     display: flex;
     align-items: center;

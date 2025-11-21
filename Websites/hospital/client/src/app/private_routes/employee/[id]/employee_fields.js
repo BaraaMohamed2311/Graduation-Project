@@ -1,37 +1,42 @@
-import styles from "./employeeprofile.module.css";
+import styles from "./employee.module.css";
 
-function DoctorDetails({ doctor }) {
+function DoctorDetails({ user }) {
   return (
-    <ul className={styles["role-details"]}>
-      <li><strong>Initial Consultation Price:</strong> {doctor.initial_consultation_price} EGP</li>
-      <li><strong>Follow-up Consultation Price:</strong> {doctor.followup_consultation_price} EGP</li>
-      <li><strong>Years of Experience:</strong> {doctor.years_of_exp} years</li>
-    </ul>
+    <>
+      <li><strong>Initial Consultation Price:</strong> {user.initial_consultation_price} EGP</li>
+      <li><strong>Follow-up Consultation Price:</strong> {user.followup_consultation_price} EGP</li>
+      <li><strong>Years of Experience:</strong> {user.years_of_exp} years</li>
+      <li><strong>Role:</strong> {user.role_name}</li>
+      
+    </>
   );
 }
 
 
 
 
- function SurgeonDetails({ surgeon }) {
+ function SurgeonDetails({ user }) {
   return (
-    <ul className={styles["role-details"]}>
-      <li><strong>Initial Consultation Price:</strong> {surgeon.initial_consultation_price} EGP</li>
-      <li><strong>Follow-up Consultation Price:</strong> {surgeon.followup_consultation_price} EGP</li>
-      <li><strong>Surgery Price:</strong> {surgeon.surgery_price} EGP</li>
-      <li><strong>Years of Experience:</strong> {surgeon.years_of_exp} years</li>
-    </ul>
+    <>
+      <li><strong>Initial Consultation Price:</strong> {user.initial_consultation_price} EGP</li>
+      <li><strong>Follow-up Consultation Price:</strong> {user.followup_consultation_price} EGP</li>
+      <li><strong>Surgery Price:</strong> {user.surgery_price} EGP</li>
+      <li><strong>Years of Experience:</strong> {user.years_of_exp} years</li>
+      <li><strong>Role:</strong> {user.role_name}</li>
+      
+    </>
   );
 }
 
 
 
 
-function NurseDetails({ nurse }) {
+function NurseDetails({ user }) {
   return (
-    <ul className={styles["role-details"]}>
-      <li><strong>Assigned Floor Number:</strong> {nurse.floor_number !== -1 ? nurse.floor_number : "Not Assigned"}</li>
-    </ul>
+    <>
+      <li><strong>Assigned Floor Number:</strong> {user.floor_number !== -1 ? user.floor_number : "Not Assigned"}</li>
+      
+    </>
   );
 }
 

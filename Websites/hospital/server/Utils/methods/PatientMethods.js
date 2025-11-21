@@ -6,7 +6,28 @@ class PatientMethods {
     //              GET
     // ============================
     static async getPatientSpecificData(patient_id){
-        const query = `SELECT * FROM patients WHERE patient_id = ${patient_id}`;
+        const query = `SELECT 
+        patient_id  AS user_id,    
+        patient_name ,
+        patient_email  AS user_email,
+        patient_password AS user_password,
+        patient_phone ,
+        patient_address ,
+        isAssignedToRoom ,  
+        room_number ,
+        floor_number ,
+        date_of_birth ,
+        next_check_date ,
+        patient_gender ,
+        emergency_contact 
+        FROM patients WHERE patient_id = ${patient_id}`;
+        const result = await executeMySqlQuery(query);
+        return result[0];
+    }
+
+    static async getOnePatientDataByFilters(filter_entries){
+        if(!filter_entries) return null;
+        const query = `SELECT * FROM patients WHERE  ${filter_entries}`;
         const result = await executeMySqlQuery(query);
         return result[0];
     }
@@ -17,14 +38,32 @@ class PatientMethods {
         return result;
     }
 
-    static async getAllPatientsCOUNT(){
-        const query = `SELECT COUNT(*) as count FROM patients `;
+
+    static async getAllPatientsCOUNT(whereClause = ""){
+        let query = `SELECT COUNT(*) as count FROM patients `;
+        if (whereClause) {
+            query += ` WHERE ${joinedFilters} `;
+        }
         const result = await executeMySqlQuery(query);
-        return result[0];
+        return result[0]?.count;
     }
 
-    static async getAllPatientsRangedData(limit, offset,restFilters = null){
-        let query = `SELECT * FROM patients `;
+    static async getAllPatientsSpecificData(limit, offset,restFilters = null){
+        let query = `SELECT  
+                        patient_id  AS user_id,    
+                        patient_name ,
+                        patient_email  AS user_email,
+                        patient_password AS user_password,
+                        patient_phone ,
+                        patient_address ,
+                        isAssignedToRoom ,  
+                        room_number ,
+                        floor_number ,
+                        date_of_birth ,
+                        next_check_date ,
+                        patient_gender ,
+                        emergency_contact  
+                        FROM patients `;
 
         if (restFilters) { 
                 query += ` WHERE ${restFilters} `;
@@ -40,12 +79,14 @@ class PatientMethods {
         static async getListedDoctorDataForPaitent(limit=null, offset=null,restFilters=null) {
             let query = `
                 SELECT 
-                    d.doctor_id,
+                    d.doctor_id AS user_id, 
                     d.hosp_emp_id,
                     d.initial_consultation_price,
                     d.followup_consultation_price,
                     d.years_of_exp,
-                    e.emp_specialty,
+                    e.emp_title AS user_title,
+                    e.emp_specialty AS user_specialty,
+                    e.emp_name AS user_name,
                     e.emp_email AS user_email, -- You MUST Rename Column For fetchImagesForListedUsers function to work
                     GROUP_CONCAT(
                         CONCAT(da.day_of_week, ': ', da.start_time, '-', da.end_time)
@@ -72,6 +113,7 @@ class PatientMethods {
                     d.followup_consultation_price,
                     d.years_of_exp,
                     e.emp_specialty,
+                    e.emp_title,
                     e.emp_email
                     ${ limit ? `LIMIT ${limit}`:""}
                     ${ offset ? `OFFSET ${offset}`:""}
@@ -85,13 +127,15 @@ class PatientMethods {
         static async getListedSurgeonDataForPaitent(restFilters = null,limit=null, offset=null) {
             let query = `
                 SELECT 
-                    s.surgeon_id,
+                    s.surgeon_id AS user_id, 
                     s.hosp_emp_id,
                     s.initial_consultation_price,
                     s.followup_consultation_price,
                     s.surgery_price,
                     s.years_of_exp,
-                    e.emp_specialty,
+                    e.emp_title AS user_title,
+                    e.emp_specialty AS user_specialty,
+                    e.emp_name AS user_name,
                     e.emp_email AS user_email, -- You MUST Rename Column For fetchImagesForListedUsers function to work
                     GROUP_CONCAT(
                         CONCAT(sa.day_of_week, ': ', sa.start_time, '-', sa.end_time)
@@ -118,6 +162,7 @@ class PatientMethods {
                     s.followup_consultation_price,
                     s.surgery_price,
                     s.years_of_exp,
+                    e.emp_title,
                     e.emp_specialty,
                     e.emp_email
                     ${ limit ? `LIMIT ${limit}` :""}

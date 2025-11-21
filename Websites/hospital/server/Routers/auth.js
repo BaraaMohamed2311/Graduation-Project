@@ -46,29 +46,23 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
             const user_id = result.user_id;
             const user_title =await User.getUserTitle(user_email);
             const isHospitalEmployee = HospitalUsersMethods.isHospitalUser(user_title)
-            if(userIsEmployee.exists && isHospitalEmployee){
-                user = await HospitalUsersMethods.MapUserToGETFunction(user_id, user_title);
-                console.log("userIsEmployee user",user)
-                user.emp_perms =  Array.from (await User.getSetUserperms(user_id));
-                user.user_id =  user.emp_id;
-                delete user.emp_id;
-                match = await bcrypt.compare(password, user.emp_password);
-            }
-            else if(userIsPatient.exists){
-                user = await HospitalUsersMethods.MapUserToGETFunction(user_id , user_title);
-                console.log("userIsPatient user",user)
-                user.user_id =  user.patient_id;
-                delete user.patient_id;
-                match = await bcrypt.compare(password, user.patient_password);
-            }
-            else{
+            user = await HospitalUsersMethods.MapUserToGETSpecificDataFunction(user_id, user_title);
+
+            // User must register as patient if he is not an employee and not registered as patient
+            if(!userIsEmployee.exists && !isHospitalEmployee && userIsPatient.exists){
                 return res.status(404).json({
                     success: false,
                     message: 'Please, Register As Patient First'
                 });
             }
+
+            //format perms if employee
+            if(userIsEmployee.exists && isHospitalEmployee){
+                user.emp_perms =  Array.from (await User.getSetUserperms(user_id));
+            }
+
+            match = await bcrypt.compare(password, user.user_password);
             
-            console.log("user from login",user)
             // Compare request's password with hashed password
             if (!match) {
                 return res.status(401).json({
@@ -80,7 +74,7 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
 
             // --4. Create JWT Token and send response without password
             const { emp_password, ...userInfo } = user;
-            const token = await createJWTToken(userInfo.user_id, userInfo.emp_email);
+            const token = await createJWTToken(userInfo.user_id, userInfo.user_email);
             
 
             return res.status(200).json({

@@ -26,3 +26,60 @@
     flex-wrap: wrap;
     gap: 2rem;
 }
+
+
+
+.table_btn_wrapper{
+    display: flex;
+    justify-content: space-evenly;
+    gap: 1rem;
+    background-color: var(--sec);
+    border-radius: 0.2rem;
+    border: 1px solid var(--sec-dark);
+}
+
+.table_btn_wrapper button , .table_btn_wrapper span{
+    width: 6rem;
+    height: 2rem;
+    padding: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+}
+
+.table_btn_wrapper button{
+    outline: none;
+    border: 2px solid transparent;
+    background-color: var(--white);
+    
+}
+
+
+
+.table_btn_wrapper span{
+    color: var(--white);
+}
+
+.table_btn_wrapper ion-icon {
+    pointer-events: none;
+  }
+
+
+ .grey-button{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 1rem;
+    background-color: var(--sec);
+    color: var(--white);
+    padding: 1rem;
+    border: 1px solid var(--sec-dark);
+    border-radius: 0.4rem;
+}
+
+.grey-button:hover{
+    background-color: var(--main-hovers);
+}

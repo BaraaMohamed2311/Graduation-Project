@@ -57,10 +57,11 @@ export default function Nav() {
                 
                     <li className={styles["nav-li"]}><Link href="/private_routes/rooms"><i className="fa-solid fa-bed-pulse"></i></Link></li>
                     <li className={styles["nav-li"]}><Link href="/private_routes/list"><i className="fa-solid fa-head-side-cough"></i></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/list-for-patient"><i className="fa-solid fa-user-doctor"></i></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/book-appointment"><i className="fa-solid fa-calendar-days"></i></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/booking-list"><i className="fa-solid fa-id-card-clip"></i></Link></li>
-
+                    <li className={styles["nav-li"]}><Link href="/private_routes/booking-list"><i className="fa-solid fa-user-doctor"></i></Link></li>
+                    <li className={styles["nav-li"]}><Link href="/private_routes/books-schedule"><i className="fa-solid fa-calendar-days"></i></Link></li>
+                    <li className={styles["nav-li"]}><Link href="/private_routes/mybooking-list"><i className="fa-solid fa-id-card-clip"></i></Link></li>
+                    <li className={styles["nav-li"]}><Link href="/private_routes/employees-list"><i className="fa-solid fa-users"></i></Link></li>
+                    
                     {isLogin ? (
                         <li className={styles["nav-li"]}><Link href="/private_routes/profile"><i className="fa-solid fa-user"></i></Link></li>
                     ) : (

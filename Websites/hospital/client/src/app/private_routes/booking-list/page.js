@@ -7,9 +7,11 @@ import BookingCard from "@/components/BookingCard/BookingCard";
 import { selectsElementsData} from "./data"
 import { useRef ,useState,useEffect} from "react";
 import { useUserDataContext } from "@/contexts/user_data";
+import { useBookingListCache } from "@/hooks/useBookingListCache";
 import userNotification from "@/utils/userNotification";
 import stringifyFields from "@/utils/stringifyFields";
 import statusNotification from "@/utils/statusNotification";
+import Pagination_Btns from "@/components/Pagination_Btns/Pagination_Btns";
 
 function BookingListPage() {
 
@@ -21,7 +23,7 @@ function BookingListPage() {
   let [targetedBooking , setTargetedBooking] = useState("doctors"); // default is booking a doctor appointment
   const [filterTrigger, setFilterTrigger] = useState(0);
   const {user_data} = useUserDataContext();
-  const {cached_booking_list, setCached_Booking_List,fetched_booking_pages, setFetched_Booking_Pages} = useCachedBookingListContext();
+  const {cached_booking_list, setCached_Booking_List,fetched_booking_pages, setFetched_Booking_Pages,saveSpecificToStore,isIndexedDBLoaded} = useBookingListCache();
    // Refrences
   const inputsBoxsRef= useRef({});
   const selectBoxsRef= useRef({});
@@ -35,9 +37,10 @@ function BookingListPage() {
 useEffect(() => {
   console.log("isFiltered",isFiltered)
   if (isFiltered) return;
+  if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
   // This needs to be changed
   if (!false) {
-    fetch(`${process.env.APIKEY}/list/${targetedBooking}`, {
+    fetch(`${process.env.APIKEY}/list/${targetedBooking}?pagination=${currPage}&size=${sizeOfPage}`, {
       mode: "cors",
       headers: {
         Authorization: `BEARER ${user_data.token}`,
@@ -56,25 +59,23 @@ useEffect(() => {
             return updated;
           });
           setNumOfPages(data.numOfPages || 1);
-                    setFetched_Patient_Pages(prev => {
-                    const updated = new Set(prev);
-                    updated.add(currPage);
-                    return updated;
-                  });
-                    appendToIndexDB(`booking-${targetedBooking}`, data.body).then(() => {
-                            console.log(`Successfully appended new booking-${targetedBooking} to IndexDB`);
-                           }) 
-                           .catch((err) => {
-                            console.error(`Failed to append new booking-${targetedBooking} to IndexDB:`, err);
-                          });
+          setFetched_Booking_Pages(prev => ({
+            ...prev,
+            [targetedBooking]: new Set([...(prev[targetedBooking] || []), currPage])
+          }));
+          // save to indexedDB
+          console.log("Saving specific to store" , data.body,targetedBooking)
+          saveSpecificToStore(data.body,targetedBooking)
+
         } else if (data && !data.success) {
           userNotification("error", data.message);
         }
       });
-  } 
+  
+    } 
 
   
-}, [currPage]);
+}, [currPage,isIndexedDBLoaded]);
 
 
 
@@ -175,10 +176,21 @@ useEffect(() => {
 }, [currPage, isFiltered,filterTrigger]);
 
 
+  function handlePagination(e){
+    if(e.target.id === 'prev'){
+      if(currPage > 1)
+        setCurrPage(prev => prev - 1);
+    }
+    else if(e.target.id === 'next'){
+      setCurrPage(prev => prev + 1);
+    }
+  }
+
+
     return (
         <div>
             <SearchOptions 
-                target={"patients"}
+                target={"users"}
                 isFiltered={isFiltered}
                 references ={{ inputsBoxsRef: inputsBoxsRef ,selectBoxsRef: selectBoxsRef}}
                 clearBtn = {handleClearFilterOption} 
@@ -190,16 +202,21 @@ useEffect(() => {
                 selectsElementsData={selectsElementsData}
 
           />
-            
-            {cached_booking_list && Object.keys(cached_booking_list).length > 0 && cached_booking_list[targetedBooking].map((booking , index)=>{
+            <div className={styles["booking-card-wrapper"]}>
+              {cached_booking_list && Object.keys(cached_booking_list).length > 0 && cached_booking_list[targetedBooking]  && cached_booking_list[targetedBooking].slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((booking , index)=>{
                 return <BookingCard 
+                key={booking._id || index}
                 userType={targetedBooking} 
                 bookingData={booking} 
                 handleBookBtn={handleBookBtn}
                 />
             })}
-
+            </div>
             
+
+            <div className={styles.table_btn_wrapper}>
+              <Pagination_Btns handlePagination={handlePagination} currPage={currPage} numOfPages={numOfPages} />
+            </div>
         </div>
     )
 }

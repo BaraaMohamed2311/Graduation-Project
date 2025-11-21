@@ -9,7 +9,7 @@ import userNotification from "@/utils/userNotification";
 import stringifyFields from "@/utils/stringifyFields";
 import statusNotification from "@/utils/statusNotification";
 import { useUserDataContext } from "@/contexts/user_data";
-import {useCachedMyPatientsContext} from "@/contexts/cached_my_patients"
+import {useMyPatientsCache} from "@/hooks/useMyPatientsCache"
 import BasicTable from '@/components/BasicTable/BasicTable';
 import { useRouter } from "next/navigation";
 import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
@@ -24,7 +24,7 @@ function MyPatientsListPage() {
   let [numOfPages , setNumOfPages] = useState(1);
   const [filterTrigger, setFilterTrigger] = useState(0);
   const {user_data} = useUserDataContext();
-  let {cached_my_patients, setCached_My_Patients , fetched_my_patient_pages, setFetched_My_Patient_Pages} = useCachedMyPatientsContext();
+  let {cached_my_patients, setCached_My_Patients , fetched_my_patient_pages, setFetched_My_Patient_Pages,saveMyPatientsToStore , isIndexedDBLoaded} = useMyPatientsCache();
    // Refrences
   const inputsBoxsRef= useRef({});
   const selectBoxsRef= useRef({});
@@ -38,7 +38,8 @@ function MyPatientsListPage() {
 useEffect(() => {
   console.log("isFiltered",isFiltered)
   if (isFiltered) return;
-
+  if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
+  console.log("fetched_my_patient_pages",fetched_my_patient_pages)
   if (!fetched_my_patient_pages.has(currPage)) {
     fetch(`${process.env.APIKEY}/list/my-patients?user_id=${user_data.user_id}&pagination=${currPage}&size=${sizeOfPage}`, {
       mode: "cors",
@@ -63,13 +64,8 @@ useEffect(() => {
         });
         // Append new my-patients to IndexedDB
       try {
-            appendToIndexDB("mypatients", data.body)
-            .then(() => {
-              console.log("Successfully appended new mypatients to IndexDB");
-            }) 
-            .catch((err) => {
-                  console.error("Failed to append new mypatients to IndexDB:", err);
-                });
+          // save to indexedDB
+            saveMyPatientsToStore(data.body);
                 
       } catch (error) {
             console.error("Failed to append IndexDB:", error);
@@ -83,7 +79,7 @@ useEffect(() => {
   } 
 
   
-}, [currPage]);
+}, [currPage,isIndexedDBLoaded]);
 
 
 useEffect(()=>{console.log("fetched_my_patient_pages",fetched_my_patient_pages)},[fetched_my_patient_pages])
@@ -92,9 +88,9 @@ useEffect(()=>{console.log("fetched_my_patient_pages",fetched_my_patient_pages)}
 //        Table Buttons
 // ===========================================
 
-    function handleVisitBtn(employee){
-      const employeeAsQueries = stringifyFields("anded",Object.entries(employee))
-      router.replace(`/private_routes/patient/${employee.user_id}?${employeeAsQueries}&currPage=${currPage}`)
+    function handleVisitBtn(mypatient){
+      console.log("Visiting mypatient",mypatient)
+      router.replace(`/private_routes/mypatient/${mypatient.user_id}?currPage=${currPage}`)
     }
 
 

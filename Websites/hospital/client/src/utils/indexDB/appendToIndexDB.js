@@ -7,13 +7,16 @@ export async function appendToIndexDB(storeName, newDataArray) {
 
   const db = await openIndxDB();
 
+
+      
+
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(storeName, "readwrite");
     const store = transaction.objectStore(storeName);
 
-
+    // use put to add or update records (if key exists, it updates), to prevent duplicates
       newDataArray.forEach((obj) => {
-        store.add(obj);
+        store.put(obj);
       })
 
       transaction.oncomplete = () => {

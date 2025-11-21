@@ -2,18 +2,13 @@
 import * as React from 'react';
 import Table from '@mui/joy/Table';
 import { useEffect  , useState} from "react";
-import {useCachedEmployeesContext} from "../../contexts/cached_employees"
 import styles from "./table.module.css"
-import userNotification from '@/utils/userNotification';
-import { useRouter } from 'next/navigation';
-import stringifyFields from '@/utils/stringifyFields';
-import statusNotification from "@/utils/statusNotification"
-import { useUserDataContext } from '@/contexts/user_data';
 import {TableColumnsMap } from "./Table_Fields"
-export default function BasicTable({currPage,sizeOfPage , setCurrPage ,numOfPages , isFiltered,filteredResults,handleActionBtn  ,data , tableType}) {
+import Pagination_Btns from "../Pagination_Btns/Pagination_Btns";
+export default function BasicTable({currPage,sizeOfPage , setCurrPage ,numOfPages , isFiltered,filteredResults,handleActionBtn  ,data=[] , tableType}) {
 
   let [ isSmallScreen , setIsSmallScreen ] = useState(false);
-  const TableColumns = TableColumnsMap[tableType] ||  <p>❌ Unknown table type: {tableType}</p>;
+  const TableColumns = TableColumnsMap[tableType] ||  ((props) => <p>❌ Unknown table type: {tableType}</p>); // Fallback component (Must be a function component, otherwise React will throw an error since it is a .jsx file)
 
  useEffect(()=>{
     // check responsibility on first render
@@ -60,13 +55,14 @@ export default function BasicTable({currPage,sizeOfPage , setCurrPage ,numOfPage
           </tr>
         </thead>
         <tbody>
+          {/* We have to pass row to each  handleActionBtn to act on targeted user*/}
           {(!isFiltered && data.length > 0) && data.slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((row, idx) => {return (
             <tr key={idx} className={styles.table_row}>
               <TableColumns
                 type="row"
                 isSmallScreen={isSmallScreen}
                 row={row}
-                handleActionBtn={handleActionBtn}
+                handleActionBtn={(e)=>handleActionBtn(row)}
               />
             </tr>
           )})}
@@ -77,7 +73,7 @@ export default function BasicTable({currPage,sizeOfPage , setCurrPage ,numOfPage
                 type="row"
                 isSmallScreen={isSmallScreen}
                 row={row}
-                handleActionBtn={handleActionBtn}
+                handleActionBtn={(e)=>handleActionBtn(row)}
               />
             </tr>
           ))}
@@ -85,13 +81,7 @@ export default function BasicTable({currPage,sizeOfPage , setCurrPage ,numOfPage
       </Table>
 
       <div className={styles.table_btn_wrapper}>
-        <button id="prev" onClick={handlePagination} className="table-btn">
-          <ion-icon name="chevron-back-outline"></ion-icon>
-        </button>
-        <span className="currpage">{currPage} - {numOfPages}</span>
-        <button id="next" onClick={handlePagination} className="table-btn">
-          <ion-icon name="chevron-forward-outline"></ion-icon>
-        </button>
+        <Pagination_Btns handlePagination={handlePagination} currPage={currPage} numOfPages={numOfPages} />
       </div>
     </div>
   );

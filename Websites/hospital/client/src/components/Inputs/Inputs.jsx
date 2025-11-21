@@ -24,7 +24,7 @@ function CheckBoxInput({inputs_info , references , employee_displayed  }){
 }
 
 function LabeledInput({inputs_info  , formKind , employee_displayed , references } ){
-    console.log("inpuut_info", inputs_info,"references",references , formKind);
+
     return (
         <div className={ inputsWrapperClassMap[formKind] || inputsWrapperClassMap["default"]}>
             
@@ -46,7 +46,7 @@ function LabeledInput({inputs_info  , formKind , employee_displayed , references
 }
 
 function NormalInput({inputs_info  , formKind , employee_displayed , references } ){
-    console.log("inpuut_info", inputs_info,"references",references , formKind);
+
     return (
         <div className={ inputsWrapperClassMap[formKind] || inputsWrapperClassMap["default"]}>
             

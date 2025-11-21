@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 2rem;
   padding: 1rem;
+  position: relative;
 }
 
 .section {
@@ -62,3 +63,21 @@
   margin-top: 3rem;
   font-weight: 500;
 }
+
+.selectUserModal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%);
+  width: 100%;
+  height: fit-content;
+  background: var(--sec-dark);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+
+}
+
+

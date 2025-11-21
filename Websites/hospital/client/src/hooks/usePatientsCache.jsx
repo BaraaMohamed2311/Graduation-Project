@@ -1,41 +1,31 @@
-"use client";
-import { createContext, useContext, useState, useEffect } from "react";
+// hooks/usePatientsCache.js
+import { useState, useEffect } from "react";
 import { getAllFromStore } from "@/utils/indexDB/getCacheMethods";
-import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
 import { clearStore } from "@/utils/indexDB/deleteCacheMethods";
+import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
 
-let cached_patients_context = createContext();
-
- function useCachedPatientsContext() {
-  return useContext(cached_patients_context);
-}
-
- function CachedPatientsProvider({ children }) {
-  // Initialize with empty array
+export const usePatientsCache = () => {
   const [cached_patients, setCached_Patients] = useState([]);
   const [fetched_patient_pages, setFetched_Patient_Pages] = useState(new Set());
+  const [isIndexedDBLoaded, setIsIndexedDBLoaded] = useState(false);
 
-
-  // ===============================
-  // Load cached patients (from IndexedDB)
-  // ===============================
+  // Load from IndexedDB
   useEffect(() => {
     (async () => {
       try {
         const storedPatients = await getAllFromStore("patients");
-
         if (Array.isArray(storedPatients)) {
           setCached_Patients(storedPatients);
         }
+        // After we try loading, set the flag to true
+        setIsIndexedDBLoaded(true);
       } catch (err) {
         console.error("Failed to load patients from IndexedDB:", err);
       }
     })();
   }, []);
 
-  // ===============================
-  // Load fetched pages (from localStorage)
-  // ===============================
+  // Load fetched pages from localStorage
   useEffect(() => {
     try {
       const storedPages = localStorage.getItem("fetched_patient_pages");
@@ -48,16 +38,12 @@ let cached_patients_context = createContext();
         }
       }
     } catch (err) {
-      console.error("Failed to parse cached_patients or fetched pages:", err);
-      localStorage.removeItem("cached_patients");
+      console.error("Failed to parse fetched_patient_pages:", err);
       localStorage.removeItem("fetched_patient_pages");
     }
   }, []);
 
-
-  // ===============================
   // Persist fetched pages
-  // ===============================
   useEffect(() => {
     try {
       if (fetched_patient_pages && fetched_patient_pages.size > 0) {
@@ -73,12 +59,27 @@ let cached_patients_context = createContext();
     }
   }, [fetched_patient_pages]);
 
-  return (
-    <cached_patients_context.Provider value={{ cached_patients, setCached_Patients , fetched_patient_pages, setFetched_Patient_Pages }}>
-      {children}
-    </cached_patients_context.Provider>
-  );
-}
+  // Save patients to IndexedDB
+  const savePatientsToStore = async (patients) => {
+    try {
+      if (Array.isArray(patients) && patients.length > 0) {
+        await appendToIndexDB("patients", patients);
+      } else {
+        await clearStore("patients");
+      }
+    } catch (err) {
+      console.error("Failed to save patients to IndexedDB:", err);
+      throw err;
+    }
+  };
 
-
-export { useCachedPatientsContext, CachedPatientsProvider };
+  return {
+    cached_patients,
+    setCached_Patients,
+    fetched_patient_pages,
+    setFetched_Patient_Pages,
+    savePatientsToStore,
+    isIndexedDBLoaded, 
+    setIsIndexedDBLoaded
+  };
+};

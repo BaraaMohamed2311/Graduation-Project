@@ -1,3 +1,6 @@
+/*******************************************************************
+    Lists data from MySQL Database using methods from classes
+*********************************************************************/
 const router = require("express").Router();
 const NodeCache = require("node-cache");
 const jwtVerify = require("../middlewares/jwtVerify.js");
@@ -16,26 +19,115 @@ const PatientMethods = require("../Utils/methods/PatientMethods.js");
 const fetchImagesForListedUsers = require("../Utils/fetchImagesForListedUsers");
 const stringifyFields = require("../Utils/stringifyFields.js");
 const JoinFiltering = require("../Utils/JoinFiltering.js")
-const myCache = new NodeCache({ stdTTL: 3600 }); // default TTL 1hr
-const PatientFile = require("../Models/Patient_file.js");
-const PatientHealthState = require("../Models/Patient_health_state.js");
+// FIX: Define myCache properly
+const myCache = new NodeCache({ stdTTL: 3600 }); // 1 hour default TTL
+const CACHE_TTL = 600; // 10 minutes in seconds (for specific overrides)
+const SurgeonMethods = require("../Utils/methods/SurgeonMethods.js");
+
+
+
+
+// ==================================================================
+
+//              Get Routes
+
+// ==================================================================
+
+// =================================
+//  Get All employees Data
+// =================================
+router.get("/employees",jwtVerify,async (req,res)=>{
+    try{
+        const { pagination, size , user_id,isFiltered, role_name: filter_role_name, emp_perms: filter_emp_perm, ...restFilters } = req.query;
+        
+        //Bad Request if modifier id or others doesn't exist
+        if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
+
+        // Ceck if list page can be accessible
+        const Modifier_role = await User.getUserRole(user_id);
+        const Modifier_perms = await User.getSetUserperms(user_id);
+
+        if (Modifier_role === "NormalUser") return res.status(401).json({ success: false, message: "NormalUser Role cannot access The list" });
+
+        const freshEmployeesCount = await HospitalUsersMethods.getAllHospitalEmployeesCOUNT(restFilters,filter_role_name, filter_emp_perm);
+        
+        // =====================================
+        // Cache Count on Server Side - ONLY for non-filtered queries
+        // =====================================
+        let EmployeesCount = freshEmployeesCount; // Default to fresh count
+        
+        // Only cache and use cache for NON-FILTERED queries
+        if (!isFiltered && Object.keys(restFilters).length === 0) {
+            if (myCache.has("totalNumOfEmployees")) {
+                EmployeesCount = myCache.get("totalNumOfEmployees");
+            } else {
+                EmployeesCount = freshEmployeesCount; 
+                myCache.set("totalNumOfEmployees", EmployeesCount, CACHE_TTL); // 5 min TTL
+            }
+        }
+
+        const numOfPages = Math.ceil( Math.ceil(EmployeesCount / size));
+
+        const users = await HospitalUsersMethods.getAllHospitalEmployeesFullData(parseInt(size), parseInt((pagination - 1) * size ),restFilters, filter_role_name, filter_emp_perm);
+
+
+      if( users && users.length > 0){
+        res.status(200).json({success : true , body:users, message:"Successfully Fetched Data",numOfPages: numOfPages})
+      }
+      else{
+        res.status(404).json({success : false , message:"No Users Found !"})
+      }
+    
+        
+        
+    }
+    catch(err){
+        console.error("Error List Employees Profile Data",err);
+        res.status(500).json({
+            success:false,
+            message:"Error List Employees Data"
+        })
+    }
+})
 
 // =================================
 //  Get All doctors Data and Images (for Admins or SuperAdmins)
 // =================================
 router.get("/doctors",async (req,res)=>{
     try{
-        const { pagination, size , user_id, ...restFilters } = req.query;
+        const { pagination, size,isFiltered , user_id, ...restFilters } = req.query;
         
         const filtering_for_query = JoinFiltering(Object.entries(restFilters),"d")
-
+        const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : "";
         const doctors = await PatientMethods.getListedDoctorDataForPaitent(  parseInt(size) , parseInt((pagination - 1) * size ),filtering_for_query);
         const doctorsRespone = await fetchImagesForListedUsers(doctors);
+        const freshDoctorsCount = await DoctorMethods.getAllDoctorsCOUNT(whereClause);
+
+        // =====================================
+        // Cache Count on Server Side - ONLY for non-filtered queries
+        // =====================================
+
+        let doctorsCount = freshDoctorsCount; // Default to fresh count
+        
+        // Only cache and use cache for NON-FILTERED queries
+        if (!isFiltered && Object.keys(restFilters).length === 0) {
+            if (myCache.has("totalNumOfDoctors")) {
+                doctorsCount = myCache.get("totalNumOfDoctors");
+            } else {
+                doctorsCount = freshDoctorsCount; 
+                myCache.set("totalNumOfDoctors", doctorsCount, CACHE_TTL); // 5 min TTL
+            }
+        }
         console.log("with images", doctorsRespone)
+
+        // =====================================
+        // Send Response
+        // =====================================
         if(doctorsRespone && doctorsRespone.length > 0 ){
             res.status(200).json({
                 success:true,
-                doctors:doctorsRespone,
+                body:doctorsRespone,
+                numOfPages: Math.ceil(doctorsCount / size),
                  message:"Fetching Doctors List Was Successful"
                 })
         }
@@ -61,16 +153,38 @@ router.get("/doctors",async (req,res)=>{
 // =================================
 router.get("/surgeons",async (req,res)=>{
     try{
-        const { pagination, size , user_id, ...restFilters } = req.query;
+        const { pagination, size , isFiltered , user_id, ...restFilters } = req.query;
         
         const filtering_for_query = JoinFiltering(Object.entries(restFilters),"s")
         const surgeons = await PatientMethods.getListedSurgeonDataForPaitent(filtering_for_query , parseInt(size) , parseInt((pagination - 1) * size ));
-        const surgeonsRespone = await fetchImagesForListedUsers(surgeons)
+        const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : "";
+        const freshSurgeonsCount = await SurgeonMethods.getAllSurgeonsCOUNT(whereClause);
+        const surgeonsRespone = await fetchImagesForListedUsers(surgeons);
 
+        
+        // =====================================
+        // Cache Count on Server Side - ONLY for non-filtered queries
+        // =====================================
+        let surgeonsCount = freshSurgeonsCount; // Default to fresh count
+        
+        // Only cache and use cache for NON-FILTERED queries
+        if (!isFiltered && Object.keys(restFilters).length === 0) {
+            if (myCache.has("totalNumOfSurgeons")) {
+                surgeonsCount = myCache.get("totalNumOfSurgeons");
+            } else {
+                surgeonsCount = freshSurgeonsCount; 
+                myCache.set("totalNumOfSurgeons", surgeonsCount, CACHE_TTL); // 5 min TTL
+            }
+        }
+
+        // =====================================
+        // Send Response 
+        // =====================================
         if(surgeonsRespone && surgeonsRespone.length > 0 ){
             res.status(200).json({
                 success:true,
-                surgeons:surgeonsRespone,
+                body:surgeonsRespone,
+                numOfPages: Math.ceil(surgeonsCount / size),
                  message:"Fetching Surgeons List Was Successful"
                 })
         }
@@ -94,31 +208,40 @@ router.get("/surgeons",async (req,res)=>{
 // =================================
 router.get("/patients",async (req,res)=>{
     try{
-        const { pagination, size , user_id, ...restFilters } = req.query;
+        const { pagination, size,isFiltered , user_id, ...restFilters } = req.query;
         console.log("/patients")
         //Bad Request if modifier id or others doesn't exist
         if(!pagination || !size  ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
-        const allpatients = await PatientMethods.getAllPatientsCOUNT();
+        const filtering_for_query = JoinFiltering(Object.entries(restFilters))  
+        const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : "";
+        const freshpatientsCOUNT = await PatientMethods.getAllPatientsCOUNT(whereClause);
 
-        // Cache total number of all patients
-        let totalNumOfPatients = 0;
+        let patientsCOUNT = freshpatientsCOUNT; // Default to fresh count
 
+        // =====================================
+        // Cache Count on Server Side - ONLY for non-filtered queries
+        // =====================================
+
+        if (!isFiltered && Object.keys(restFilters).length === 0) {
         if (myCache.has("totalNumOfPatients")) {
-            totalNumOfPatients = myCache.get("totalNumOfPatients");
+            patientsCOUNT = myCache.get("totalNumOfPatients");
         } else {
-            totalNumOfPatients = allpatients.count; 
-            myCache.set("totalNumOfPatients", totalNumOfPatients);
+            patientsCOUNT = freshpatientsCOUNT; 
+            myCache.set("totalNumOfPatients", patientsCOUNT, CACHE_TTL); 
+        }
         }
 
+        // Calculate number of pages
+        const numOfPages = Math.ceil(patientsCOUNT / size);
 
-        const numOfPages = Math.ceil(totalNumOfPatients / size);
 
-        const REST_CONDITIONS = JoinFiltering(Object.entries(restFilters))  
-        console.log("Patients Reest CONDITIONS",REST_CONDITIONS)
-      const my_rangedpatients = await PatientMethods.getAllPatientsRangedData(parseInt(size),parseInt((pagination - 1) * size ),REST_CONDITIONS);
-
+        console.log("Patients Reest CONDITIONS",filtering_for_query)
+        const my_rangedpatients = await PatientMethods.getAllPatientsSpecificData(parseInt(size),parseInt((pagination - 1) * size ),filtering_for_query);
+        // =====================================
+        // Send Response
+        // =====================================
       if( my_rangedpatients && my_rangedpatients.length > 0){
         res.status(200).json({success : true , body:my_rangedpatients, message:"Successfully Fetched Data",numOfPages: numOfPages})
       }
@@ -143,33 +266,40 @@ router.get("/patients",async (req,res)=>{
 // =================================
 router.get("/my-patients",async (req,res)=>{
     try{
-        const { pagination, size , user_id, ...restFilters } = req.query;
+        const { pagination, size,isFiltered , user_id, ...restFilters } = req.query;
         
         //Bad Request if modifier id or others doesn't exist
         if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
         const REST_CONDITIONS = JoinFiltering(Object.entries(restFilters),"p")  
-        const my_allpatients = await DoctorMethods.getDoctorAllPatientsCOUNT(user_id,parseInt(size),parseInt((pagination - 1) * size ),REST_CONDITIONS);
+        const freshMyPatientsCOUNT = await DoctorMethods.getDoctorAllPatientsCOUNT(user_id,parseInt(size),parseInt((pagination - 1) * size ),REST_CONDITIONS);
 
 
+        // =====================================
+        // Cache Count on Server Side - ONLY for non-filtered queries
+        // =====================================
+        let mypatientsCOUNT = freshMyPatientsCOUNT; // Default to fresh count
 
-        // Cache total number of employees
-        let totalNumOfMyPatients = 0;
-
-        if (myCache.has("totalNumOfMyPatients")) {
-            totalNumOfMyPatients = myCache.get("totalNumOfMyPatients");
-        } else {
-            totalNumOfMyPatients = my_allpatients.count; 
-            myCache.set("totalNumOfMyPatients", totalNumOfMyPatients);
+        // Only cache and use cache for NON-FILTERED queries
+        if (!isFiltered && Object.keys(restFilters).length === 0) {
+            if (myCache.has("totalNumOfMyPatients")) {
+                mypatientsCOUNT = myCache.get("totalNumOfMyPatients");
+            } else {
+                mypatientsCOUNT = freshMyPatientsCOUNT; 
+                myCache.set("totalNumOfMyPatients", mypatientsCOUNT, CACHE_TTL); 
+            }
         }
 
-
-        const numOfPages = Math.ceil(totalNumOfMyPatients / size);
+        const numOfPages = Math.ceil(mypatientsCOUNT / size);
 
 
 
       const my_rangedpatients = await DoctorMethods.getDoctorRangedPatients(user_id,parseInt(size),parseInt((pagination - 1) * size ));
+
+        // =====================================
+        // Send Response
+        // =====================================
 
       if( my_rangedpatients && my_rangedpatients.length > 0){
         res.status(200).json({success : true , body:my_rangedpatients, message:"Successfully Fetched Data",numOfPages: numOfPages})
@@ -190,56 +320,13 @@ router.get("/my-patients",async (req,res)=>{
     }
 })
 
-// =================================
-//  Get Patient MongoDB Data 
-// =================================
-router.get("/patient-health-state/:patientId",async (req,res)=>{
-    try{
-        const {patientId} = req.params
 
-        const record = await PatientHealthState.findOne({ patient_id: patientId });
 
-        if (!record) {
-            return res.status(404).json({ success: false, message: "Patient not found" });
-        }
+// ==================================================================
 
-        res.json({ success: true, body: record });
-    
-        
-        
-    }
-    catch(err){
-        console.error("Error List All Patient Data",err);
-        res.status(500).json({
-            success:false,
-            message: err.message || "Error List All Patient Data"
-        })
-    }
-})
+//              Update Routes
 
-router.get("/patient-files/:patientId",async (req,res)=>{
-     try {
-        const { patientId } = req.params;
-
-        const records = await PatientFile.find({ patient_id: patientId });
-
-        if (!records || records.length === 0) {
-        return res.status(404).json({ success: false, message: "No files found for this patient" });
-        }
-
-        // Extract file names and ids
-        const files = records.map(r => ({
-            file_name: r.file.file_name,
-            file_id: r.file.file_id,
-            file_type: r.file.file_type
-        }));
-
-        res.json({ success: true, files });
-  } catch (err) {
-    console.error("Error listing patient files", err);
-    res.status(500).json({ success: false, message: err.message || "Error listing patient files" });
-  }
-})
+// ==================================================================
 
 // =============================================================================================================================
 //  Update Other Users Specific Data (Data that is not at employees tables like roles, perms, nurse data, doctor data ...etc)
@@ -312,7 +399,7 @@ router.get("/patient-files/:patientId",async (req,res)=>{
 
                     
                     //===9. Get Updated User Data
-                    const UpdateUser = await HospitalUsersMethods.MapUserToGETFunction(other_user_id,other_user_title);
+                    const UpdateUser = await HospitalUsersMethods.MapUserToGETSpecificDataFunction(other_user_id,other_user_title);
 
                     //===10. Send any failing messages or success
                     if(failing_messages.length > 0){
@@ -392,7 +479,7 @@ router.get("/patient-files/:patientId",async (req,res)=>{
                     }
 
                     //===7. Execute Update
-                    const UpdateUser = await HospitalUsersMethods.MapUserToGETFunction(other_user_id,other_user_title);
+                    const UpdateUser = await HospitalUsersMethods.MapUserToGETSpecificDataFunction(other_user_id,other_user_title);
 
                     //===8. Send any failing messages or success
                     if(failing_messages.length > 0){
@@ -471,7 +558,7 @@ router.get("/patient-files/:patientId",async (req,res)=>{
                     }
 
                     //===7. Execute Update
-                    const UpdateUser = await HospitalUsersMethods.MapUserToGETFunction(other_user_id,other_user_title);
+                    const UpdateUser = await HospitalUsersMethods.MapUserToGETSpecificDataFunction(other_user_id,other_user_title);
 
                     //===8. Send any failing messages or success
                     if(failing_messages.length > 0){
@@ -492,72 +579,11 @@ router.get("/patient-files/:patientId",async (req,res)=>{
         }
     })
 
+// ==================================================================
 
+//              Delete Routes
 
-// =================================
-//  Delete Patient (by Admin or SuperAdmin)
-// =================================
-router.delete("/delete-patient", async (req, res) => {
-    try {
-        const { modifier_email, modifier_id, modifier_name, patient_email, patient_name } = req.body;
-        
-
-        // all these fields required to delete & send email
-        if(!modifier_email || !modifier_id || !patient_email || !emp_email  ) return res.status(400).json({success:false,message:"Bad Request"});
-        
-        
-        let ModifierpermsSet = await User.getSetUserperms(modifier_id);
-        let isFulfilled = false;
-        // ===1. Check if modifier have perm to delete users
-        if (ModifierpermsSet.isPermExist("Delete Patient")) {
-
-            // ===2. Get Modifier Role & Other User ID
-            const ModifierRole = await User.getUserRole(modifier_id);
-            const otherUserGET_ID = await User.getUserIDAndTable(patient_email);
-            
-            // ===3. Check that other user is not self & is a patient
-            if(otherUserGET_ID.user_id === null || otherUserGET_ID.table !== "patients" ) return res.status(404).json({success:false,message:"Patient Not Found"});
-            else if(otherUserGET_ID.user_id === modifier_id) return res.status(400).json({success:false,message:"You Cannot Delete Yourself"});
-
-
-            // ===4. Execute Deletion 
-            if(otherUserGET_ID.user_id && otherUserGET_ID.table === "patients") {
-                isFulfilled =await deletePatient(ModifierRole, otherUserRole,patient_id)
-            }
-
-        }
-        else{
-            return res.json({success:false , message:"Not Allowed To Delete Patients"})
-        }
-        
-        // ===5. Send Email
-        if (isFulfilled) {
-            const isSent = await mailer(modifier_email, emp_email, "You Got Deleted", `
-                Dear ${patient_name},
-
-                Your hospital patient's account was deleted ${new Date()}.
-                If you believe this was a mistake or have any questions, please contact us.
-
-                Sincerely,
-                ${modifier_name}
-            `);
-
-            if (isSent)
-                return res.json({ success: true, message: "Patient Deleted & Email Sent" });
-            else
-                return res.status(500).json({ success: false, message: "Patient Deleted But Email Not Sent" });
-
-        } else {
-            return res.status(500).json({ success: false, message: "Patient Wasn't Deleted" });
-        }
-    } catch (err) {
-        consoleLog(`Error Delete Patient Data ${err}`, "error");
-        res.json({
-            success: false,
-            message: err.message || "Error Delete Patient Data"
-        });
-    }
-});
+// ==================================================================
 
 
 

@@ -9,7 +9,7 @@ import userNotification from "@/utils/userNotification";
 import stringifyFields from "@/utils/stringifyFields";
 import statusNotification from "@/utils/statusNotification";
 import { useUserDataContext } from "@/contexts/user_data";
-import {useCachedPatientsContext} from "@/contexts/cached_patients"
+import {usePatientsCache} from "@/hooks/usePatientsCache"
 import BasicTable from '@/components/BasicTable/BasicTable';
 import { useRouter } from "next/navigation";
 import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
@@ -25,7 +25,7 @@ function PatientsListPage() {
   let [numOfPages , setNumOfPages] = useState(1);
   const [filterTrigger, setFilterTrigger] = useState(0);
   const {user_data} = useUserDataContext();
-  let {cached_patients , setCached_Patients , fetched_patient_pages, setFetched_Patient_Pages} = useCachedPatientsContext();
+  let {cached_patients , setCached_Patients , fetched_patient_pages, setFetched_Patient_Pages , savePatientsToStore,isIndexedDBLoaded} = usePatientsCache();
    // Refrences
   const inputsBoxsRef= useRef({});
   const selectBoxsRef= useRef({});
@@ -39,6 +39,7 @@ function PatientsListPage() {
 useEffect(() => {
   console.log("isFiltered",isFiltered)
   if (isFiltered) return;
+  if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
 
   if (!fetched_patient_pages.has(currPage)) {
     console.log("page not fetched")
@@ -63,12 +64,8 @@ useEffect(() => {
           updated.add(currPage);
           return updated;
         });
-          appendToIndexDB("patients", data.body).then(() => {
-                  console.log("Successfully appended new patients to IndexDB");
-                 }) 
-                 .catch((err) => {
-                  console.error("Failed to append new patients to IndexDB:", err);
-                });
+        // save to indexedDB
+        savePatientsToStore(data.body)
         
         } else if (data && !data.success) {
           userNotification("error", data.message);
@@ -77,18 +74,17 @@ useEffect(() => {
   } 
 
   
-}, [currPage]);
+}, [currPage,isIndexedDBLoaded]);
 
 
-useEffect(()=>{console.log("fetched_patient_pages",fetched_patient_pages)},[fetched_patient_pages])
 
 // ===========================================
 //        Table Buttons
 // ===========================================
 
-    function handleVisitBtn(employee){
-      const employeeAsQueries = stringifyFields("anded",Object.entries(employee))
-      router.replace(`/private_routes/patient/${employee.user_id}?${employeeAsQueries}&currPage=${currPage}`)
+    function handleVisitBtn(patient){
+      console.log("Visiting patient",patient)
+      router.replace(`/private_routes/patient/${patient.user_id}?currPage=${currPage}`)
     }
 
 
