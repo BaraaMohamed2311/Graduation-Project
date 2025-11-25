@@ -75,6 +75,9 @@ class PatientMethods {
         const result = await executeMySqlQuery(query,[limit, offset]);
         return result;
     }
+    // ==========================================
+    // Patient need his own functions for listing others, as we do not want to expose all data of doctors/surgeons/nurses to patients
+    // ==========================================
 
         static async getListedDoctorDataForPaitent(limit=null, offset=null,restFilters=null) {
             let query = `
@@ -89,8 +92,8 @@ class PatientMethods {
                     e.emp_name AS user_name,
                     e.emp_email AS user_email, -- You MUST Rename Column For fetchImagesForListedUsers function to work
                     GROUP_CONCAT(
-                        CONCAT(da.day_of_week, ': ', da.start_time, '-', da.end_time)
-                        ORDER BY FIELD(da.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                        CONCAT(da.day_of_week, ': ', DATE_FORMAT(da.start_time, '%H:%i'), '-', DATE_FORMAT(end_time, '%H:%i'))
+                        ORDER BY da.day_of_week
                         SEPARATOR '; '
                     ) AS availability_schedule
                 FROM doctors d
@@ -138,10 +141,11 @@ class PatientMethods {
                     e.emp_name AS user_name,
                     e.emp_email AS user_email, -- You MUST Rename Column For fetchImagesForListedUsers function to work
                     GROUP_CONCAT(
-                        CONCAT(sa.day_of_week, ': ', sa.start_time, '-', sa.end_time)
-                        ORDER BY FIELD(sa.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+                        CONCAT(da.day_of_week, ': ', DATE_FORMAT(sa.start_time, '%H:%i'), '-', DATE_FORMAT(sa.end_time, '%H:%i'))
+                        ORDER BY da.day_of_week
                         SEPARATOR '; '
                     ) AS availability_schedule
+                    
                 FROM surgeons s
                 JOIN employees e 
                     ON s.hosp_emp_id = e.emp_id

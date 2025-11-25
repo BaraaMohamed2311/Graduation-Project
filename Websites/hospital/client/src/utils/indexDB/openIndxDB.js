@@ -24,11 +24,11 @@ export function openIndxDB() {
         }
       });
 
-      console.log("Database structure created/updated:", DB_NAME);
+
     };
 
     request.onsuccess = function (event) {
-      console.log("Database opened successfully:", DB_NAME);
+
       resolve(event.target.result);
     };
 

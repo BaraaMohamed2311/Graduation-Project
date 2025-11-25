@@ -79,12 +79,12 @@ const consoleLog = require("../Utils/consoleLog.js")
                 //Bad Request if
                 if(!user.emp_email || !user.emp_password) return res.status(400 ).json({success:false,message:"Bad Request"});
 
-                const check_unregistered_table = await isExist(`SELECT * FROM unregistered_employees WHERE emp_email = ?`,[user.emp_email]);
-                const check_employees_table = await isExist(`SELECT * FROM employees WHERE emp_email = ?`,[user.emp_email]);
+                const check_unregistered_table = await isExist(`SELECT EXISTS(SELECT * FROM unregistered_employees WHERE emp_email = ?) AS data_exists`, [user.emp_email]);
+                const check_employees_table = await isExist(`SELECT EXISTS(SELECT * FROM employees WHERE emp_email = ?) AS data_exists`, [user.emp_email]);
 
-                if (check_unregistered_table.exists) {
+                if (check_unregistered_table) {
                     return res.json({ success: false, message: "User Already staged & Waiting For Approval" });
-                } else if (check_employees_table.exists) {
+                } else if (check_employees_table) {
                     return res.json({ success: false, message: "User Already Registered & Approved" });
                 } 
                 /* If user is not staged or registered before we start registering it */
@@ -150,8 +150,8 @@ const consoleLog = require("../Utils/consoleLog.js")
 
 
             // first check user exists 
-            const query = `SELECT * FROM employees WHERE emp_id = ?`
-            const { exists } = await isExist(query,[emp_id]);
+            const query = `SELECT EXISTS(SELECT * FROM employees WHERE emp_id = ?) AS data_exists`;
+            const exists  = await isExist(query,[emp_id]);
             // make sure to remove fields that cannot be changed by user 
             userData = fixedFields(userData);
             if(exists){
@@ -190,10 +190,10 @@ const consoleLog = require("../Utils/consoleLog.js")
 
 
             // search for user inside employees table
-            const query = `SELECT * FROM employees WHERE emp_email =?`
+            const query = `SELECT EXISTS(SELECT * FROM employees WHERE emp_email = ?) AS data_exists`;
             const userinTable = await isExist(query,[emp_email]);
             // USER NOT FOUND At EMPLOYEES TABLE
-            if(!userinTable.exists) 
+            if(!userinTable) 
                 res.status(404).json({
                     success:false,
                      message : "User Not Found"

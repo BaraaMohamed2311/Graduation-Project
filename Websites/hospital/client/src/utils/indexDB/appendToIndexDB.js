@@ -20,7 +20,6 @@ export async function appendToIndexDB(storeName, newDataArray) {
       })
 
       transaction.oncomplete = () => {
-        console.log(` Append ${storeName} with new data`);
         resolve(true);
       };
 

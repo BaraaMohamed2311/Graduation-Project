@@ -82,26 +82,44 @@ class SurgeonMethods {
                     -- from hospital_roles with COALESCE for default
                     COALESCE(hr.role_name, 'NormalUser') AS role_name,
 
-                    GROUP_CONCAT(
-                        CONCAT(sa.day_of_week, ': ', sa.start_time, '-', sa.end_time)
-                        ORDER BY FIELD(sa.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
-                        SEPARATOR '; '
-                    ) AS availability_schedule
+                    -- availability schedule with DISTINCT to remove duplicates
+                    -- FIXED: availability schedule using subquery to format times first
+                    COALESCE((
+                        SELECT GROUP_CONCAT(
+                            DISTINCT CONCAT(
+                                formatted.day_of_week, 
+                                ': ', 
+                                formatted.formatted_start, 
+                                '-', 
+                                formatted.formatted_end
+                            )
+                            ORDER BY formatted.day_of_week
+                            SEPARATOR '; '
+                        )
+                        FROM (
+                            SELECT 
+                                day_of_week,
+                                DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                                DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                            FROM availability 
+                            WHERE hosp_emp_id = s.surgeon_id
+                        ) AS formatted
+                    ), 'None') AS availability_schedule
 
                 FROM surgeons s
                 JOIN employees e ON s.hosp_emp_id = e.emp_id
                 LEFT JOIN availability sa ON s.surgeon_id = sa.hosp_emp_id
-                
+
                 -- Join with hospital_emp_perms to get perm_id
                 LEFT JOIN hospital_emp_perms hep ON s.hosp_emp_id = hep.hosp_emp_id
-                
+
                 -- Join with hospital_perms to get perm_name using the perm_id
                 LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
-                
+
                 -- Join with hospital_roles and use COALESCE for default role name
                 LEFT JOIN hospital_roles hr ON s.hosp_emp_id = hr.hosp_emp_id
 
-                ${whereClause } 
+                ${whereClause} 
 
                 GROUP BY 
                     e.emp_id, 
@@ -138,42 +156,47 @@ class SurgeonMethods {
                     s.surgery_price,
                     s.years_of_exp,
 
-                    -- from hospital_perms via hospital_emp_perms
-                    COALESCE(NULLIF(GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
+                    -- from hospital_perms via hospital_emp_perms (subquery)
+                    COALESCE(NULLIF((
+                        SELECT GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', ')
+                        FROM hospital_emp_perms hep
+                        JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+                        WHERE hep.hosp_emp_id = s.hosp_emp_id
+                    ), ''), 'None') AS emp_perms,
                     
-                    -- from hospital_roles with COALESCE for default
-                    COALESCE(hr.role_name, 'NormalUser') AS role_name,
+                    -- from hospital_roles with COALESCE for default (subquery)
+                    COALESCE((
+                        SELECT hr.role_name
+                        FROM hospital_roles hr
+                        WHERE hr.hosp_emp_id = s.hosp_emp_id
+                    ), 'NormalUser') AS role_name,
 
-                    GROUP_CONCAT(
-                        CONCAT(sa.day_of_week, ': ', sa.start_time, '-', sa.end_time)
-                        ORDER BY FIELD(sa.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
-                        SEPARATOR '; '
-                    ) AS availability_schedule
+                    -- FIXED: availability schedule using subquery to format times first
+                    COALESCE((
+                        SELECT GROUP_CONCAT(
+                            DISTINCT CONCAT(
+                                formatted.day_of_week, 
+                                ': ', 
+                                formatted.formatted_start, 
+                                '-', 
+                                formatted.formatted_end
+                            )
+                            ORDER BY formatted.day_of_week
+                            SEPARATOR '; '
+                        )
+                        FROM (
+                            SELECT 
+                                day_of_week,
+                                DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                                DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                            FROM availability 
+                            WHERE hosp_emp_id = s.surgeon_id
+                        ) AS formatted
+                    ), 'None') AS availability_schedule
 
                 FROM surgeons s
                 JOIN employees e ON s.hosp_emp_id = e.emp_id
-                LEFT JOIN availability sa ON s.surgeon_id = sa.hosp_emp_id
-                
-                -- Join with hospital_emp_perms to get perm_id
-                LEFT JOIN hospital_emp_perms hep ON s.hosp_emp_id = hep.hosp_emp_id
-                
-                -- Join with hospital_perms to get perm_name using the perm_id
-                LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
-                
-                -- Join with hospital_roles and use COALESCE for default role name
-                LEFT JOIN hospital_roles hr ON s.hosp_emp_id = hr.hosp_emp_id
-
                 WHERE s.surgeon_id = ?
-
-                GROUP BY 
-                    e.emp_id, 
-                    s.surgeon_id, 
-                    s.hosp_emp_id, 
-                    s.initial_consultation_price, 
-                    s.followup_consultation_price, 
-                    s.surgery_price, 
-                    s.years_of_exp,
-                    hr.role_name
 
             `;
         const result = await executeMySqlQuery(query,[surgeon_id]);
@@ -197,11 +220,28 @@ class SurgeonMethods {
                         s.surgery_price,
                         s.years_of_exp,
 
-                        GROUP_CONCAT(
-                        CONCAT(sa.day_of_week, ': ', sa.start_time, '-', sa.end_time)
-                        ORDER BY FIELD(sa.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
-                        SEPARATOR '; '
-                    ) AS availability_schedule
+                        -- FIXED: availability schedule using subquery to format times first
+                    COALESCE((
+                        SELECT GROUP_CONCAT(
+                            DISTINCT CONCAT(
+                                formatted.day_of_week, 
+                                ': ', 
+                                formatted.formatted_start, 
+                                '-', 
+                                formatted.formatted_end
+                            )
+                            ORDER BY formatted.day_of_week
+                            SEPARATOR '; '
+                        )
+                        FROM (
+                            SELECT 
+                                day_of_week,
+                                DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                                DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                            FROM availability 
+                            WHERE hosp_emp_id = s.surgeon_id
+                        ) AS formatted
+                    ), 'None') AS availability_schedule
 
                     FROM surgeons s
                     JOIN employees e ON s.hosp_emp_id = e.emp_id
@@ -232,11 +272,28 @@ class SurgeonMethods {
                         s.surgery_price,
                         s.years_of_exp,
 
-                        GROUP_CONCAT(
-                        CONCAT(sa.day_of_week, ': ', sa.start_time, '-', sa.end_time)
-                        ORDER BY FIELD(sa.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
-                        SEPARATOR '; '
-                    ) AS availability_schedule
+                        -- FIXED: availability schedule using subquery to format times first
+                            COALESCE((
+                                SELECT GROUP_CONCAT(
+                                    DISTINCT CONCAT(
+                                        formatted.day_of_week, 
+                                        ': ', 
+                                        formatted.formatted_start, 
+                                        '-', 
+                                        formatted.formatted_end
+                                    )
+                                    ORDER BY formatted.day_of_week
+                                    SEPARATOR '; '
+                                )
+                                FROM (
+                                    SELECT 
+                                        day_of_week,
+                                        DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                                        DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                                    FROM availability 
+                                    WHERE hosp_emp_id = s.surgeon_id
+                                ) AS formatted
+                            ), 'None') AS availability_schedule
 
                     FROM surgeons s
                     JOIN employees e ON s.hosp_emp_id = e.emp_id

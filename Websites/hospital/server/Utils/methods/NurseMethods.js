@@ -84,22 +84,39 @@ class NurseMethods {
                 -- from hospital_roles with COALESCE for default
                 COALESCE(hr.role_name, 'NormalUser') AS role_name,
                 
-                GROUP_CONCAT(
-                    CONCAT(na.day_of_week, ': ', na.start_time, '-', na.end_time)
-                    ORDER BY FIELD(na.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
-                    SEPARATOR '; '
-                ) AS availability_schedule
+                -- FIXED: availability schedule using subquery to format times first
+                COALESCE((
+                    SELECT GROUP_CONCAT(
+                        DISTINCT CONCAT(
+                            formatted.day_of_week, 
+                            ': ', 
+                            formatted.formatted_start, 
+                            '-', 
+                            formatted.formatted_end
+                        )
+                        ORDER BY formatted.day_of_week
+                        SEPARATOR '; '
+                    )
+                    FROM (
+                        SELECT 
+                            day_of_week,
+                            DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                            DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                        FROM availability 
+                        WHERE hosp_emp_id = n.nurse_id
+                    ) AS formatted
+                ), 'None') AS availability_schedule
 
             FROM nurses n
             JOIN employees e ON n.hosp_emp_id = e.emp_id
             LEFT JOIN availability na ON n.nurse_id = na.hosp_emp_id
-            
+
             -- Join with hospital_emp_perms to get perm_id
             LEFT JOIN hospital_emp_perms hep ON n.hosp_emp_id = hep.hosp_emp_id
-            
+
             -- Join with hospital_perms to get perm_name using the perm_id
             LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
-            
+
             -- Join with hospital_roles and use COALESCE for default role name
             LEFT JOIN hospital_roles hr ON n.hosp_emp_id = hr.hosp_emp_id
 
@@ -124,53 +141,61 @@ class NurseMethods {
         
         const query = `
             SELECT 
-                -- from employees
-                e.emp_id AS user_id,
-                e.emp_name,
-                e.emp_abscence,
-                e.emp_rate,
-                e.emp_title,
-                e.emp_specialty,
-                e.emp_email AS user_email,
-                
-                -- from nurses
-                n.nurse_id,
-                n.hosp_emp_id,
-                n.floor_number,
-                
-                -- from hospital_perms via hospital_emp_perms
-                COALESCE(NULLIF(GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
-                
-                -- from hospital_roles with COALESCE for default
-                COALESCE(hr.role_name, 'NormalUser') AS role_name,
-                
-                GROUP_CONCAT(
-                    CONCAT(na.day_of_week, ': ', na.start_time, '-', na.end_time)
-                    ORDER BY FIELD(na.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
-                    SEPARATOR '; '
-                ) AS availability_schedule
-
-            FROM nurses n
-            JOIN employees e ON n.hosp_emp_id = e.emp_id
-            LEFT JOIN availability na ON n.nurse_id = na.hosp_emp_id
+            -- from employees
+            e.emp_id AS user_id,
+            e.emp_name,
+            e.emp_abscence,
+            e.emp_rate,
+            e.emp_title,
+            e.emp_specialty,
+            e.emp_email AS user_email,
             
-            -- Join with hospital_emp_perms to get perm_id
-            LEFT JOIN hospital_emp_perms hep ON n.hosp_emp_id = hep.hosp_emp_id
+            -- from nurses
+            n.nurse_id,
+            n.hosp_emp_id,
+            n.floor_number,
             
-            -- Join with hospital_perms to get perm_name using the perm_id
-            LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+            -- from hospital_perms via hospital_emp_perms (subquery)
+            COALESCE(NULLIF((
+                SELECT GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', ')
+                FROM hospital_emp_perms hep
+                JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+                WHERE hep.hosp_emp_id = n.hosp_emp_id
+            ), ''), 'None') AS emp_perms,
             
-            -- Join with hospital_roles and use COALESCE for default role name
-            LEFT JOIN hospital_roles hr ON n.hosp_emp_id = hr.hosp_emp_id
+            -- from hospital_roles with COALESCE for default (subquery)
+            COALESCE((
+                SELECT hr.role_name
+                FROM hospital_roles hr
+                WHERE hr.hosp_emp_id = n.hosp_emp_id
+            ), 'NormalUser') AS role_name,
+            
+            -- FIXED: availability schedule using subquery to format times first
+                COALESCE((
+                    SELECT GROUP_CONCAT(
+                        DISTINCT CONCAT(
+                            formatted.day_of_week, 
+                            ': ', 
+                            formatted.formatted_start, 
+                            '-', 
+                            formatted.formatted_end
+                        )
+                        ORDER BY formatted.day_of_week
+                        SEPARATOR '; '
+                    )
+                    FROM (
+                        SELECT 
+                            day_of_week,
+                            DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                            DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                        FROM availability 
+                        WHERE hosp_emp_id = n.nurse_id
+                    ) AS formatted
+                ), 'None') AS availability_schedule
 
-            WHERE n.nurse_id = ?
-
-            GROUP BY 
-                e.emp_id, 
-                n.nurse_id, 
-                n.hosp_emp_id, 
-                n.floor_number,
-                hr.role_name
+        FROM nurses n
+        JOIN employees e ON n.hosp_emp_id = e.emp_id
+        WHERE n.nurse_id = ?
 
         `;
 
@@ -191,11 +216,28 @@ class NurseMethods {
                         
                         n.hosp_emp_id,
                         n.floor_number,
-                        GROUP_CONCAT(
-                        CONCAT(na.day_of_week, ': ', na.start_time, '-', na.end_time)
-                        ORDER BY FIELD(na.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
-                        SEPARATOR '; '
-                    ) AS availability_schedule
+                        -- FIXED: availability schedule using subquery to format times first
+                        COALESCE((
+                            SELECT GROUP_CONCAT(
+                                DISTINCT CONCAT(
+                                    formatted.day_of_week, 
+                                    ': ', 
+                                    formatted.formatted_start, 
+                                    '-', 
+                                    formatted.formatted_end
+                                )
+                                ORDER BY formatted.day_of_week
+                                SEPARATOR '; '
+                            )
+                            FROM (
+                                SELECT 
+                                    day_of_week,
+                                    DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                                    DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                                FROM availability 
+                                WHERE hosp_emp_id = n.nurse_id
+                            ) AS formatted
+                        ), 'None') AS availability_schedule
 
                     FROM nurses n
                     JOIN employees e ON n.hosp_emp_id = e.emp_id
@@ -222,11 +264,28 @@ class NurseMethods {
                         n.nurse_id,
                         n.hosp_emp_id,
                         n.floor_number,
-                        GROUP_CONCAT(
-                        CONCAT(na.day_of_week, ': ', na.start_time, '-', na.end_time)
-                        ORDER BY FIELD(na.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
-                        SEPARATOR '; '
-                    ) AS availability_schedule
+                        -- FIXED: availability schedule using subquery to format times first
+                        COALESCE((
+                            SELECT GROUP_CONCAT(
+                                DISTINCT CONCAT(
+                                    formatted.day_of_week, 
+                                    ': ', 
+                                    formatted.formatted_start, 
+                                    '-', 
+                                    formatted.formatted_end
+                                )
+                                ORDER BY formatted.day_of_week
+                                SEPARATOR '; '
+                            )
+                            FROM (
+                                SELECT 
+                                    day_of_week,
+                                    DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                                    DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                                FROM availability 
+                                WHERE hosp_emp_id = n.nurse_id
+                            ) AS formatted
+                        ), 'None') AS availability_schedule
 
                     FROM nurses n
                     JOIN employees e ON n.hosp_emp_id = e.emp_id

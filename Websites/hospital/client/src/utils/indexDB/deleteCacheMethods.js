@@ -41,7 +41,7 @@ export async function deleteAfterOneHour(storeNames) {
     
     // If no timestamp exists or 1 hour has passed, clear the stores
     if (!storedTimestamp || (now - parseInt(storedTimestamp)) >= ONE_HOUR_MS) {
-      console.log('Clearing IndexedDB stores after 1 hour...');
+      console.warn('Clearing IndexedDB stores after 1 hour...');
       
       // Clear all specified stores
       for (const storeName of storeNames) {

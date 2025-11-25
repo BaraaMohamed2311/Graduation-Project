@@ -13,10 +13,10 @@ async function isExist(query , paramsArray) {
                 
                 // If there are results, resolve with exists: true
                 if (result.length > 0 && result[0].data_exists) {
-                    resolve({ exists: true  });
+                    resolve( true  );
                 } else {
                     // Otherwise, resolve with exists: false
-                    resolve({ exists: false });
+                    resolve(false );
                 }
             });
         });

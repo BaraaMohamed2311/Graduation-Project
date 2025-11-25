@@ -43,7 +43,7 @@ Changes to reflect to previous ems
 
 // Booking
 patient can update status to Cancelled only if it was Scheduled with him
-employee can update any consultion data , can get any data about consultion
+employee can update any Consultation data , can get any data about Consultation
 
 Check isVaildEmployeeTitleForAppointments and doctor and surgeon methods
 
@@ -73,3 +73,9 @@ Replace THese lines :
 
 
 // Create a function that deletes indexDB after an hour
+
+=========================================
+1) Update EMS queries to use users table for authentication
+2) Update functions that query using email to get corresponding table
+3) Consultions table must reference user_id instead of patient_id
+4) When user is registered at EMS or hospital they must be inserted to users and there specific table

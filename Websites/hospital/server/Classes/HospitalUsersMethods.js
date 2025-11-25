@@ -16,7 +16,7 @@ class HospitalUsersMethods   {
 
         // Add rest filters on employee table
         /**  
-        restFilters are fields in employees table as it is not logical to filter of specific table like consultion_price etc 
+        restFilters are fields in employees table as it is not logical to filter of specific table like price etc 
         because authorized users to list employees cannot modify their specific fields 
         **/
         if (restFilters && Object.keys(restFilters).length > 0) {
@@ -65,7 +65,9 @@ class HospitalUsersMethods   {
             NurseMethods.getAllNursesFullData(limitPerType, offset, whereClause, perms_CONDITION)
         ]);
 
-        return [...doctors, ...surgeons, ...nurses];
+        const result = [].concat(doctors, surgeons, nurses);
+ 
+        return result;
     }
 
     static isHospitalUser(user_title){
@@ -86,7 +88,7 @@ class HospitalUsersMethods   {
     static async MapUserToIsMyPatientFunction(user_id, user_title,patient_id) {
         const fn = HospitalUsersMethods.#titleToIsMyPatientFunction[user_title];
         if (!fn) {
-            throw new Error(`No function mapped for user title: ${user_title}`);
+            return null;
         }
         return await fn.call(this, user_id, patient_id); // call it in class context
     }
@@ -105,7 +107,7 @@ class HospitalUsersMethods   {
     static async MapUserToGETSpecificDataFunction(user_id, user_title) {
         const fn = HospitalUsersMethods.#titleToGETSpecificDataFunction[user_title];
         if (!fn) {
-            throw new Error(`No function mapped for user title: ${user_title}`);
+            return null;
         }
         return await fn.call(this, user_id); // call it in class context
     }
@@ -120,7 +122,7 @@ class HospitalUsersMethods   {
     static async MapUserToGETFullDataFunction(user_id, user_title) {
         const fn = HospitalUsersMethods.#titleToGETFullDataFunction[user_title];
         if (!fn) {
-            throw new Error(`No function mapped for user title: ${user_title}`);
+            return null;
         }
         return await fn.call(this, user_id); // call it in class context
     }
@@ -140,7 +142,9 @@ class HospitalUsersMethods   {
     static async MapUserToUpdateFunction(user_id, title, data , actions) {
         console.log(user_id, title, data , actions)
         const fn = HospitalUsersMethods.#titleUpdateMap[title];
-        if (!fn) throw new Error(`No update function defined for role: ${title}`);
+        if (!fn) {
+            return null;
+        }
         
         return await fn.call(this, user_id, data, actions);
     }

@@ -114,9 +114,7 @@ DROP TABLE IF EXISTS availability;
 CREATE TABLE availability (
     availability_id INT AUTO_INCREMENT PRIMARY KEY,   -- unique slot id
     hosp_emp_id INT NOT NULL,                           -- FK to doctors
-    day_of_week ENUM(
-        'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'
-    ) NOT NULL,
+    day_of_week TINYINT NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
     start_time TIME NOT NULL,                         -- when shift starts
     end_time TIME NOT NULL,                           -- when shift ends
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -135,7 +133,7 @@ CREATE TABLE availability (
 -- consultations
 -- ==========================================
 DROP TABLE IF EXISTS consultations;
-DROP TABLE IF EXISTS consultations;
+
 CREATE TABLE consultations (
     consultation_id INT AUTO_INCREMENT PRIMARY KEY,
     hosp_emp_id INT NOT NULL,                       -- unified reference for doctor/surgeon
@@ -144,9 +142,9 @@ CREATE TABLE consultations (
     consultation_date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
-    status ENUM('Available','Scheduled','Completed','Cancelled') DEFAULT 'Available',
+    consultation_status ENUM('Available','Scheduled','Completed','Cancelled') DEFAULT 'Available',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
+    consultation_type ENUM('initial_consultation_price', 'followup_consultation_price') NOT NULL,
     FOREIGN KEY (hosp_emp_id)
         REFERENCES employees_hospital(hosp_emp_id)
         ON DELETE CASCADE
@@ -398,131 +396,120 @@ INSERT INTO nurses (nurse_id, hosp_emp_id, floor_number) VALUES
 INSERT INTO availability (hosp_emp_id, day_of_week, start_time, end_time)
 VALUES
 -- 🔹 Surgeons
-(1004, 'Monday', '08:00:00', '12:00:00'),
-(1004, 'Thursday', '13:00:00', '17:00:00'),
+(1004, 1, '08:00:00', '12:00:00'),  -- Monday
+(1004, 4, '13:00:00', '17:00:00'),  -- Thursday
 
-(1029, 'Tuesday', '09:00:00', '13:00:00'),
-(1029, 'Friday', '14:00:00', '18:00:00'),
+(1029, 2, '09:00:00', '13:00:00'),  -- Tuesday
+(1029, 5, '14:00:00', '18:00:00'),  -- Friday
 
-(1046, 'Wednesday', '10:00:00', '14:00:00'),
-(1046, 'Saturday', '09:00:00', '13:00:00'),
+(1046, 3, '10:00:00', '14:00:00'),  -- Wednesday
+(1046, 6, '09:00:00', '13:00:00'),  -- Saturday
 
-(1061, 'Monday', '14:00:00', '18:00:00'),
-(1061, 'Thursday', '08:00:00', '12:00:00'),
+(1061, 1, '14:00:00', '18:00:00'),  -- Monday
+(1061, 4, '08:00:00', '12:00:00'),  -- Thursday
 
-(1080, 'Tuesday', '08:30:00', '12:30:00'),
-(1080, 'Friday', '15:00:00', '19:00:00'),
+(1080, 2, '08:30:00', '12:30:00'),  -- Tuesday
+(1080, 5, '15:00:00', '19:00:00'),  -- Friday
 
-(1083, 'Wednesday', '09:00:00', '13:00:00'),
-(1083, 'Sunday', '10:00:00', '14:00:00'),
+(1083, 3, '09:00:00', '13:00:00'),  -- Wednesday
+(1083, 0, '10:00:00', '14:00:00'),  -- Sunday
 
-(1089, 'Thursday', '13:30:00', '17:30:00'),
-(1089, 'Saturday', '08:00:00', '12:00:00'),
+(1089, 4, '13:30:00', '17:30:00'),  -- Thursday
+(1089, 6, '08:00:00', '12:00:00'),  -- Saturday
 
-(1099, 'Monday', '09:00:00', '13:00:00'),
-(1099, 'Friday', '14:00:00', '18:00:00'),
+(1099, 1, '09:00:00', '13:00:00'),  -- Monday
+(1099, 5, '14:00:00', '18:00:00'),  -- Friday
 
-(1103, 'Tuesday', '10:00:00', '14:00:00'),
-(1103, 'Thursday', '15:00:00', '19:00:00'),
+(1103, 2, '10:00:00', '14:00:00'),  -- Tuesday
+(1103, 4, '15:00:00', '19:00:00'),  -- Thursday
 
-(1155, 'Wednesday', '08:00:00', '12:00:00'),
-(1155, 'Saturday', '13:00:00', '17:00:00'),
+(1155, 3, '08:00:00', '12:00:00'),  -- Wednesday
+(1155, 6, '13:00:00', '17:00:00'),  -- Saturday
 
-(1158, 'Monday', '13:00:00', '17:00:00'),
-(1158, 'Thursday', '09:00:00', '13:00:00'),
+(1158, 1, '13:00:00', '17:00:00'),  -- Monday
+(1158, 4, '09:00:00', '13:00:00'),  -- Thursday
 
-(1179, 'Tuesday', '09:30:00', '13:30:00'),
-(1179, 'Friday', '15:30:00', '19:30:00'),
+(1179, 2, '09:30:00', '13:30:00'),  -- Tuesday
+(1179, 5, '15:30:00', '19:30:00'),  -- Friday
 
-(1180, 'Wednesday', '10:00:00', '14:00:00'),
-(1180, 'Sunday', '08:00:00', '12:00:00'),
+(1180, 3, '10:00:00', '14:00:00'),  -- Wednesday
+(1180, 0, '08:00:00', '12:00:00'),  -- Sunday
 
-(1190, 'Thursday', '08:30:00', '12:30:00'),
-(1190, 'Saturday', '14:00:00', '18:00:00'),
+(1190, 4, '08:30:00', '12:30:00'),  -- Thursday
+(1190, 6, '14:00:00', '18:00:00'),  -- Saturday
 
 -- 🔹 Nurses
-(1003, 'Monday', '07:00:00', '11:00:00'),
-(1003, 'Thursday', '13:00:00', '17:00:00'),
+(1003, 1, '07:00:00', '11:00:00'),  -- Monday
+(1003, 4, '13:00:00', '17:00:00'),  -- Thursday
 
-(1024, 'Tuesday', '08:00:00', '12:00:00'),
-(1024, 'Friday', '14:00:00', '18:00:00'),
+(1024, 2, '08:00:00', '12:00:00'),  -- Tuesday
+(1024, 5, '14:00:00', '18:00:00'),  -- Friday
 
-(1034, 'Wednesday', '07:30:00', '11:30:00'),
-(1034, 'Saturday', '12:00:00', '16:00:00'),
+(1034, 3, '07:30:00', '11:30:00'),  -- Wednesday
+(1034, 6, '12:00:00', '16:00:00'),  -- Saturday
 
-(1039, 'Monday', '12:00:00', '16:00:00'),
-(1039, 'Thursday', '08:00:00', '12:00:00'),
+(1039, 1, '12:00:00', '16:00:00'),  -- Monday
+(1039, 4, '08:00:00', '12:00:00'),  -- Thursday
 
-(1047, 'Tuesday', '09:00:00', '13:00:00'),
-(1047, 'Friday', '13:00:00', '17:00:00'),
+(1047, 2, '09:00:00', '13:00:00'),  -- Tuesday
+(1047, 5, '13:00:00', '17:00:00'),  -- Friday
 
-(1068, 'Wednesday', '10:00:00', '14:00:00'),
-(1068, 'Sunday', '08:00:00', '12:00:00'),
+(1068, 3, '10:00:00', '14:00:00'),  -- Wednesday
+(1068, 0, '08:00:00', '12:00:00'),  -- Sunday
 
-(1069, 'Monday', '07:00:00', '11:00:00'),
-(1069, 'Saturday', '13:00:00', '17:00:00'),
+(1069, 1, '07:00:00', '11:00:00'),  -- Monday
+(1069, 6, '13:00:00', '17:00:00'),  -- Saturday
 
-(1072, 'Tuesday', '08:30:00', '12:30:00'),
-(1072, 'Friday', '15:00:00', '19:00:00'),
+(1072, 2, '08:30:00', '12:30:00'),  -- Tuesday
+(1072, 5, '15:00:00', '19:00:00'),  -- Friday
 
-(1093, 'Wednesday', '09:00:00', '13:00:00'),
-(1093, 'Thursday', '14:00:00', '18:00:00'),
+(1093, 3, '09:00:00', '13:00:00'),  -- Wednesday
+(1093, 4, '14:00:00', '18:00:00'),  -- Thursday
 
-(1100, 'Monday', '12:30:00', '16:30:00'),
-(1100, 'Friday', '08:00:00', '12:00:00'),
+(1100, 1, '12:30:00', '16:30:00'),  -- Monday
+(1100, 5, '08:00:00', '12:00:00'),  -- Friday
 
-(1108, 'Tuesday', '07:00:00', '11:00:00'),
-(1108, 'Sunday', '13:00:00', '17:00:00'),
+(1108, 2, '07:00:00', '11:00:00'),  -- Tuesday
+(1108, 0, '13:00:00', '17:00:00'),  -- Sunday
 
-(1110, 'Wednesday', '08:00:00', '12:00:00'),
-(1110, 'Saturday', '14:00:00', '18:00:00'),
+(1110, 3, '08:00:00', '12:00:00'),  -- Wednesday
+(1110, 6, '14:00:00', '18:00:00'),  -- Saturday
 
-(1116, 'Monday', '09:00:00', '13:00:00'),
-(1116, 'Thursday', '15:00:00', '19:00:00'),
+(1116, 1, '09:00:00', '13:00:00'),  -- Monday
+(1116, 4, '15:00:00', '19:00:00'),  -- Thursday
 
-(1127, 'Tuesday', '10:00:00', '14:00:00'),
-(1127, 'Friday', '09:00:00', '13:00:00'),
+(1127, 2, '10:00:00', '14:00:00'),  -- Tuesday
+(1127, 5, '09:00:00', '13:00:00'),  -- Friday
 
-(1142, 'Wednesday', '07:30:00', '11:30:00'),
-(1142, 'Sunday', '14:00:00', '18:00:00'),
+(1142, 3, '07:30:00', '11:30:00'),  -- Wednesday
+(1142, 0, '14:00:00', '18:00:00'),  -- Sunday
 
-(1153, 'Monday', '13:00:00', '17:00:00'),
-(1153, 'Thursday', '09:00:00', '13:00:00'),
+(1153, 1, '13:00:00', '17:00:00'),  -- Monday
+(1153, 4, '09:00:00', '13:00:00'),  -- Thursday
 
-(1168, 'Tuesday', '08:00:00', '12:00:00'),
-(1168, 'Saturday', '12:00:00', '16:00:00'),
+(1168, 2, '08:00:00', '12:00:00'),  -- Tuesday
+(1168, 6, '12:00:00', '16:00:00'),  -- Saturday
 
-(1172, 'Wednesday', '09:30:00', '13:30:00'),
-(1172, 'Friday', '14:30:00', '18:30:00'),
+(1172, 3, '09:30:00', '13:30:00'),  -- Wednesday
+(1172, 5, '14:30:00', '18:30:00'),  -- Friday
 
-(1175, 'Monday', '08:00:00', '12:00:00'),
-(1175, 'Thursday', '13:00:00', '17:00:00'),
+(1175, 1, '08:00:00', '12:00:00'),  -- Monday
+(1175, 4, '13:00:00', '17:00:00'),  -- Thursday
 
-(1196, 'Tuesday', '07:30:00', '11:30:00'),
-(1196, 'Sunday', '10:00:00', '14:00:00');
+(1196, 2, '07:30:00', '11:30:00'),  -- Tuesday
+(1196, 0, '10:00:00', '14:00:00');  -- Sunday
 
 
 
 INSERT INTO consultations
-(doctor_id, availability_id, consultation_date, start_time, end_time, status)
+(hosp_emp_id, availability_id, consultation_date, start_time, end_time, consultation_status, patient_id, consultation_type)
 VALUES
--- Doctor 1016 (Monday 08:00–12:00) — all available 1-hour slots
-(1016, 1, '2025-10-06', '08:00:00', '09:00:00', 'Available'),
-(1016, 1, '2025-10-06', '09:00:00', '10:00:00', 'Available'),
-(1016, 1, '2025-10-06', '10:00:00', '11:00:00', 'Available'),
-(1016, 1, '2025-10-06', '11:00:00', '12:00:00', 'Available'),
 
--- Doctor 1045 (Tuesday 09:00–13:00)
-(1045, 2, '2025-10-07', '09:00:00', '10:00:00', 'Available'),
-(1045, 2, '2025-10-07', '10:00:00', '11:00:00', 'Available'),
-(1045, 2, '2025-10-07', '11:00:00', '12:00:00', 'Available'),
-(1045, 2, '2025-10-07', '12:00:00', '13:00:00', 'Available'),
+-- Use 'scheduled' status for new appointments
+(1045, 315, '2025-10-07', '09:00:00', '10:00:00', 'scheduled', 1, 'initial_consultation_price'),
+(1045, 315, '2025-10-07', '10:00:00', '11:00:00', 'scheduled', 4, 'initial_consultation_price'),
+(1045, 315, '2025-10-07', '11:00:00', '12:00:00', 'scheduled', 3, 'initial_consultation_price');
 
--- Doctor 1065 (Wednesday 10:00–14:00)
-(1065, 3, '2025-10-08', '10:00:00', '11:00:00', 'Available'),
-(1065, 3, '2025-10-08', '11:00:00', '12:00:00', 'Available'),
-(1065, 3, '2025-10-08', '12:00:00', '13:00:00', 'Available'),
-(1065, 3, '2025-10-08', '13:00:00', '14:00:00', 'Available');
 
 
 

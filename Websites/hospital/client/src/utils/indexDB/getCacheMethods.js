@@ -12,7 +12,6 @@ export async function getAllFromStore(storeName) {
     const request = store.getAll();
 
     request.onsuccess = () => {
-      console.log(`Retrieved ${storeName} data:`, request.result);
       resolve(request.result || []);
     };
 

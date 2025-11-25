@@ -55,7 +55,6 @@ export const syncUpdatedRecordsWithCache = async (setCachedData, updatedRecordId
         updatedDataMap.has(record.id) ? updatedDataMap.get(record.id) : record
       );
 
-      console.log(`Synchronized ${validUpdatedRecords.length} records in cache`);
       return updatedData;
     });
 

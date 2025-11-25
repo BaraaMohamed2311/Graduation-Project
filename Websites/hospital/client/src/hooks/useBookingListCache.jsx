@@ -6,11 +6,16 @@ import { clearStore } from "@/utils/indexDB/deleteCacheMethods";
 import { globally_mapped_booking_stores } from "@/global_data";
 // If you update this you have to update the IndexedDB stores names in openIndxDB.js to create them first
 const MapTargetToStoreName = globally_mapped_booking_stores;
+const targets = Object.keys(globally_mapped_booking_stores);
 
-const InitialFetchedPages = {
-  doctors: new Set(),
-  surgeons: new Set()
-};
+const InitialFetchedPagesMappedToTarget = {};
+
+// Initialize with empty Sets for each target
+// e.g., { doctors: Set(), surgeons: Set() }
+targets.forEach(target =>{
+  InitialFetchedPagesMappedToTarget[target] = new Set();
+});
+
 
 export const useBookingListCache = () => {
   const initialBookingList = Object.keys(MapTargetToStoreName).reduce((acc, key) => {
@@ -19,7 +24,7 @@ export const useBookingListCache = () => {
   }, {});
 
   const [cached_booking_list, setCached_Booking_List] = useState(initialBookingList);
-  const [fetched_booking_pages, setFetched_Booking_Pages] = useState(InitialFetchedPages);
+  const [fetched_booking_pages, setFetched_Booking_Pages] = useState(InitialFetchedPagesMappedToTarget);
   const [isIndexedDBLoaded, setIsIndexedDBLoaded] = useState(false);
 
    // Save specific target data to IndexedDB
@@ -81,14 +86,14 @@ useEffect(() => {
       if (typeof parsedPages === 'object' && parsedPages !== null) {
         // New format: { doctors: [...], surgeons: [...] }
         const restoredPages = {};
-        Object.keys(InitialFetchedPages).forEach(target => {
+        Object.keys(InitialFetchedPagesMappedToTarget).forEach(target => {
           restoredPages[target] = new Set(parsedPages[target] || []);
         });
         setFetched_Booking_Pages(restoredPages);
       } else if (Array.isArray(parsedPages)) {
         // Old format: array - migrate to new format
         const migratedPages = {};
-        Object.keys(InitialFetchedPages).forEach(target => {
+        Object.keys(InitialFetchedPagesMappedToTarget).forEach(target => {
           migratedPages[target] = new Set(parsedPages); // Put old array in all targets
         });
         setFetched_Booking_Pages(migratedPages);

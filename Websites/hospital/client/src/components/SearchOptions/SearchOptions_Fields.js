@@ -15,7 +15,7 @@ function renderUserFilters({ styles,inputs_info, selectsElementsData, references
       {selectsElementsData &&
         selectsElementsData.map((selectData) => (
           <Select
-            key={selectData.key}
+            key={selectData.name}
             styles={styles}
             isLabeld={false}
             select_options={selectData}
@@ -36,7 +36,7 @@ function renderUserFilters({ styles,inputs_info, selectsElementsData, references
       {selectsElementsData &&
         selectsElementsData.map((selectData) => (
           <Select
-            key={selectData.key}
+            key={selectData.name}
             styles={styles}
             isLabeld={false}
             select_options={selectData}

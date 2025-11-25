@@ -8,7 +8,7 @@ const  ModifyOtherUserData  = require("../Utils/ControlUsers/ModifyOtherUserData
 const  ModifyOtherUserRole  = require("../Utils/ControlUsers/ModifyOtherUserRole.js");  
 const  ModifyOtherUserPerms = require("../Utils/ControlUsers/ModifyOtherUserPerms.js");
 const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
-const ConsultionMethods = require("../Utils/methods/ConsultionMethods.js");
+const ConsultationMethods = require("../Utils/methods/ConsultationMethods.js");
 const deletePatient = require("../Utils/ControlUsers/deletePatient.js");
 const RemoveFixedFields = require("../Utils/RemoveFixedFields.js");
 const Tables = require("../Tables/data.js");
@@ -19,8 +19,50 @@ const stringifyFields = require("../Utils/stringifyFields.js");
 const JoinFiltering = require("../Utils/JoinFiltering.js");
 const isExist = require("../Utils/isExist.js");
 const getDayOfWeekByDate = require("../Utils/getDayOfWeekByDate.js");
+const isDayInPast = require("../Utils/isDayInPast.js");
 const myCache = new NodeCache({ stdTTL: 3600 }); // default TTL 1hr
 
+// =================================
+//  Get  Availability Details
+// =================================
+
+router.get("/get-availability",async (req,res)=>{
+
+    try {
+    const { hosp_emp_id } = req.query;
+
+    // Validate required fields
+    if (!hosp_emp_id ) {
+      return res.status(400).json({
+        success: false,
+        message: "Bad Request."
+      });
+    }
+
+
+    // Fetch the appointment
+    const available_days = await ConsultationMethods.getAllShiftAvailabilityDays(hosp_emp_id);
+
+    if (!available_days || available_days.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No Availability found matching provided details."
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      body: available_days
+    });
+
+  } catch (err) {
+    console.error("Error in /get-availability:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Server error while fetching availability."
+    });
+  }
+});
 // =================================
 //  Get  Specific Appointment
 // =================================
@@ -55,7 +97,7 @@ router.get("/get-appointment",async (req,res)=>{
     }
 
     // Fetch the appointment
-    const appointment = await ConsultionMethods.getSpecificAppointment(
+    const appointment = await ConsultationMethods.getSpecificAppointment(
       hosp_emp_id,
       patient_id,
       consultation_date,
@@ -71,7 +113,7 @@ router.get("/get-appointment",async (req,res)=>{
 
     res.status(200).json({
       success: true,
-      data: appointment
+      body: appointment
     });
 
   } catch (err) {
@@ -110,9 +152,9 @@ router.get("/get-all-appointments",async (req,res)=>{
 
     if (userIsEmployee) {
 
-      appointments = await ConsultionMethods.getEmployeeAppointments(user_id);
+      appointments = await ConsultationMethods.getEmployeeAppointments(user_id);
     } else if(userIsPatient){
-      appointments = await ConsultionMethods.getPatientAppointments(user_id);
+      appointments = await ConsultationMethods.getPatientAppointments(user_id);
     }
 
     if (!appointments || appointments.length === 0) {
@@ -125,7 +167,7 @@ router.get("/get-all-appointments",async (req,res)=>{
     res.status(200).json({
       success: true,
       count: appointments.length,
-      data: appointments
+      body: appointments
     });
 
   } catch (err) {
@@ -141,7 +183,7 @@ router.get("/get-all-appointments",async (req,res)=>{
 // =================================
 //    Schedule an Appointment
 // =================================
-router.post("/book-appointment",async (req,res)=>{
+router.post("/book-consultation",async (req,res)=>{
     try{
        
         const {
@@ -149,7 +191,8 @@ router.post("/book-appointment",async (req,res)=>{
             patient_id,  // The selected availability slot
             consultation_date,
             start_time,
-            end_time
+            end_time,
+            booking_type
         } = req.body;
 
         // ===1. Validate Input
@@ -162,8 +205,17 @@ router.post("/book-appointment",async (req,res)=>{
         }
 
 
+        // === Ceck if consultation_date is in the past
+        if(isDayInPast(consultation_date)){
+            return res.status(400).json({
+                success: false,
+                message: "Cannot book consultation in the past."
+            });
+        }
+
+
         // ===2. Check employee eligibility
-        const isValidEmp = await ConsultionMethods.isVaildEmployeeTitleForAppointments(hosp_emp_id);
+        const isValidEmp = await ConsultationMethods.isVaildEmployeeTitleForAppointments(hosp_emp_id);
 
 
         if(!isValidEmp){
@@ -176,20 +228,24 @@ router.post("/book-appointment",async (req,res)=>{
         // ===3. Check if new patient exists 
         const query_pat = `SELECT EXISTS(SELECT * FROM patients WHERE patient_id =?) AS data_exists`
         const userIsPatient = await isExist(query_pat,[patient_id]);
-        
-        if(!userIsPatient.exists){
+        const query_emp = `SELECT EXISTS(SELECT * FROM employees WHERE emp_id =?) AS data_exists`
+        const userIsEmployee = await isExist(query_emp,[patient_id]);
+
+        // Any user can book appointment with doctor but he must be at least patient or employee
+        if(!userIsPatient && !userIsEmployee){
           return res.status(404).json({
               success:false,
-              message : "Patient Not Found"
+              message : "You have to register as patient before booking an appointment."
               });
         }
 
         // === Get day of week from date
-        const dayOfWeek  = getDayOfWeekByDate(consultation_date);
-        console.log("Day of Week:", dayOfWeek);
+        const dayOfWeek  = new Date(consultation_date);
+        const dayOfWeekIndex = dayOfWeek.getDay(); // 0 (Sun) to 6 (Sat)
+
 
         // ===3. Check shift availability if vaild get availability details
-        const isShiftAvailable = await ConsultionMethods.checkShiftAvailability(hosp_emp_id,dayOfWeek,start_time,end_time);
+        const isShiftAvailable = await ConsultationMethods.checkShiftAvailability(hosp_emp_id,dayOfWeekIndex,start_time,end_time);
 
         if(!isShiftAvailable.valid){
             return res.status(400).json({
@@ -199,12 +255,12 @@ router.post("/book-appointment",async (req,res)=>{
         }
         
 
-        const availability = await ConsultionMethods.getShiftAvailability(hosp_emp_id,dayOfWeek); // Not used in this context
+        const availability = await ConsultationMethods.getShiftAvailability(hosp_emp_id,dayOfWeekIndex); // Not used in this context
         console.log("Availability for the day:", availability);
 
-        // ===4. Check consultion state
+        // ===4. Check consultation_status 
 
-        const isSlotAvailable = await ConsultionMethods.getAppointmentAvailability(hosp_emp_id,consultation_date,start_time);
+        const isSlotAvailable = await ConsultationMethods.getAppointmentAvailability(hosp_emp_id,consultation_date,start_time);
         console.log("isSlotAvailable for the day:", isSlotAvailable);
         if(!isSlotAvailable || (isSlotAvailable !== "Available" && isSlotAvailable !== "Completed" && isSlotAvailable !== "Cancelled")){
             return res.status(400).json({
@@ -220,7 +276,7 @@ router.post("/book-appointment",async (req,res)=>{
         // =============================
         // ====6. Create Consultation Entry
         // =============================
-        const isAppointmentCreated = await ConsultionMethods.bookConsultionAppointment(hosp_emp_id, patient_id,availability.availability_id,consultation_date,start_time,end_time)
+        const isAppointmentCreated = await ConsultationMethods.bookConsultationAppointment(hosp_emp_id, patient_id,availability.availability_id,consultation_date,start_time,end_time)
         console.log("Appointment Creation Status:", isAppointmentCreated);
         if(!isAppointmentCreated){
             return res.status(400).json({
@@ -241,10 +297,10 @@ router.post("/book-appointment",async (req,res)=>{
         });
     }
     catch(err){
-        console.error("Error Booking Consultion",err);
+        console.error("Error Booking Consultation",err);
         res.status(500).json({
             success:false,
-            message: err.message || "Error Booking Consultion"
+            message: err.message || "Error Booking Consultation"
         })
     }
 })
@@ -269,7 +325,7 @@ router.put("/update-appointment-status",async (req,res)=>{
 
         // ===2. Validate inputs check if appointment exists before updating
 
-        const existingAppointment = await ConsultionMethods.getSpecificAppointmentByID(consultation_id);
+        const existingAppointment = await ConsultationMethods.getSpecificAppointmentByID(consultation_id);
         if (!existingAppointment) {
         return res.status(404).json({
             success: false,
@@ -278,7 +334,7 @@ router.put("/update-appointment-status",async (req,res)=>{
         }
 
         // ===3. Update appointment status
-        const result = await ConsultionMethods.updateAppointmentStatus(consultation_id, new_status);
+        const result = await ConsultationMethods.updateAppointmentStatus(consultation_id, new_status);
 
         if (result) {
         res.status(200).json({
@@ -318,7 +374,7 @@ router.put("/update-appointment-patient",async (req,res)=>{
 
         // ===2. check if appointment exists before updating
 
-        const existingAppointment = await ConsultionMethods.getSpecificAppointmentByID(consultation_id);
+        const existingAppointment = await ConsultationMethods.getSpecificAppointmentByID(consultation_id);
         if (!existingAppointment) {
         return res.status(404).json({
             success: false,
@@ -330,7 +386,7 @@ router.put("/update-appointment-patient",async (req,res)=>{
         const query_pat = `SELECT EXISTS(SELECT * FROM patients WHERE patient_id =?) AS data_exists`
         const userIsPatient = await isExist(query_pat,[patient_id]);
         
-        if(!userIsPatient.exists){
+        if(!userIsPatient){
           return res.status(404).json({
               success:false,
               message : "Create patient before assigning to appointment."
@@ -338,7 +394,7 @@ router.put("/update-appointment-patient",async (req,res)=>{
         }
 
         // ===4. Update appointment patient id
-        const result = await ConsultionMethods.updateAppointmentPatient(consultation_id, patient_id);
+        const result = await ConsultationMethods.updateAppointmentPatient(consultation_id, patient_id);
 
         if (result) {
         res.status(200).json({
@@ -378,7 +434,7 @@ router.put("/reschedule-appointment",async (req,res)=>{
 
         // ===2. check if appointment exists before updating
 
-        const existingAppointment = await ConsultionMethods.getSpecificAppointmentByID(consultation_id);
+        const existingAppointment = await ConsultationMethods.getSpecificAppointmentByID(consultation_id);
         if (!existingAppointment) {
         return res.status(404).json({
             success: false,
@@ -388,11 +444,11 @@ router.put("/reschedule-appointment",async (req,res)=>{
 
         // ===3.  Chech new Schedule Availability
         // === Get day of week from date
-        const dayOfWeek  = getDayOfWeekByDate(new_consultation_date);
-        console.log("Day of Week:", dayOfWeek);
+        const dayOfWeek  = new Date(new_consultation_date);
+        const dayOfWeekIndex = dayOfWeek.getDay(); // 0 (Sun) to 6 (Sat)
 
         // ===3. Check shift availability if vaild get availability details
-        const isShiftAvailable = await ConsultionMethods.checkShiftAvailability(hosp_emp_id,dayOfWeek,new_start_time,new_end_time);
+        const isShiftAvailable = await ConsultationMethods.checkShiftAvailability(hosp_emp_id,dayOfWeekIndex,new_start_time,new_end_time);
 
         if(!isShiftAvailable.valid){
             return res.status(400).json({
@@ -402,12 +458,12 @@ router.put("/reschedule-appointment",async (req,res)=>{
         }
         
 
-        const availability = await ConsultionMethods.getShiftAvailability(hosp_emp_id,dayOfWeek); // Not used in this context
+        const availability = await ConsultationMethods.getShiftAvailability(hosp_emp_id,dayOfWeekIndex); // Not used in this context
         console.log("Availability for the day:", availability);
 
-        // ===4. Check consultion state
+        // ===4. Check Consultation state
 
-        const isSlotAvailable = await ConsultionMethods.getAppointmentAvailability(hosp_emp_id,new_consultation_date,new_start_time);
+        const isSlotAvailable = await ConsultationMethods.getAppointmentAvailability(hosp_emp_id,new_consultation_date,new_start_time);
         console.log("isSlotAvailable for the day:", isSlotAvailable);
         if(!isSlotAvailable || (isSlotAvailable !== "Available" && isSlotAvailable !== "Completed" && isSlotAvailable !== "Cancelled")){
             return res.status(400).json({
@@ -417,7 +473,7 @@ router.put("/reschedule-appointment",async (req,res)=>{
         }
 
         // ===5. Reschedule Appointment
-        const result = await ConsultionMethods.updateAppointmentSchedule(consultation_id, availability.availability_id,new_consultation_date , new_start_time,new_end_time);
+        const result = await ConsultationMethods.updateAppointmentSchedule(consultation_id, availability.availability_id,new_consultation_date , new_start_time,new_end_time);
 
         if (result) {
         res.status(200).json({
@@ -458,7 +514,7 @@ router.delete("/delete-appointment",async (req,res)=>{
 
 
         // ===2. check if appointment exists before updating
-        const existingAppointment = await ConsultionMethods.getSpecificAppointmentByID(consultation_id);
+        const existingAppointment = await ConsultationMethods.getSpecificAppointmentByID(consultation_id);
         if (!existingAppointment) {
         return res.status(404).json({
             success: false,
@@ -474,7 +530,7 @@ router.delete("/delete-appointment",async (req,res)=>{
             });
         }
         // ===2. delete appointment
-        const result = await ConsultionMethods.deleteConsultation(consultation_id);
+        const result = await ConsultationMethods.deleteConsultation(consultation_id);
 
         if (result) {
         res.status(200).json({

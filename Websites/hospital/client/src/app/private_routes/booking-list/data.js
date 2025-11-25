@@ -11,8 +11,8 @@ let selectsElementsData = [
     },
     {   
 
-        key:"Consultion Price",
-        label:"Consultion Price",
+        key:"Consultation Price",
+        label:"Consultation Price",
         name:"initial_consultation_price",
         options:[{ value: "High To Low", text: "High To Low" },{ value: "Low To High", text: "Low To High" }],
         

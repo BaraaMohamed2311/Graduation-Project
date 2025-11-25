@@ -35,11 +35,12 @@ function BookingListPage() {
 //        Initial Fetch
 // ===========================================
 useEffect(() => {
-  console.log("isFiltered",isFiltered)
+
   if (isFiltered) return;
   if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
-  // This needs to be changed
-  if (!false) {
+  // Check if we already fetched this page for this target to avoid refetching
+  console.log("fetched_booking_pages",fetched_booking_pages , !fetched_booking_pages[targetedBooking]?.has(currPage))
+  if (!(fetched_booking_pages[targetedBooking]?.has(currPage))) {
     fetch(`${process.env.APIKEY}/list/${targetedBooking}?pagination=${currPage}&size=${sizeOfPage}`, {
       mode: "cors",
       headers: {
@@ -59,10 +60,15 @@ useEffect(() => {
             return updated;
           });
           setNumOfPages(data.numOfPages || 1);
-          setFetched_Booking_Pages(prev => ({
-            ...prev,
-            [targetedBooking]: new Set([...(prev[targetedBooking] || []), currPage])
-          }));
+          setFetched_Booking_Pages(prev => {
+            const currentPages = prev[targetedBooking] || new Set();
+            const updatedPages = new Set([...currentPages, currPage]);
+            
+            return {
+              ...prev,
+              [targetedBooking]: updatedPages
+            };
+          });
           // save to indexedDB
           console.log("Saving specific to store" , data.body,targetedBooking)
           saveSpecificToStore(data.body,targetedBooking)
@@ -84,7 +90,7 @@ useEffect(() => {
 // ===========================================
 
     function handleBookBtn(employee){
-
+      router.push(`/private_routes/book-consultation/${employee.user_id}`);
     }
 
 

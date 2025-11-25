@@ -59,7 +59,7 @@ import { useUserDataContext } from "@/contexts/user_data";
               </p>
               <p><strong>Email:</strong> {employee.user_email}</p>
               <p><strong>Location:</strong> {employee.emp_address || "Not Specified"}</p>
-              <p><strong>Member Since:</strong> {employee.emp_joined || "Not Specified"}</p>
+              
             </div>
           </div>
 
@@ -69,6 +69,26 @@ import { useUserDataContext } from "@/contexts/user_data";
               <SpecificContentFields  user={employee}/>
               <li><strong>Absence:</strong> {employee.emp_abscence || 'N/A'}</li>
               <li><strong>Rating:</strong> {employee.emp_rate}</li>
+               {/* Availability Schedule */}
+              <li className={styles.availability_box}>
+                <strong className={styles.availability_header}>Availability</strong>
+                <div className={styles.availability_wrapper}>
+                  {employee.availability_schedule ? (
+                    employee.availability_schedule.split("; ").map((schedule) => {
+                      const [dayIndex, timeRange] = schedule.split(": ");
+                      const [startTime, endTime] = timeRange.split("-");
+                      const days = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun"};
+                      
+                      return (
+                        <div key={dayIndex} className={styles.schedule_item}>
+                          <span className={styles.day}>{days[dayIndex] || `Day ${dayIndex}`}</span>
+                          <span className={styles.time}>{startTime} - {endTime}</span>
+                        </div>
+                      );
+                    })
+                  ) : "No schedule available"}
+                </div>
+              </li>
               <li className={styles.perms_box}><strong className={styles.perms_header}>Permissions </strong>
                         <div className={styles.perms_wrapper}>
                             {employee.emp_perms && employee.emp_perms[0] !== "None" ?(employee.emp_perms.split(", ").map((perm)=>{
@@ -78,6 +98,7 @@ import { useUserDataContext } from "@/contexts/user_data";
                                   }
                           </div>
                 </li>
+
               </ul>
 
             {/* --- Action Buttons --- */}

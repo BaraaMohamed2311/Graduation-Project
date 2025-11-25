@@ -1,0 +1,260 @@
+.consultationScheduler {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.priceTypeSection, .calendarNavigation, .timeSelection, .summary {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.priceTypeSection h3, .timeSelection h3, .summary h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.priceTypeButtons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.priceBtn, .navBtn {
+  padding: 10px 20px;
+  border: 1px solid #007bff;
+  background: white;
+  color: #007bff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.priceBtn:hover, .navBtn:hover {
+  background: #e7f3ff;
+}
+
+.priceBtnActive {
+  background: #007bff !important;
+  color: white !important;
+}
+
+.navBtn:hover {
+  background: #007bff;
+  color: white;
+}
+
+.calendarNavigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+}
+
+.calendarNavigation h2 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.dayHeader {
+  text-align: center;
+  font-weight: bold;
+  padding: 15px 10px;
+  background: #f8f9fa;
+  color: #333;
+  border-bottom: 2px solid #dee2e6;
+  font-size: 14px;
+}
+
+.calendarDay {
+  border: 1px solid #dee2e6;
+  padding: 10px;
+  min-height: 80px;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  background: white;
+  text-align: center;
+}
+
+.calendarDayCurrentMonth {
+  background: white;
+}
+
+.calendarDayCurrentMonth:hover {
+  background: #e7f3ff;
+  border-color: #007bff;
+}
+
+.calendarDayOtherMonth {
+  background: #f8f9fa;
+  color: #6c757d;
+}
+
+.calendarDayDisabled {
+  background: #e9ecef;
+  color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.calendarDaySelected {
+  background: #007bff;
+  color: white;
+  border-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.dayNumber {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.dayOfWeek {
+  font-size: 11px;
+  opacity: 0.8;
+  text-transform: uppercase;
+}
+
+.timeSelection {
+  background: #f8f9fa;
+}
+
+.timeSelect {
+  padding: 10px 15px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 120px;
+  margin-bottom: 15px;
+}
+
+.timeDisplay {
+  margin-top: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 4px;
+  border-left: 4px solid #007bff;
+}
+
+.timeDisplay p {
+  margin: 5px 0;
+}
+
+.durationNote {
+  font-style: italic;
+  color: #6c757d;
+  margin-top: 10px !important;
+}
+
+.summary {
+  background: #e7f3ff;
+  border-color: #007bff;
+  border-left: 4px solid #007bff;
+}
+
+.summary p {
+  margin: 8px 0;
+  padding: 5px 0;
+  border-bottom: 1px solid #b3d7ff;
+}
+
+.summary p:last-child {
+  border-bottom: none;
+}
+
+.calendarDayUnavailable {
+  background-color: #f8f8f8;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.calendarDayUnavailable .dayNumber {
+  color: #ccc;
+}
+
+.unavailableIndicator {
+  font-size: 0.7em;
+  color: #ff6b6b;
+  margin-top: 2px;
+}
+
+.noSlotsMessage {
+  color: #ff6b6b;
+  font-style: italic;
+  padding: 10px;
+  text-align: center;
+  background-color: #fff5f5;
+  border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .consultationScheduler {
+    padding: 10px;
+  }
+  
+  .calendarNavigation {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .priceTypeButtons {
+    flex-direction: column;
+  }
+  
+  .calendarGrid {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  
+  .calendarDay {
+    min-height: 60px;
+    padding: 5px;
+  }
+  
+  .dayNumber {
+    font-size: 14px;
+  }
+  
+  .dayOfWeek {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendarDay {
+    min-height: 50px;
+  }
+  
+  .dayHeader {
+    padding: 10px 5px;
+    font-size: 12px;
+  }
+  
+  .dayNumber {
+    font-size: 12px;
+  }
+  
+  .dayOfWeek {
+    display: none;
+  }
+}
