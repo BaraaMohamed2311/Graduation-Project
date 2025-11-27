@@ -11,7 +11,9 @@ else{
   console.log("Config development | No containers")
   require('dotenv').config({ path: './.env.dev' });  // Load development environment variables
 }
-/**************************/
+/**********Crons************/
+require("./cronjobs/markOldConsultationsCron.js")
+/**********Init************/
 const express = require("express");
 const app = express();
 const consoleLog = require("./Utils/consoleLog.js");

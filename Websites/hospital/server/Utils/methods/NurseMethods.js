@@ -64,14 +64,15 @@ class NurseMethods {
         
         const query = `
             SELECT 
+                -- from users 
+                u.user_email,
+                u.user_name,
                 -- from employees
                 e.emp_id AS user_id,
-                e.emp_name,
                 e.emp_abscence,
                 e.emp_rate,
                 e.emp_title,
                 e.emp_specialty,
-                e.emp_email AS user_email,
                 
                 -- from nurses
                 n.nurse_id,
@@ -109,6 +110,7 @@ class NurseMethods {
 
             FROM nurses n
             JOIN employees e ON n.hosp_emp_id = e.emp_id
+            JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id -- Added JOIN with users table
             LEFT JOIN availability na ON n.nurse_id = na.hosp_emp_id
 
             -- Join with hospital_emp_perms to get perm_id
@@ -127,13 +129,14 @@ class NurseMethods {
                 n.nurse_id, 
                 n.hosp_emp_id, 
                 n.floor_number,
-                hr.role_name
+                hr.role_name,
+                u.user_email
             ${perms_CONDITION}
             LIMIT ${limit} OFFSET ${offset}
         `;
 
         const result = await executeMySqlQuery(query);
-        console.log("result",result);
+
         return result;
     }
 
@@ -141,14 +144,17 @@ class NurseMethods {
         
         const query = `
             SELECT 
+            -- from users 
+            u.user_email,
+            u.user_name,
+
             -- from employees
             e.emp_id AS user_id,
-            e.emp_name,
             e.emp_abscence,
             e.emp_rate,
             e.emp_title,
             e.emp_specialty,
-            e.emp_email AS user_email,
+
             
             -- from nurses
             n.nurse_id,
@@ -195,25 +201,30 @@ class NurseMethods {
 
         FROM nurses n
         JOIN employees e ON n.hosp_emp_id = e.emp_id
+        JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id -- Added JOIN with users table
         WHERE n.nurse_id = ?
 
         `;
 
         const result = await executeMySqlQuery(query,[nurse_id]);
-        console.log("result",result);
+
         return result;
     }
 
         static async getAllNursesSpecificData(){
         const query = `SELECT 
+                        -- from users
+                        u.user_email,
+                        u.user_name,
+
+                        -- from employees
                         e.emp_id AS user_id,
-                        e.emp_name,
                         e.emp_abscence,
                         e.emp_rate,
                         e.emp_title,
                         e.emp_specialty,
-                        e.emp_email AS user_email,
                         
+                        -- from nurses
                         n.hosp_emp_id,
                         n.floor_number,
                         -- FIXED: availability schedule using subquery to format times first
@@ -241,6 +252,7 @@ class NurseMethods {
 
                     FROM nurses n
                     JOIN employees e ON n.hosp_emp_id = e.emp_id
+                    JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id -- Added JOIN with users table
                     LEFT JOIN availability na ON n.nurse_id = na.hosp_emp_id
                     GROUP BY e.emp_id, n.nurse_id, n.hosp_emp_id, n.floor_number;
                     `;
@@ -250,18 +262,22 @@ class NurseMethods {
 
     static async getNurseSpecificData(nurse_id){
         const query = `SELECT 
-                        e.emp_id AS user_id,
-                        e.emp_name,
+                        -- from users
+                        u.user_email,
+                        u.user_password,
+                        u.user_name,
+
+                        -- from employees
+                        e.emp_id AS user_id
                         e.emp_salary,
                         e.emp_abscence,
                         e.emp_bonus,
                         e.emp_rate,
                         e.emp_title,
                         e.emp_specialty,
-                        e.emp_email AS user_email,
-                        e.emp_password AS user_password, -- include password for authentication purposes
-                        
-                        n.nurse_id,
+
+
+                        -- from nurses
                         n.hosp_emp_id,
                         n.floor_number,
                         -- FIXED: availability schedule using subquery to format times first
@@ -289,6 +305,7 @@ class NurseMethods {
 
                     FROM nurses n
                     JOIN employees e ON n.hosp_emp_id = e.emp_id
+                    JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id -- Added JOIN with users table
                     LEFT JOIN availability na ON n.nurse_id = na.hosp_emp_id
                     WHERE n.hosp_emp_id = ${nurse_id}
                     GROUP BY e.emp_id, n.nurse_id, n.hosp_emp_id, n.floor_number;

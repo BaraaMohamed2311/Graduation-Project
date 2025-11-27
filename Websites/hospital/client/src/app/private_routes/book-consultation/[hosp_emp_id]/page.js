@@ -43,11 +43,7 @@ function BookConsultationPage() {
 
     function onBookingSubmit(bookingData) {
         console.log("Booking Data Submitted:", bookingData);
-        // Format the date for API (YYYY-MM-DD)
-        const consultation_date = getYYYYMMDD(bookingData.date);
-        console.log("consultation_date", consultation_date);
-        const start_time = bookingData.startTime;
-        const end_time = bookingData.endTime;
+
 
         fetch(`${process.env.APIKEY}/booking/book-consultation`, {
             method: "POST",
@@ -59,10 +55,11 @@ function BookConsultationPage() {
             body: JSON.stringify({
                 hosp_emp_id,       // Doctor or Surgeon ID (from employees_hospital)
                 patient_id: user_data.user_id,  // The selected availability slot
-                consultation_date ,
-                start_time,
-                end_time,
-                consultation_type: bookingData.consultationType // Added consultation type
+                consultation_date:bookingData.date_time ,
+                start_time:bookingData.startTime,
+                end_time:bookingData.endTime,
+                consultation_type: bookingData.consultationType, // Added consultation type
+                bookedAt: bookingData.bookedAt
             })
         })
         .then((res) => {

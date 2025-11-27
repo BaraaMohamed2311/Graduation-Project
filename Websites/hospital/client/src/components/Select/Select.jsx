@@ -15,7 +15,7 @@ export default function Select({ styles , select_options , isLabeld= true , empl
                     return (
                         <>
                         {/* if employee_displayed exist then make the selected same as user previous by checking that it's equal to option and if employee_displayed not exist just check option.selected from data.js*/}
-                            <option key={option.value} value={option.value} selected={employee_displayed ?(employee_displayed[select_options.name] === option.value ):( option.selected || false)}>{option.text}</option>
+                            <option key={option.value} value={option.value} defaultValue={employee_displayed ?(employee_displayed[select_options.name] === option.value ):( option.selected || false)}>{option.text}</option>
                         </>
                     )
                 })

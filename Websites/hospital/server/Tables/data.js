@@ -35,8 +35,8 @@ const Tables = {
     "emergency_contact",
     "created_at"
   ],
-  doctor_patient: [
-    "doctor_id",
+  staff_patient: [
+    "staff_id",
     "patient_id",
     "assigned_date"
   ],

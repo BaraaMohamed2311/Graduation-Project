@@ -1,4 +1,5 @@
-import { minutesTo12Hour } from "./timeHelpers";
+import { minutesTo12Hour , convertTimeUTCToLocal } from "./timeHelpers";
+
 // ==========================================
 //  Converts availability data string into a structured object
 // ==========================================
@@ -15,7 +16,8 @@ export const parseAvailabilityData = (availabilityData) => {
     const timeRange = day.slice(colonIndex + 1).trim();
     if (timeRange && !isNaN(dayIndex)) {
       const [start, end] = timeRange.split('-').map(time => time.trim());
-      parsedAvailability[dayIndex] = { start, end };
+      // convert them to local time
+      parsedAvailability[dayIndex] = { start:convertTimeUTCToLocal(start), end:convertTimeUTCToLocal(end) };
     }
   });
   // parsedAvailability = {"day_indx": {start:"00:00",end:"00:00"}"}

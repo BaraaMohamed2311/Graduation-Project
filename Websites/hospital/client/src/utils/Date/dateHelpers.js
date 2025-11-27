@@ -148,3 +148,24 @@ export function getYYYYMMDD(date) {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
+
+// Convert a Date object to UTC string: "YYYY-MM-DD HH:MM:SS" we can use new Date and pass it as parameter
+export const convertLocalToUTC = (dateObj) =>{
+  // toISOString gets UTC YYYY-MM-DDTHH:MM:SS 
+  return dateObj.toISOString().slice(0,19).replace('T', ' ');  // YYYY-MM-DD HH:MM:SS in UTC
+}
+
+// Convert a UTC datetime string "YYYY-MM-DD HH:MM:SS" to local time string "YYYY-MM-DD HH:MM:SS"
+export const convertUTCToLocal = (dateTimeUTC) => {
+  // Convert the string to a Date object in UTC by adding 'Z'
+  const dateObj = new Date(dateTimeUTC.replace(' ', 'T') + 'Z');
+
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // 0-indexed
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const hours = String(dateObj.getHours()).padStart(2, '0');    // local hours
+  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+  const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`; // YYYY-MM-DD HH:MM:SS local
+}

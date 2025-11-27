@@ -7,27 +7,32 @@ class PatientMethods {
     // ============================
     static async getPatientSpecificData(patient_id){
         const query = `SELECT 
-        patient_id  AS user_id,    
-        patient_name ,
-        patient_email  AS user_email,
-        patient_password AS user_password,
-        patient_phone ,
-        patient_address ,
-        isAssignedToRoom ,  
-        room_number ,
-        floor_number ,
-        date_of_birth ,
-        next_check_date ,
-        patient_gender ,
-        emergency_contact 
-        FROM patients WHERE patient_id = ${patient_id}`;
+                            -- from users
+                            u.user_email,
+                            u.user_password,
+                            u.user_name,
+
+                            -- from patients
+                            p.patient_id AS user_id,    
+                            p.patient_phone,
+                            p.patient_address,
+                            p.isAssignedToRoom,  
+                            p.room_number,
+                            p.floor_number,
+                            p.date_of_birth,
+                            p.next_check_date,
+                            p.patient_gender,
+                            p.emergency_contact
+                        FROM patients p
+                        JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
+                        WHERE p.patient_id = ${patient_id}`;
         const result = await executeMySqlQuery(query);
         return result[0];
     }
 
-    static async getOnePatientDataByFilters(filter_entries){
-        if(!filter_entries) return null;
-        const query = `SELECT * FROM patients WHERE  ${filter_entries}`;
+    static async getOnePatientDataByFilters(filter_fields){
+        if(!filter_fields) return null;
+        const query = `SELECT * FROM patients p JOIN users u ON p.patient_id = u.user_id  WHERE  ${filter_fields}`;
         const result = await executeMySqlQuery(query);
         return result[0];
     }
@@ -50,20 +55,23 @@ class PatientMethods {
 
     static async getAllPatientsSpecificData(limit, offset,restFilters = null){
         let query = `SELECT  
-                        patient_id  AS user_id,    
-                        patient_name ,
-                        patient_email  AS user_email,
-                        patient_password AS user_password,
-                        patient_phone ,
-                        patient_address ,
-                        isAssignedToRoom ,  
-                        room_number ,
-                        floor_number ,
-                        date_of_birth ,
-                        next_check_date ,
-                        patient_gender ,
-                        emergency_contact  
-                        FROM patients `;
+                        -- from users
+                        u.user_email, 
+                        u.user_name,
+
+                        -- from patients
+                        p.patient_id AS user_id,    
+                        p.patient_phone,
+                        p.patient_address,
+                        p.isAssignedToRoom,  
+                        p.room_number,
+                        p.floor_number,
+                        p.date_of_birth,
+                        p.next_check_date,
+                        p.patient_gender,
+                        p.emergency_contact  
+                    FROM patients p 
+                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id`;
 
         if (restFilters) { 
                 query += ` WHERE ${restFilters} `;
@@ -71,7 +79,7 @@ class PatientMethods {
         if(limit >0 &&  offset > -1) {
             query += " LIMIT ? OFFSET ? "
         }
-        console.log("query",query,limit, offset)
+
         const result = await executeMySqlQuery(query,[limit, offset]);
         return result;
     }
@@ -81,24 +89,30 @@ class PatientMethods {
 
         static async getListedDoctorDataForPaitent(limit=null, offset=null,restFilters=null) {
             let query = `
-                SELECT 
+                SELECT
+                    -- from users
+                    u.user_email,
+                    u.user_name,
+
+                    -- from employees
+                    e.emp_title AS user_title,
+                    e.emp_specialty AS user_specialty,
+
+                    -- from doctors
                     d.doctor_id AS user_id, 
                     d.hosp_emp_id,
                     d.initial_consultation_price,
                     d.followup_consultation_price,
                     d.years_of_exp,
-                    e.emp_title AS user_title,
-                    e.emp_specialty AS user_specialty,
-                    e.emp_name AS user_name,
-                    e.emp_email AS user_email, -- You MUST Rename Column For fetchImagesForListedUsers function to work
+
                     GROUP_CONCAT(
                         CONCAT(da.day_of_week, ': ', DATE_FORMAT(da.start_time, '%H:%i'), '-', DATE_FORMAT(end_time, '%H:%i'))
                         ORDER BY da.day_of_week
                         SEPARATOR '; '
                     ) AS availability_schedule
                 FROM doctors d
-                JOIN employees e 
-                    ON d.hosp_emp_id = e.emp_id
+                JOIN employees e ON d.hosp_emp_id = e.emp_id
+                JOIN users u ON u.user_type = 'employee' AND u.user_id = d.doctor_id
                 LEFT JOIN availability da 
                     ON d.doctor_id = da.hosp_emp_id
             `;
@@ -117,29 +131,36 @@ class PatientMethods {
                     d.years_of_exp,
                     e.emp_specialty,
                     e.emp_title,
-                    e.emp_email
+                    u.user_email
                     ${ limit ? `LIMIT ${limit}`:""}
                     ${ offset ? `OFFSET ${offset}`:""}
             `;
             
             const result = await executeMySqlQuery(query, params);
-            console.log("query",query, "\n",result)
+
             return result;
         }
 
         static async getListedSurgeonDataForPaitent(restFilters = null,limit=null, offset=null) {
             let query = `
                 SELECT 
+                    -- from users
+                    u.user_email, 
+                    u.user_name,
+
+                    -- from employees
+                    e.emp_title AS user_title,
+                    e.emp_specialty AS user_specialty,
+                    
+                    -- from surgeons
                     s.surgeon_id AS user_id, 
                     s.hosp_emp_id,
                     s.initial_consultation_price,
                     s.followup_consultation_price,
                     s.surgery_price,
                     s.years_of_exp,
-                    e.emp_title AS user_title,
-                    e.emp_specialty AS user_specialty,
-                    e.emp_name AS user_name,
-                    e.emp_email AS user_email, -- You MUST Rename Column For fetchImagesForListedUsers function to work
+                    
+
                     GROUP_CONCAT(
                         CONCAT(da.day_of_week, ': ', DATE_FORMAT(sa.start_time, '%H:%i'), '-', DATE_FORMAT(sa.end_time, '%H:%i'))
                         ORDER BY da.day_of_week
@@ -147,8 +168,8 @@ class PatientMethods {
                     ) AS availability_schedule
                     
                 FROM surgeons s
-                JOIN employees e 
-                    ON s.hosp_emp_id = e.emp_id
+                JOIN employees e ON s.hosp_emp_id = e.emp_id
+                JOIN users u ON u.user_type = 'employee' AND u.user_id = s.surgeon_id
                 LEFT JOIN availability sa 
                     ON s.surgeon_id = sa.hosp_emp_id
             `;
@@ -168,7 +189,7 @@ class PatientMethods {
                     s.years_of_exp,
                     e.emp_title,
                     e.emp_specialty,
-                    e.emp_email
+                    u.user_email
                     ${ limit ? `LIMIT ${limit}` :""}
                     ${ offset ? `OFFSET ${offset}` :""}
             `;
@@ -176,7 +197,44 @@ class PatientMethods {
             const result = await executeMySqlQuery(query, params);
             return result;
         }
+    // ==========================================
+    // Get Patient Consultions
+    // ==========================================
 
+    static async getPatientConsultions(patient_id){
+        const query = `SELECT *
+        FROM consultations
+        WHERE patient_id = ?   
+        ORDER BY consultation_date, start_time;
+        `
+
+        const result = await executeMySqlQuery(query,[patient_id]);
+        return result || [];
+    }
+
+    static async getPatientConsultionByDate(patient_id,consultation_date){
+        const query = `SELECT *
+        FROM consultations
+        WHERE patient_id = ? AND consultation_date= ?  
+        ORDER BY consultation_date, start_time;
+        `
+
+        const result = await executeMySqlQuery(query,[patient_id,consultation_date]);
+        return result[0];
+    }
+
+    static async isPatientAvailable(patient_id,consultation_date,start_time){
+
+
+        const query = "SELECT * FROM consultations WHERE patient_id = ? AND consultation_date= ? AND  start_time = ?";
+
+        const result = await executeMySqlQuery(query,[patient_id,consultation_date,start_time]);
+        // Since not having a consultation record in the table means he is available
+
+        if(!result || result.length === 0 ) return true;
+        // if exists check status
+        return result[0].consultation_status !== "Scheduled";
+    }
 
     
     // ============================

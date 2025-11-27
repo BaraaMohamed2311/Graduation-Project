@@ -3,7 +3,7 @@ import * as React from 'react';
 import Table from '@mui/joy/Table';
 import { useEffect  , useState} from "react";
 import styles from "./table.module.css"
-import {TableColumnsMap } from "./Table_Fields"
+import {TableColumnsMap , MapTableColumns} from "./Table_Fields"
 import Pagination_Btns from "../Pagination_Btns/Pagination_Btns";
 export default function BasicTable({currPage,sizeOfPage , setCurrPage ,numOfPages , isFiltered,filteredResults,handleActionBtn  ,data=[] , tableType}) {
 
@@ -51,28 +51,37 @@ export default function BasicTable({currPage,sizeOfPage , setCurrPage ,numOfPage
       >
         <thead>
           <tr className={styles.table_row}>
-            <TableColumns type="headers" isSmallScreen={isSmallScreen} />
+            <MapTableColumns tableType={tableType} type="headers" isSmallScreen={isSmallScreen} />
           </tr>
         </thead>
         <tbody>
+        {/* We have to return No Data Found when no sliced data*/}
+          { data.length > 0 && data.slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).length === 0 &&
+            <tr  className={styles.table_row_no_data}>
+              <td>No Data Found</td>
+            </tr>
+          }
+
           {/* We have to pass row to each  handleActionBtn to act on targeted user*/}
-          {(!isFiltered && data.length > 0) && data.slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((row, idx) => {return (
-            <tr key={idx} className={styles.table_row}>
-              <TableColumns
+          {(!isFiltered && data.length > 0) && data.slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((row, indx) => {return (
+            <tr  className={styles.table_row}>
+              <MapTableColumns tableType={tableType}
+                key={row.user_id}
                 type="row"
                 isSmallScreen={isSmallScreen}
-                row={row}
+                row={{indx ,...row}}
                 handleActionBtn={(e)=>handleActionBtn(row)}
               />
             </tr>
           )})}
 
           {(isFiltered && filteredResults.length > 0) && filteredResults.slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((row, idx) => (
-            <tr key={idx} className={styles.table_row}>
-              <TableColumns
+             <tr  className={styles.table_row}>
+              <MapTableColumns tableType={tableType}
+                key={row.user_id}
                 type="row"
                 isSmallScreen={isSmallScreen}
-                row={row}
+                row={{indx ,...row}}
                 handleActionBtn={(e)=>handleActionBtn(row)}
               />
             </tr>

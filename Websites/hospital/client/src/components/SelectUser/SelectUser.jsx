@@ -49,7 +49,7 @@ function fetchUser(e)  {
 
 
   //        Fetch Filtered Data
-  fetch(`${process.env.APIKEY}/list${list_url}${queryString ? `?${queryString}` : ''}`, {
+  fetch(`${process.env.APIKEY}/details${list_url}${queryString ? `?${queryString}` : ''}`, {
     mode: "cors",
     headers: {
       Authorization: `BEARER ${user_data.token}`,

@@ -21,19 +21,24 @@ function EmployeesListPage() {
 
 
   // Refrences
-  
 
   function handleClearFilterOption(){
-    Object.keys(selectBoxsRef.current).forEach((key) => {
-    const selectEl = selectBoxsRef.current[key];
-    if (selectEl) {
-      selectEl.value = "all"; // or "" depending on how you represent "no filter"
+    selectsElementsData.forEach((el) => {
+      
+    if (selectBoxsRef.current[el.name]) {
+      
     }
   });
 
   setIsFiltered(false)
 
-  fetch(`${process.env.APIKEY}/rooms/?pagination=${currPage}&size=${sizeOfPage}`)
+  fetch(`${process.env.APIKEY}/rooms/?pagination=${currPage}&size=${sizeOfPage}`,{
+    mode: "cors",
+    headers: {
+      Authorization: `BEARER ${user_data.token}`,
+      "Content-Type": "application/json",
+    },
+  })
   .then(res=>{ 
             statusNotification(res.status)  
             return res.json();})
@@ -51,7 +56,13 @@ function EmployeesListPage() {
 
 useEffect(()=>{
   if(isFiltered) return;
-  fetch(`${process.env.APIKEY}/rooms/?pagination=${currPage}&size=${sizeOfPage}`)
+  fetch(`${process.env.APIKEY}/rooms/?pagination=${currPage}&size=${sizeOfPage}`,{
+    mode: "cors",
+    headers: {
+      Authorization: `BEARER ${user_data.token}`,
+      "Content-Type": "application/json",
+    },
+  })
   .then(res=>{ 
             statusNotification(res.status)  
             return res.json();})
@@ -75,6 +86,7 @@ function handleFilterOption(e, showNotif = true) {
   const roomValue = selectBoxsRef.current["room_number"]?.value;
   const floorValue = selectBoxsRef.current["floor_id"]?.value;
   const statusValue = selectBoxsRef.current["status"]?.value;
+  console.log(roomValue,floorValue,statusValue)
 
   let endpoint = `${process.env.APIKEY}/rooms`;
   const queryParams = new URLSearchParams();
@@ -83,27 +95,26 @@ function handleFilterOption(e, showNotif = true) {
   queryParams.append('pagination', currPage);
   queryParams.append('size', sizeOfPage);
 
-  // Handle status filter - if status is "empty" or "occupied", use specific endpoints
-  if (statusValue === "empty") {
-    endpoint = `${process.env.APIKEY}/rooms/empty`;
-  } else if (statusValue === "occupied") {
-    endpoint = `${process.env.APIKEY}/rooms/occupied`;
-  } else {
     // For "all" status or no status, use main endpoint with filters
     if (roomValue) queryParams.append('room_number', roomValue);
     if (floorValue) queryParams.append('floor_number', floorValue);
-    if (statusValue && statusValue !== "all") queryParams.append('status', statusValue);
-  }
-
-  // Only add query params if we're using the main endpoint
-  if (!endpoint.includes('/empty') && !endpoint.includes('/occupied')) {
-    endpoint += `?${queryParams.toString()}`;
-  } else {
+    if(statusValue && statusValue === "empty"){ 
+      queryParams.append('isOccupied', 0);
+    }
+    else if (statusValue && statusValue === "occupied"){
+      queryParams.append('isOccupied', 1);
+    }
     // For empty/occupied endpoints, still need pagination
     endpoint += `?${queryParams.toString()}`;
-  }
+  
 
-  fetch(endpoint)
+  fetch(endpoint,{
+    mode: "cors",
+    headers: {
+      Authorization: `BEARER ${user_data.token}`,
+      "Content-Type": "application/json",
+    },
+  })
     .then((res) => {
       statusNotification(res.status);
       return res.json();
@@ -132,7 +143,13 @@ function handleFilterOption(e, showNotif = true) {
 function handleShowAllOccupiedRooms() {
   const endpoint = `${process.env.APIKEY}/rooms/occupied?pagination=${currPage}&size=${sizeOfPage}`;
 
-  fetch(endpoint)
+  fetch(endpoint,{
+    mode: "cors",
+    headers: {
+      Authorization: `BEARER ${user_data.token}`,
+      "Content-Type": "application/json",
+    },
+  })
     .then((res) => {
       statusNotification(res.status);
       return res.json();
@@ -153,7 +170,13 @@ function handleShowAllOccupiedRooms() {
 function handleShowAllEmptyRooms() {
   const endpoint = `${process.env.APIKEY}/rooms/empty?pagination=${currPage}&size=${sizeOfPage}`;
 
-  fetch(endpoint)
+  fetch(endpoint,{
+    mode: "cors",
+    headers: {
+      Authorization: `BEARER ${user_data.token}`,
+      "Content-Type": "application/json",
+    },
+  })
     .then((res) => {
       statusNotification(res.status);
       return res.json();

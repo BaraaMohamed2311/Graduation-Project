@@ -4,26 +4,7 @@ import Inputs from "../Inputs/Inputs"
 import { useEffect , useState} from "react";
 import { global_mapped_specialities } from "@/global_data";
 
-function RegisterFormFields({
-  select_options,
-  employee_displayed,
-  styles,
-  references,
-}){
-    /* Get Change of title's selected value */
-    const [selectedTitleValue, setSelectedTitleValue] = useState(employee_displayed?.emp_title ?? "");
 
-    /* Get Corresponding specialities for title */
-    const specialities_for_title = {...select_options.select_specialty_options, options: global_mapped_specialities[selectedTitleValue]};
-
-    return (
-        <>
-        {/*display select for positions */}
-        <Select styles={styles} select_options={select_options.select_title_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
-        <Select styles={styles} select_options={specialities_for_title} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
-        </>
-    )
-}
 
 function UpdateUserFormFields({
     references,
@@ -87,7 +68,6 @@ function LoginFormFields({
 
 
 const FormFieldsMap = {
-    register_form: RegisterFormFields,
     update_form: UpdateUserFormFields,
     login_form: LoginFormFields,
 };

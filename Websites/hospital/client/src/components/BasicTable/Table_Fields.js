@@ -27,7 +27,7 @@ function PatientsTableColumns({ type, isSmallScreen, row, handleActionBtn, butto
   if (type === "headers") {
     return (
       <>
-        <th className={styles.table_col_1}>ID</th>
+        <th className={styles.table_col_1}>INDX</th>
         <th className={styles.table_col_1}>Name</th>
         <th className={styles.table_col_1}>patient_gender</th>
         <th className={styles.table_col_2}>Email</th>
@@ -48,7 +48,7 @@ function PatientsTableColumns({ type, isSmallScreen, row, handleActionBtn, butto
   // For row rendering
   return (
     <>
-      <td className={styles.table_col_1}>{row.user_id}</td>
+      <td className={styles.table_col_1}>{row.indx}</td>
       <td className={styles.table_col_1}>{row.patient_name}</td>
       <td className={styles.table_col_1}>{row.patient_gender}</td>
       <td className={styles.table_col_2}>{row.user_email}</td>
@@ -74,26 +74,28 @@ function EmployeesTableColumns({ type, isSmallScreen, row, handleActionBtn, butt
 
   if (type === "headers") {
     return (
-      <>
-        <th className={styles.table_col_1}>Name</th>
-        <th className={styles.table_col_2}>Email</th>
-        <th className={styles.table_col_1}>Title</th>
-        <th className={styles.table_col_2}>Speciality</th>
-        {!isSmallScreen && (
-          <>
-            <th className={styles.table_col_2}>Phone</th>
-            <th className={styles.table_col_1}>Abscence</th>
-          </>
-        )}
-        <th className={styles.table_col_1}>Details</th>
-      </>
+        <>
+          <th className={styles.table_col_1}>INDX</th>
+          <th className={styles.table_col_1}>Name</th>
+          <th className={styles.table_col_2}>Email</th>
+          <th className={styles.table_col_1}>Title</th>
+          <th className={styles.table_col_2}>Speciality</th>
+          {!isSmallScreen && (
+            <>
+              <th className={styles.table_col_2}>Phone</th>
+              <th className={styles.table_col_1}>Abscence</th>
+            </>
+          )}
+          <th className={styles.table_col_1}>Details</th>
+        </>
     );
   }
 
   // For row rendering
   return (
     <>
-      <td className={styles.table_col_1}>{row.emp_name}</td>
+      <td className={styles.table_col_1}>{row.indx}</td>
+      <td className={styles.table_col_1}>{row.user_name}</td>
       <td className={styles.table_col_2}>{row.user_email}</td>
       <td className={styles.table_col_1}>{row.emp_title}</td>
       <td className={styles.table_col_2}>{row.emp_specialty}</td>
@@ -111,10 +113,25 @@ function EmployeesTableColumns({ type, isSmallScreen, row, handleActionBtn, butt
     </>)
 }
 
+function MapTableColumns({ type,tableType, isSmallScreen, row, handleActionBtn, buttonType }) {
+
+  
+  // Check if target component exists
+  const TargetedFieldsComponent = TableColumnsMap[tableType];
+  
+  if (!TargetedFieldsComponent) {
+    return <p>No Targeted Table</p>;
+  }
+  
+
+  // For row rendering
+  return <TargetedFieldsComponent row={row} type={type} isSmallScreen={isSmallScreen} handleActionBtn={handleActionBtn} buttonType={buttonType}/>;
+}
+
 
 const TableColumnsMap = {
   "patients": PatientsTableColumns,
   "employees": EmployeesTableColumns,
 };
 
-export {TableColumnsMap }
+export {TableColumnsMap ,MapTableColumns}

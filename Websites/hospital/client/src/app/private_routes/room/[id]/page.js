@@ -191,9 +191,9 @@ useEffect(()=>{
         <h2>Patient Information</h2>
         {patient ? (
           <div className={styles.patientInfo}>
-            <p><strong>Name:</strong> {patient.patient_name}</p>
+            <p><strong>Name:</strong> {patient.user_name}</p>
             <p><strong>Gender:</strong> {patient.patient_gender}</p>
-            <p><strong>Email:</strong> {patient.patient_email}</p>
+            <p><strong>Email:</strong> {patient.user_email}</p>
             <p><strong>Phone:</strong> {patient.patient_phone}</p>
             <p><strong>Date of Birth:</strong> {patient.date_of_birth}</p>
           </div>

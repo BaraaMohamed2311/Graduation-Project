@@ -26,7 +26,16 @@
     border-bottom: 1px solid var(--sec-dark) ;
     border-radius: 0.1rem;
 }
+.table_row_no_data{
+    height: 100%;
+    vertical-align: top; /* Align the content at the top */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    font-size: 1.5rem;
 
+}
 
 .table_row:not([name="headers"]):hover > *{
     color: var(--main-hovers);

@@ -3,30 +3,64 @@ const stringifyFields = require("../stringifyFields");
 
 class ConsultationMethods {
     // ========================================
-    //   Get Appointments Data
+    //   COUNT Data
     // ========================================
+    static async getEMPConsultationsCOUNT(hosp_emp_id){
+        const query = `
+        SELECT 
+             COUNT(*) AS consultations_count
+            FROM consultations
+            WHERE hosp_emp_id = ?`
+
+        const result = await executeMySqlQuery(query,[hosp_emp_id]);
+
+        return result[0]?.consultations_count
+    }
+
+    static async getPATConsultationsCOUNT(patient_id){
+        const query = `
+        SELECT 
+             COUNT(*) AS consultations_count
+            FROM consultations
+            WHERE patient_id = ?`
+
+        const result = await executeMySqlQuery(query,[patient_id]);
+
+        return result[0]?.consultations_count
+    }
 
     // ========================================
     //   Based On Title
 
-        static async getEmployeeAppointments(hosp_emp_id) {
-        const query = `
-           SELECT *
+        static async getEmployeeAppointments(hosp_emp_id,limit=null,offset=null) {
+
+        let query = `
+            SELECT 
+             *,
+            DATE_FORMAT(start_time, '%H:%i') AS start_time,
+            DATE_FORMAT(end_time, '%H:%i')   AS end_time
             FROM consultations
             WHERE hosp_emp_id = ?
         `;
+        if(limit && offset) query += ` limit ${limit} offset ${offset}`
         
         const result = await executeMySqlQuery(query, [hosp_emp_id]);
         return result;
+
+        
     }
 
-    static async getPatientAppointments(patient_id) {
-        const query = `
-           SELECT *
+    static async getPatientAppointments(patient_id,limit=null,offset=null) {
+        let query = `
+           SELECT 
+            *,
+            DATE_FORMAT(start_time, '%H:%i') AS start_time,
+            DATE_FORMAT(end_time, '%H:%i')   AS end_time
             FROM consultations
             WHERE patient_id = ?
         `;
-        
+        if(limit && offset) query += `limit ${limit} offset ${offset}`
+
         const result = await executeMySqlQuery(query, [patient_id]);
         return result;
     }
@@ -34,7 +68,7 @@ class ConsultationMethods {
     // ========================================
     //   availability Data
 
-        static async getAllShiftAvailabilityDays(hosp_emp_id) {
+        static async getAllAvailabilityDays(hosp_emp_id) {
             const query = `
                 SELECT 
                     COALESCE(
@@ -57,11 +91,14 @@ class ConsultationMethods {
 
         
     
-    static async getShiftAvailability(hosp_emp_id,dayIndx) {
+    static async getAvailabilityDay(hosp_emp_id,dayIndx) {
 
             // Fetch the doctor's availability for that day
             const query = `
-                SELECT *
+                SELECT 
+                 *,
+                DATE_FORMAT(start_time, '%H:%i') AS start_time,
+                DATE_FORMAT(end_time, '%H:%i')   AS end_time
                 FROM availability
                 WHERE hosp_emp_id = ? AND day_of_week = ?
                 LIMIT 1
@@ -76,7 +113,7 @@ class ConsultationMethods {
     // ========================================
     //   Appointment (Consultation) Data
 
-    static async getAppointmentAvailability(hosp_emp_id,consultation_date,start_time) {
+    static async getConsultionStatus(hosp_emp_id,consultation_date,start_time) {
         const query = `
            SELECT consultation_status
             FROM consultations
@@ -92,9 +129,12 @@ class ConsultationMethods {
 
 
 
-    static async getSpecificAppointment(hosp_emp_id,patient_id,consultation_date,start_time) {
+    static async getConsultationSlot(hosp_emp_id,patient_id,consultation_date,start_time) {
         let query = `
-           SELECT *
+           SELECT 
+             *,
+            DATE_FORMAT(start_time, '%H:%i') AS start_time,
+            DATE_FORMAT(end_time, '%H:%i')   AS end_time
             FROM consultations
             WHERE consultation_date = ? AND start_time = ?
         `;
@@ -110,14 +150,16 @@ class ConsultationMethods {
             params.push(patient_id);
         }
         
-        console.log("getAppointmentStatus params:", [hosp_emp_id,patient_id,consultation_date,start_time],query);
         const result = await executeMySqlQuery(query, params);
         return result[0];
     }
 
-    static async getSpecificAppointmentByID(consultation_id) {
+    static async getConsultationById(consultation_id) {
         let query = `
-           SELECT *
+           SELECT 
+            *,
+            DATE_FORMAT(start_time, '%H:%i') AS start_time,
+            DATE_FORMAT(end_time, '%H:%i')   AS end_time
             FROM consultations
             WHERE consultation_id = ?
         `;
@@ -125,6 +167,27 @@ class ConsultationMethods {
         const result = await executeMySqlQuery(query, [consultation_id]);
         return result[0];
     }
+
+    static async getEmployeeConsultationSlot(hosp_emp_id,consultation_date,start_time) {
+        let query = `
+           SELECT 
+            *,
+            DATE_FORMAT(start_time, '%H:%i') AS start_time,
+            DATE_FORMAT(end_time, '%H:%i')   AS end_time
+            FROM consultations
+            WHERE consultation_date = ? AND start_time = ?
+        `;
+        let params = [consultation_date, start_time];
+
+        if(hosp_emp_id){
+            query += ` AND hosp_emp_id = ? `;
+            params.push(hosp_emp_id);
+        }
+
+        const result = await executeMySqlQuery(query, params);
+        return result[0];
+    }
+
 
 
     // ========================================
@@ -142,35 +205,25 @@ class ConsultationMethods {
         return result.length > 0;
 
     }
-
-    static async checkShiftAvailability(hosp_emp_id,dayIndx,start_time,end_time) {
+    // slot refers to consultions table not availability
+    static async isSlotWithinAvailability(availability,requested_start_Slot ,requested_end_Slot,requested_consultion_date) {
         try {
-            // Fetch the doctor's availability for that day
-            const query = `
-                SELECT start_time, end_time 
-                FROM availability
-                WHERE hosp_emp_id = ? AND day_of_week = ?
-                LIMIT 1
-            `;
-            const [availability] = await executeMySqlQuery(query, [hosp_emp_id, dayIndx]);
-            console.log("Fetched Availability for checkShiftAvailability:", availability,[hosp_emp_id, dayIndx]);
-            // If no availability found for that doctor/day
-            if (!availability) {
-                return { valid: false, message: "No shift found  on the selected day." };
-            }
-
-            // Convert both DB times and given times to comparable Date objects
-            const [availStart, availEnd] = [availability.start_time, availability.end_time];
-            const reqStart = new Date(`1970-01-01T${start_time}`);
-            const reqEnd = new Date(`1970-01-01T${end_time}`);
-            const dbStart = new Date(`1970-01-01T${availStart}`);
-            const dbEnd = new Date(`1970-01-01T${availEnd}`);
-
+            
+            // Request's start and end slots
+            const dateISO = new Date(requested_consultion_date).toISOString();
+            const dateOnly = dateISO.split("T")[0];
+            console.log("availability",availability,"requested_start_Slot",requested_start_Slot,"requested_end_Slot",requested_end_Slot,"dateOnly",dateOnly)
+            const reqStart = new Date(`${dateOnly}T${requested_start_Slot}`);
+            const reqEnd = new Date(`${dateOnly}T${requested_end_Slot}`);
+            // Shift's availability hours
+            const avStart = new Date(`${dateOnly}T${availability.start_time}`);
+            const avEnd = new Date(`${dateOnly}T${availability.end_time}`);
+            console.log("reqStart",reqStart,"reqEnd",reqEnd,"avStart",avStart,"avEnd",avEnd)
             // Check if the requested times are inside the available window
-            if (reqStart >= dbStart && reqEnd <= dbEnd) {
-                return { valid: true, message: "Requested time is within the available shift." };
+            if (reqStart >= avStart && reqEnd <= avEnd) {
+                return true;
             } else {
-                return { valid: false, message: "Requested time is outside the doctor's shift hours." };
+                return  false;
             }
         } catch (err) {
             console.error("Error in checkShiftAvailability:", err);
@@ -179,16 +232,53 @@ class ConsultationMethods {
     }
 
 
+    static async isConsultionAvailable(availability , consultation_slot){
+        // ====1. First Check availability of shift and is slot within it
+
+            if (!availability) return false;
+            // Consultion could not be inserted to the table yet, and that's why it's undefined
+            if (!consultation_slot) return true;
+
+            const isSlotWithinShift = await this.isSlotWithinAvailability(availability,consultation_slot.start_time,consultation_slot.end_time,consultation_slot.consultation_date);
+            console.log("isSlotWithinShift",isSlotWithinShift)
+            if( !isSlotWithinShift) return false;
+
+        // ====2.Now if Slot Consultion is free
+        // if available check if scheduled
+            if(consultation_slot && consultation_slot.consultation_status === "Scheduled") return false;
+            
+            
+            
+            
+    }
+
+    static async patientHasOtherConsultationWithEmp(patient_id,hosp_emp_id){
+        const query = `SELECT 
+             *,
+            DATE_FORMAT(start_time, '%H:%i') AS start_time,
+            DATE_FORMAT(end_time, '%H:%i')   AS end_time
+            FROM consultations
+            WHERE patient_id = ? AND hosp_emp_id = ? AND consultation_status = 'Scheduled' AND CURDATE() <  consultation_date`
+
+        const result = await executeMySqlQuery(query,[patient_id,hosp_emp_id]);
+
+        return result.length > 0 
+    }
+
 
     // ========================================
     //   Insert new Booking
     // ========================================
 
-    static async bookConsultationAppointment(hosp_emp_id, patient_id,availability_id,consultation_date,start_time,end_time) {
+    static async bookConsultationAppointment(hosp_emp_id, patient_id,availability_id,consultation_date,start_time,end_time,consultation_type) {
         try{
 
             if(start_time === end_time){
                 throw new Error("Start time and end time cannot be the same.");
+            }
+
+            if(!consultation_type){
+                throw new Error("Booking type must be provided");
             }
 
             // Default end_time to one hour after start_time 
@@ -203,11 +293,11 @@ class ConsultationMethods {
 
 
         const query = `
-            INSERT INTO consultations  (hosp_emp_id ,patient_id,availability_id,consultation_date,start_time,end_time,consultation_status)
-            VALUES (?, ?, ?, ?, ?,?,?)
+            INSERT INTO consultations  (hosp_emp_id ,patient_id,availability_id,consultation_date,start_time,end_time,consultation_status,consultation_type)
+            VALUES (?, ?, ?, ?, ?,?,?,?)
         `;
 
-        const result = await executeMySqlQuery(query, [hosp_emp_id, patient_id,availability_id,consultation_date,start_time,end_time,"Scheduled"]);
+        const result = await executeMySqlQuery(query, [hosp_emp_id, patient_id,availability_id,consultation_date,start_time,end_time,"Scheduled",consultation_type]);
         return result.affectedRows > 0;;
         }
         catch(err){
@@ -243,7 +333,7 @@ class ConsultationMethods {
     }
 
 
-    static async updateAppointmentPatient(consultation_id, patient_id) {
+    static async updateConsultationPatient(consultation_id, patient_id) {
         try{
             const query = `
            UPDATE consultations

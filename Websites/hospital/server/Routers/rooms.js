@@ -1,9 +1,9 @@
 const router = require("express").Router();
 const jwtVerify = require("../middlewares/jwtVerify.js");
 const RoomsMethods = require("../Utils/methods/RoomsMethods.js");
-const NodeCache = require("node-cache");
-const myCache = new NodeCache({ stdTTL: 3600 }); // 1 hour default TTL
-const CACHE_TTL = 600; // 10 minutes in seconds (for specific overrides)
+const cacheCountNodeCache = require("../Utils/cacheCountNodeCache.js");
+const JoinFiltering = require("../Utils/JoinFiltering.js")
+
 // ============================
 //              GET
 // ============================
@@ -11,29 +11,49 @@ const CACHE_TTL = 600; // 10 minutes in seconds (for specific overrides)
 // Get all rooms
 router.get("/", async function (req, res) {
     try {
-        const {pagination, size,...restFilteers} = req.query
+        const {pagination, size,...restFilters} = req.query
 
         if (!pagination || !size )  return res.status(400).json({success:false,message:"Bad Request"});
 
-        const rooms = await RoomsMethods.getRooms(parseInt(size) , parseInt((pagination - 1) * size));
+        // Check if we have any filters
+            const isFiltered = Object.keys(restFilters).length > 0;
 
-        // Get fresh count from database
-        const freshTotalRoomsCount = await RoomsMethods.getAllRoomsCOUNT();
+            // Build the filtering clause if needed
+            let whereClause = "";
+
+            if (isFiltered) {
+            const filterClauses = [];
+
+            // Iterate through each filter entry
+            Object.entries(restFilters).forEach(([key, value]) => {
+                if (value === undefined || value === null || value === "") return; // skip empty filters
+
+                // Determine which table alias to use
+                const tableAlias = (key === "floor_number") ? "f" : "r";
+
+                // Use your JoinFiltering helper, passing the key/value pair and table alias
+                // Assuming JoinFiltering can take something like [['floor_number', 2]] and alias
+                filterClauses.push(JoinFiltering([[key, value]], tableAlias));
+            });
+
+            if (filterClauses.length > 0) {
+                // Combine all individual filters with AND
+                whereClause = `WHERE ${filterClauses.join(" AND ")}`;
+            }
+            }
+
+
+        const rooms = await RoomsMethods.getRooms(parseInt(size) , parseInt((pagination - 1) * size),whereClause);
+
+        // get cached count 
+        const RoomsCount = await cacheCountNodeCache("totalNumOfRooms",RoomsMethods.getAllRoomsCOUNT,whereClause,isFiltered)
+        const numOfPages = Math.ceil( Math.ceil( RoomsCount / size));
         
-        let totalRoomsCount = freshTotalRoomsCount; // Default to fresh count
-        
-        // Only cache and use cache for non-filtered queries (this endpoint is always non-filtered)
-        if (myCache.has("totalNumOfRooms")) {
-            totalRoomsCount = myCache.get("totalNumOfRooms");
-        } else {
-            totalRoomsCount = freshTotalRoomsCount; 
-            myCache.set("totalNumOfRooms", totalRoomsCount, CACHE_TTL);
-        }
 
         res.json({
             success:true, 
             rooms,
-            numOfPages: Math.ceil(totalRoomsCount / size)
+            numOfPages
         });
     } catch (error) {
         console.log("Error Fetching All Rooms")
@@ -82,24 +102,16 @@ router.get("/empty", async function (req, res) {
 
 
         const rooms = await RoomsMethods.getEmptyRooms(parseInt(size) , parseInt((pagination - 1) * size));
+        const isFiltered = true;
+        // get cached count 
+        const RoomsCount = await cacheCountNodeCache("totalNumOfEmptyRooms",RoomsMethods.getEmptyRoomsCOUNT,isFiltered)
+        const numOfPages = Math.ceil( Math.ceil( RoomsCount / size));
 
-        // Get fresh count from database
-        const freshEmptyRoomsCount = await RoomsMethods.getEmptyRoomsCOUNT();
-        
-        let emptyRoomsCount = freshEmptyRoomsCount; // Default to fresh count
-        
-        // Only cache and use cache for non-filtered queries (this endpoint is always non-filtered)
-        if (myCache.has("totalNumOfEmptyRooms")) {
-            emptyRoomsCount = myCache.get("totalNumOfEmptyRooms");
-        } else {
-            emptyRoomsCount = freshEmptyRoomsCount; 
-            myCache.set("totalNumOfEmptyRooms", emptyRoomsCount, CACHE_TTL);
-        }
 
         res.json({
             success:true, 
             rooms,
-            numOfPages: Math.ceil(emptyRoomsCount / size)
+            numOfPages
         });
     } catch (error) {
         res.status(500).json({success:false, message:"Error Fetching Empty Rooms"});
@@ -113,25 +125,16 @@ router.get("/occupied", async function (req, res) {
 
         if ( !pagination || !size )  return res.status(400).json({success:false,message:"Bad Request"});
 
+        const isFiltered = true;
         const rooms = await RoomsMethods.getOccupiedRooms(parseInt(size) , parseInt((pagination - 1) * size));
-        // Get fresh count from database - always use fresh count for filtered states
-        // Get fresh count from database
-        const freshOccupiedRoomsCount = await RoomsMethods.getOccupiedRoomsCOUNT();
-        
-        let occupiedRoomsCount = freshOccupiedRoomsCount; // Default to fresh count
-        
-        // Only cache and use cache for non-filtered queries (this endpoint is always non-filtered)
-        if (myCache.has("totalNumOfOccupiedRooms")) {
-            occupiedRoomsCount = myCache.get("totalNumOfOccupiedRooms");
-        } else {
-            occupiedRoomsCount = freshOccupiedRoomsCount; 
-            myCache.set("totalNumOfOccupiedRooms", occupiedRoomsCount, CACHE_TTL);
-        }
+        // get cached count 
+        const RoomsCount = await cacheCountNodeCache("totalNumOfOccupiedRooms",RoomsMethods.getOccupiedRoomsCOUNT,isFiltered)
+        const numOfPages = Math.ceil( Math.ceil( RoomsCount / size));
         
         res.json({
             success:true, 
             rooms,
-            numOfPages: Math.ceil(occupiedRoomsCount / size) // Always use fresh count
+            numOfPages 
         });
     } catch (error) {
         res.status(500).json({success:false, message:"Error Fetching Occupied Rooms"});

@@ -11,6 +11,7 @@ const ResetPasswordTokensModel = require("../Models/ResetPassword.js");
 const crypto = require("crypto");
 const consoleLog = require("../Utils/consoleLog.js");
 const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
+const stringifyFields = require("../Utils/stringifyFields.js");
 // =================================
 //  Login User (Employees or Patients)
 // =================================
@@ -23,16 +24,13 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
             if(!user_email || !password) 
                 return res.status(400).json({success:false,message:"Bad Request"});
             
+            const userExists = await User.checkIfUserExistsByEmail(user_email);
+            const userType = await User.getUserTypeByEmail(user_email);
 
-             // --2. See if user exists at one of the tables
-            const query_emp = `SELECT EXISTS(SELECT * FROM employees WHERE emp_email =?) AS data_exists`
-            const userIsEmployee = await isExist(query_emp,[user_email]);
-             // search for user inside patients table
-            const query_pat = `SELECT EXISTS(SELECT * FROM patients WHERE patient_email =?) AS data_exists`
-            const userIsPatient = await isExist(query_pat,[user_email]);
-            
+            const userIsEmployee = userType === 'employee';
+            const userIsPatient = userType === 'patient';
 
-            if(!userIsEmployee && !userIsPatient){
+            if(!userExists){
                 return res.status(404).json({
                     success:false,
                      message : "User Not Found"
@@ -87,7 +85,7 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
 
 
             // --4. Create JWT Token and send response without password
-            const { emp_password, ...userInfo } = user;
+            const { user_password, ...userInfo } = user;
             const token = await createJWTToken(userInfo.user_id, userInfo.user_email);
             
 
@@ -114,58 +112,48 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
     router.post("/register",async function(req , res){
         try {
     
-                let user = req.body;
+                let {user_name,user_email,user_password, ...restPatientData} = req.body;
 
-                //Bad Request if
-                if(!user.patient_email || !user.patient_password) return res.status(400 ).json({success:false,message:"Bad Request"});
+                // Bad Request 
+                if(!user_name || !user_email || !user_password) return res.status(400 ).json({success:false,message:"Bad Request"});
 
-                const check_patients_table = await isExist(`SELECT EXISTS(SELECT * FROM patients WHERE patient_email = ?) AS data_exists`,[user.patient_email]);
+                const userType = await User.getUserTypeByEmail(user_email);
+                const userIsPatient = userType === "patient";
 
-
-                if (check_patients_table) {
+                // User is not patient
+                if (userIsPatient) {
                     return res.json({ success: false, message: "This email has been used before" });
                 } 
-                /* If user is not staged or registered before we start registering it */
 
-            // assign hashed to user before preparing for inserting into db 
-            user.patient_password= await User.hashPassword(user.patient_password);
-
-            // make entries array of hashed user
-            let request_entries = Object.entries(user);
-            /***************************************/ 
-            
-            let columns_field = "";
-            let values_field = "";
-            request_entries.forEach(([key , value ],indx)=>{
-                columns_field += key;
+                // assign hashed to user before preparing for inserting into db 
+                const hashedPassword = await User.hashPassword(user_password);
+                if(!hashedPassword) return res.status().json({success: false, message: "Failed To Hash Password"})
                 
-                if(typeof value == 'string'){
-                    // make sure to add the hashed password to db and not the original
-                    values_field += `"${value}"`
-                }
-                else {
-                    values_field += `${value}`
-                }
-                if(indx !== request_entries.length - 1){
-                    columns_field += ",";
-                    values_field += ","
-                }
-                    
-            })
-            /***************************************/ 
-  
-            // this time we insert to patients table
-            const query = `INSERT INTO patients (${columns_field}) VALUES (${values_field})`
+                // First Insert to patients table
+                const queryPatients = `INSERT INTO users (${columns_field}) VALUES (${values_field})`
+                const InsertedToPatients = await executeMySqlQuery( queryPatients );
+
+                if(InsertedToPatients.affectedRows == 0) return res.status().json({success:false,message:"Failed To Register User"})
+
+                
+
+                // make entries array of hashed user
+                let request_entries = Object.entries(user);
+
+                const {columns_field , values_field} = stringifyFields("seperate", request_entries)
+                
+                // Register by inserting to patients table
+                const query = `INSERT INTO users (${columns_field}) VALUES (${values_field})`
 
 
-            const registered = await executeMySqlQuery( query );
+                const registered = await executeMySqlQuery( query );
 
-            if(registered){
-                res.json({success:true,message:"Successfully Registered as Patient"})
-            }
-            else{
-                res.json({success:false,message:"Failed To Register Patient"})
-            }
+                if(registered){
+                    res.json({success:true,message:"Successfully Registered as Patient"})
+                }
+                else{
+                    res.json({success:false,message:"Failed To Register Patient"})
+                }
         
         }
         catch (err) {
@@ -204,12 +192,12 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
                      message : "User Not Found"
                 });
             }
+
+            const userType = await User.getUserTypeByEmail(user_email);
+
+            const userIsEmployee = userType === 'employee';
+            const userIsPatient = userType === 'patient';
             
-            const query_emp = `SELECT EXISTS(SELECT * FROM employees WHERE emp_email =?) AS data_exists`
-            const userIsEmployee = await isExist(query_emp,[user_email]);
-             // search for user inside patients table
-            const query_pat = `SELECT EXISTS(SELECT * FROM patients WHERE patient_email =?) AS data_exists`
-            const userIsPatient = await isExist(query_pat,[user_email]);
             if(!userIsEmployee && !userIsPatient){
                 return res.status(404).json({
                     success:false,
@@ -222,11 +210,8 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
             // --3. Update User's Data at the correct table
             // make sure to remove fields that cannot be changed by user 
             let isUpdated = null;
-            console.log("user_id , user_title , newUserData , actions",user_id , user_title , actions)
-            console.log("userIsEmployee",userIsEmployee)
-            console.log("userIsPatient",userIsPatient)
-            if(userIsEmployee){
 
+            if(userIsEmployee){
                 isUpdated =await HospitalUsersMethods.MapUserToUpdateFunction(user_id , user_title , newUserData , actions)
                 
             }
@@ -280,11 +265,11 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
 
 
             // --2. See if user exists at one of the tables
-            const query_emp = `SELECT EXISTS(SELECT * FROM employees WHERE emp_email =?) AS data_exists`
-            const userIsEmployee = await isExist(query_emp,[user_email]);
-             // search for user inside patients table
-            const query_pat = `SELECT EXISTS(SELECT * FROM patients WHERE patient_email =?) AS data_exists`
-            const userIsPatient = await isExist(query_pat,[user_email]);
+            const userType = await User.getUserTypeByEmail(user_email);
+
+            const userIsEmployee = userType === 'employee';
+            const userIsPatient = userType === 'patient';
+
             // USER NOT FOUND At EMPLOYEES TABLE
             if(!userIsEmployee && !userIsPatient){
                 return res.status(404).json({
@@ -295,21 +280,21 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
             // --2. See if user have requested to reset password before if not create a document for him
             let UserAtResetPasswordTokensModel = null;
             if(userIsEmployee){
-                 UserAtResetPasswordTokensModel = await ResetPasswordTokensModel.findOne({ emp_email: userIsEmployee.data.emp_email });
+                 UserAtResetPasswordTokensModel = await ResetPasswordTokensModel.findOne({ user_email: userIsEmployee.data.user_email });
                  if(!UserAtResetPasswordTokensModel) {
                     UserAtResetPasswordTokensModel = new ResetPasswordTokensModel({
                         emp_id:userIsEmployee.data.emp_id,
-                        emp_email: userIsEmployee.data.emp_email,
+                        user_email: userIsEmployee.data.user_email,
                         ResetToken: "",
                     })
                 }
             }
             else if(userIsPatient){
-                 UserAtResetPasswordTokensModel = await ResetPasswordTokensModel.findOne({ patient_email: userIsPatient.data.patient_email });
+                 UserAtResetPasswordTokensModel = await ResetPasswordTokensModel.findOne({ user_email: userIsPatient.data.user_email });
                  if(!User) {
                     UserAtResetPasswordTokensModel = new ResetPasswordTokensModel({
                         emp_id:userIsPatient.data.emp_id,
-                        patient_email: userIsPatient.data.patient_email,
+                        user_email: userIsPatient.data.user_email,
                         ResetToken: "",
                     })
                 }
@@ -354,22 +339,21 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
 // =================================
     router.put("/reset-password/:userId/:resetToken",async function(req ,res){
         try{
-            const {emp_password} = req.body;
+            const {user_password} = req.body;
             // userId is Id of user document at mongodb and not the emp_id field
             const  {userId , resetToken} = req.params;
 
 
             // --1. Bad Request if missing fields
-            if(!emp_password || !userId || !resetToken) return res.status(400 ).json({success:false,message:"Bad Request"});
+            if(!user_password || !userId || !resetToken) return res.status(400 ).json({success:false,message:"Bad Request"});
 
 
             // --2. Check user exists at one of the tables
-            // search for user inside employees table
-            const query_emp = `SELECT EXISTS(SELECT * FROM employees WHERE emp_email =?) AS data_exists`
-            const userIsEmployee = await isExist(query_emp,[emp_email]);
-             // search for user inside patients table
-            const query_pat = `SELECT EXISTS(SELECT * FROM patients WHERE patient_email =?) AS data_exists`
-            const userIsPatient = await isExist(query_pat,[emp_email]);
+            const userType = await User.getUserTypeByEmail(user_email);
+
+            const userIsEmployee = userType === 'employee';
+            const userIsPatient = userType === 'patient';
+            
             if(!userIsEmployee && !userIsPatient){
                 return res.status(404).json({
                     success:false,
@@ -406,14 +390,14 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
                    created_Token_at.day === current_Time.day){
                     
                     // then token is still valid and we save new password into db
-                    const hashedPassword = await User.hashPassword(emp_password);
+                    const hashedPassword = await User.hashPassword(user_password);
 
                     let isReseted = null;
                     if(userIsEmployee){
-                        isReseted = await executeMySqlQuery(`UPDATE employees SET emp_password = ? WHERE emp_id = ?`,[hashedPassword , resetTokenForUser.emp_id])
+                        isReseted = await executeMySqlQuery(`UPDATE employees SET user_password = ? WHERE emp_id = ?`,[hashedPassword , resetTokenForUser.emp_id])
                     }
                     else if(userIsPatient){
-                        isReseted = await executeMySqlQuery(`UPDATE patients SET patient_password = ? WHERE patient_id = ?`,[hashedPassword , resetTokenForUser.emp_id])
+                        isReseted = await executeMySqlQuery(`UPDATE patients SET user_password = ? WHERE patient_id = ?`,[hashedPassword , resetTokenForUser.emp_id])
                     }
 
                      

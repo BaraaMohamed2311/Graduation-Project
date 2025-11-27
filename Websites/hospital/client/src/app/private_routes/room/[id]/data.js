@@ -1,6 +1,6 @@
 let inputs_info= [
-    {  key:"patient_email",label:"Email", name: "patient_email", type: "email" },
-    { key:"patient_phone",label:"Phone ", name: "patient_phone", type: "text" },
+    {  key:"user_email",label:"Email", name: "user_email", type: "email" },
+    { key:"user_phone",label:"Phone ", name: "user_phone", type: "text" },
 ]
 
  

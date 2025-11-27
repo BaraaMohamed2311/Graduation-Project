@@ -3,7 +3,7 @@
 import Form from "@/components/Form/Form";
 import styles from "./register.module.css";
 import { useRef, useState } from "react";
-import {inputs_info , select_options} from "./data";
+import {inputs_info } from "./data";
 import userNotification from "@/utils/userNotification";
 import { useRouter } from "next/navigation";
 
@@ -12,9 +12,9 @@ export default function RegisterPage() {
   let router = useRouter();
 
   // ========================>MUST HAVE SAME ORDER IN references ARRAY AS inputs_info <=================
-  console.log("select_options",select_options);
 
-  let selectBoxsRef = useRef({});
+
+
   let inputsBoxsRef = useRef({});
   /**************************************/
   function register_handler(e){
@@ -28,10 +28,7 @@ export default function RegisterPage() {
       requestBody[input.name]= inputsBoxsRef.current[input.name].value;
     });
     
-    // Adding Title & specialty selection
-    console.log("selectBoxsRef.current",selectBoxsRef.current);
-      requestBody[select_options.select_title_options.name]= selectBoxsRef.current[select_options.select_title_options.name].value;
-      requestBody[select_options.select_specialty_options.name]= selectBoxsRef.current[select_options.select_specialty_options.name].value;
+
     console.log("requestBody",requestBody);
 
 
@@ -74,10 +71,9 @@ export default function RegisterPage() {
           <h1>EMS - Register</h1>
           <Form 
           form_handler={register_handler} 
-          select_options ={select_options} 
           formBtnState = {formBtnState} 
           inputs_info = { inputs_info} 
-          references={{inputsBoxsRef , selectBoxsRef}} 
+          references={{inputsBoxsRef}} 
           formKind={"register_form"}/>
         </div>
       </div>

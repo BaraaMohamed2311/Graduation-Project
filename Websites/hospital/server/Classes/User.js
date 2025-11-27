@@ -4,56 +4,71 @@ const bcrypt = require("bcrypt");
 
 class User {
 
+    static async checkIfUserExistsById(user_id) {
+        // SELECT EXISTS() stopps at first found row, more efficient than COUNT(*)
+    const query = `SELECT EXISTS(SELECT 1 FROM users WHERE user_id = ?) AS user_exists`;
+    const result = await executeMySqlQuery(query, [user_id]);
+    return result[0]?.user_exists === 1; 
+}
 
-    static async emailExists( emp_email){
-        const query = `SELECT emp_email FROM  employees WHERE emp_email = ? LIMIT 1`;
-        const result = await executeMySqlQuery(query,[emp_email])
+static async checkIfUserExistsByEmail(user_email) {
+    // SELECT EXISTS() stopps at first found row, more efficient than COUNT(*)
+    const query = `SELECT EXISTS(SELECT 1 FROM users WHERE user_email = ?) AS user_exists`;
+    const result = await executeMySqlQuery(query, [user_email]);
+    return result[0]?.user_exists === 1; 
+}
 
-        return result.length > 0 ; // if length is greater than 0 then email exists
-    }
+static async getUserTypeById(user_id) {
+    // LIMIT 1 stopps at first found row
+    const query = `SELECT user_type FROM users WHERE user_id = ? LIMIT 1`;
+    const result = await executeMySqlQuery(query, [user_id]);
+    return result[0]?.user_type || null;
+}
+
+static async getUserTypeByEmail(user_email) {
+    // LIMIT 1 stopps at first found row
+    const query = `SELECT user_type FROM users WHERE user_email = ? LIMIT 1`;
+    const result = await executeMySqlQuery(query, [user_email]);
+    return result[0]?.user_type || null;
+}
+
+static async getUserIDByEmail(user_email) {
+    // LIMIT 1 stopps at first found row
+    const query = `SELECT user_id FROM users WHERE user_email = ? LIMIT 1`;
+    const result = await executeMySqlQuery(query, [user_email]);
+    return result[0]?.user_id || null;
+}
+
+static async getUserEmailByID(user_id) {
+    // LIMIT 1 stopps at first found row
+    const query = `SELECT user_id FROM users WHERE user_id = ? LIMIT 1`;
+    const result = await executeMySqlQuery(query, [user_id]);
+    return result[0]?.user_email || null;
+}
+
+
 
     // =============================
     //              Get
     // =============================
     static async getUserIDAndTable(user_email){
-        if (user_email) {
-            // Use the helper functions instead of direct queries
-            const employeeId = await this.getEmployeeIdByEmail(user_email);
-            const patientId = await this.getPatientIdByEmail(user_email);
+            if (!user_email)  return console.error("User email is required");
 
-            if (employeeId) {
-                return { user_id: employeeId, table: "employees" }; 
+            // Get user type first
+            const userType = await this.getUserTypeByEmail(user_email);
+            if(!userType)  return console.error("User type could not be determined");
+            // Get user external ID at corresponding table
+            const user_id = await this.getUserIDByEmail(user_email);
+            if(!user_id)  return console.error("User user_id is undefined");
+
+            if (userType === "employee") {
+                return { user_id: user_id, table: "employees" }; 
             }
-            else if (patientId) {
-                return { user_id: patientId, table: "patients" }; 
-            } else {
-                console.error("User's Id do not exist in db");
-                return null;
+            else if (userType === "patient") {
+                return { user_id: user_id, table: "patients" }; 
             }
-        } else {
-            console.error("User email is required");
-            return null;
+
         }
-        }
-
-    static async getPatientIdByEmail(patient_email){
-        const query = `
-                SELECT patient_id FROM patients WHERE patient_email = ? LIMIT 1
-            `;
-        const result = await executeMySqlQuery(query,[patient_email]);
-
-        return result[0]?.patient_id || null;
-    }
-
-    static async getEmployeeIdByEmail(emp_email){
-        const query = `
-                SELECT emp_id FROM employees WHERE emp_email = ? LIMIT 1
-            `;
-        const result = await executeMySqlQuery(query,[emp_email]);
-
-        return result[0]?.emp_id || null;
-    }
-
 
 
         static async getUserEmailAndTable(user_id){
@@ -79,25 +94,21 @@ class User {
         }
         }
 
-        static async getUserTitle(user_email  ){
-        //Finds Role of user using id or email & by default Role is Employee if not defined or user not exist
-        if (user_email) {
+        static async getUserTitle(user_email ){
+            // Get user external id first to search in employees table
+            const user_id = await this.getUserIDByEmail(user_email);
+            if (!user_id) return console.error("User user_id is undefined");
+
             const query = `
                 SELECT COALESCE(
-                (SELECT emp_title FROM employees WHERE emp_email = ? LIMIT 1),
+                (SELECT emp_title FROM employees WHERE emp_id = ? LIMIT 1),
                 'Patient'
             ) AS emp_title`;
 
-            const result = await executeMySqlQuery(query,[user_email]);
+            const result = await executeMySqlQuery(query,[user_id]);
             
-
-            if(result.length > 0){
-                return result[0]?.emp_title; 
-            }
-            } else {
-                console.error("User's Id do not exist in db");
-            return null;
-        }
+            return result[0]?.emp_title; 
+        
         }
 
     
@@ -106,7 +117,8 @@ class User {
 
     static async getUserRole(hosp_emp_id  ){
         //Finds Role of user using id or email & by default Role is Employee if not defined or user not exist
-        if (hosp_emp_id) {
+        if (!hosp_emp_id)  return console.error("No hosp_emp_id Provided to get Role");
+
             const query = `
                 SELECT COALESCE(
                     (SELECT NULLIF(hr.role_name, '') 
@@ -120,12 +132,7 @@ class User {
             const result = await executeMySqlQuery(query,[hosp_emp_id]);
             console.log("result and query from getUserRole",result[0]?.role_name)
             return result[0]?.role_name; 
-        } else {
-            console.error("No hosp_emp_id Provided to get Role");
-            return null;
-        }
-        
-     
+
     }
 
 

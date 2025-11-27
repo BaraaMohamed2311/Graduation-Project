@@ -12,11 +12,11 @@ class DoctorMethods {
             const query = `
                 SELECT EXISTS (
                     SELECT 1
-                    FROM doctor_patient dp
+                    FROM staff_patient sp
                     JOIN patients p 
-                        ON dp.patient_id = p.patient_id
-                    WHERE dp.doctor_id = ? 
-                    AND dp.patient_id = ?
+                        ON sp.patient_id = p.patient_id
+                    WHERE sp.staff_id = ? 
+                    AND sp.patient_id = ? AND relation_type = 'Doctor'
                 ) AS patient_exists;
             `;
 
@@ -83,14 +83,15 @@ class DoctorMethods {
         
         const query = `
             SELECT 
+                -- from users
+                u.user_email,
+                u.user_name,
                 -- from employees
                 e.emp_id AS user_id,
-                e.emp_name,
                 e.emp_abscence,
                 e.emp_rate,
                 e.emp_title,
                 e.emp_specialty,
-                e.emp_email AS user_email,
                 
                 -- from doctors
                 d.doctor_id,
@@ -130,6 +131,7 @@ class DoctorMethods {
 
             FROM doctors d
             JOIN employees e ON d.hosp_emp_id = e.emp_id
+            JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
             LEFT JOIN availability da ON d.doctor_id = da.hosp_emp_id
 
             -- Join with hospital_emp_perms to get perm_id
@@ -166,14 +168,16 @@ class DoctorMethods {
         
         const query = `
         SELECT 
+            -- from users
+                u.user_email,
+                u.user_name,
             -- from employees
             e.emp_id AS user_id,
-            e.emp_name,
             e.emp_abscence,
             e.emp_rate,
             e.emp_title,
             e.emp_specialty,
-            e.emp_email AS user_email,
+
             
             -- from doctors
             d.doctor_id,
@@ -222,6 +226,7 @@ class DoctorMethods {
 
         FROM doctors d
         JOIN employees e ON d.hosp_emp_id = e.emp_id
+        JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
         WHERE d.doctor_id = ?
     `;
 
@@ -234,14 +239,15 @@ class DoctorMethods {
         
         const query = `
                 SELECT 
+                    -- from users
+                    u.user_email,
+                    u.user_name,
                     -- from employees
                     e.emp_id AS user_id,
-                    e.emp_name,
                     e.emp_abscence,
                     e.emp_rate,
                     e.emp_title,
                     e.emp_specialty,
-                    e.emp_email AS user_email,
                     
                     -- from doctors
                     d.hosp_emp_id,
@@ -275,6 +281,7 @@ class DoctorMethods {
 
                 FROM doctors d
                 JOIN employees e ON d.hosp_emp_id = e.emp_id
+                JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
 
 `;
 
@@ -287,17 +294,19 @@ class DoctorMethods {
         
         const query = `
                 SELECT 
+
+                    -- from users
+                    u.user_email,
+                    u.user_password, -- include password for authentication purposes
+                    u.user_name,
                     -- from employees
                     e.emp_id AS user_id,
-                    e.emp_name,
                     e.emp_salary,
                     e.emp_abscence,
                     e.emp_bonus,
                     e.emp_rate,
                     e.emp_title,
                     e.emp_specialty,
-                    e.emp_email AS user_email,
-                    e.emp_password AS user_password, -- include password for authentication purposes
                     
                     -- from doctors
                     d.doctor_id,
@@ -332,6 +341,7 @@ class DoctorMethods {
 
                 FROM doctors d
                 JOIN employees e ON d.hosp_emp_id = e.emp_id
+                JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
                 WHERE d.doctor_id = ${doctor_id}
 
 `;
@@ -344,11 +354,13 @@ class DoctorMethods {
     
 
 
-    static async getDoctorAllPatients(doctor_id){
+    static async getDoctorAllPatients(staff_id){
         const query = `SELECT 
+                        -- from users
+                        u.user_email,
+                        u.user_name,
+                        -- from patients
                         p.patient_id AS user_id,
-                        p.patient_name,
-                        p.patient_email AS user_email,
                         p.patient_phone,
                         p.patient_address,
                         p.isAssignedToRoom,
@@ -358,22 +370,25 @@ class DoctorMethods {
                         p.patient_gender,
                         p.emergency_contact,
                         p.created_at,
-                        dp.assigned_date
-                    FROM doctor_patient dp
-                    JOIN patients p 
-                        ON dp.patient_id = p.patient_id
-                    WHERE dp.doctor_id = ?;
+                        sp.assigned_date
+                    FROM staff_patient sp
+                    JOIN patients p ON sp.patient_id = p.patient_id
+                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
+                    WHERE sp.staff_id = ? AND relation_type = 'Doctor';
                     `;
-            const result = await executeMySqlQuery(query,[doctor_id]);
+            const result = await executeMySqlQuery(query,[staff_id]);
             
             return result;
     }
 
-    static async getDoctorRangedPatients(doctor_id,limit, offset,restfilters=null){
+    static async getDoctorRangedPatients(staff_id,limit, offset,restfilters=null){
         let query = `SELECT 
+                        -- from users
+                        u.user_email,
+                        u.user_name,
+
+                        -- from patients
                         p.patient_id AS user_id,
-                        p.patient_name,
-                        p.patient_email AS user_email,
                         p.patient_phone,
                         p.patient_address,
                         p.isAssignedToRoom,
@@ -383,11 +398,11 @@ class DoctorMethods {
                         p.patient_gender,
                         p.emergency_contact,
                         p.created_at,
-                        dp.assigned_date
-                    FROM doctor_patient dp
-                    JOIN patients p 
-                        ON dp.patient_id = p.patient_id
-                    WHERE dp.doctor_id = ? 
+                        sp.assigned_date
+                    FROM staff_patient sp
+                    JOIN patients p ON sp.patient_id = p.patient_id
+                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
+                    WHERE sp.staff_id = ?  AND relation_type = 'Doctor'
                     `;
             if(restfilters){
                 
@@ -395,20 +410,20 @@ class DoctorMethods {
             if(limit> 0 &&  offset > -1){
                 query += "LIMIT ? OFFSET ?"
             }
-            const result = await executeMySqlQuery(query,[doctor_id,limit, offset]);
+            const result = await executeMySqlQuery(query,[staff_id,limit, offset]);
             
             return result;
     }
 
-    static async getDoctorAllPatientsCOUNT(doctor_id){
+    static async getDoctorAllPatientsCOUNT(staff_id){
         const query = `SELECT 
                         COUNT(p.patient_id) as count
-                    FROM doctor_patient dp
+                    FROM staff_patient sp
                     JOIN patients p 
-                        ON dp.patient_id = p.patient_id
-                    WHERE dp.doctor_id = ? ;
+                        ON sp.patient_id = p.patient_id
+                    WHERE sp.staff_id = ?  AND relation_type = 'Doctor';
                     `;
-            const result = await executeMySqlQuery(query,[doctor_id]);
+            const result = await executeMySqlQuery(query,[staff_id]);
             
             return result[0];
     }
@@ -453,10 +468,10 @@ class DoctorMethods {
         static async updateDoctorPatient(doctor_id, patient_id, data ) {
             try{
                 // ===1. Filter data to only include fields relevant to doctor_patient table
-                const doctor_patient_table_fields = Tables.doctor_patient;
+                const staff_patient_table_fields = Tables.staff_patient;
                 const MapOfData = new Map(Object.entries(data));
                 let fieldsToUpdate = {};
-                for (const field of doctor_patient_table_fields) {
+                for (const field of staff_patient_table_fields) {
                     if( MapOfData.has(field)){
                         fieldsToUpdate[field] = MapOfData.get(field);
                     }
@@ -464,8 +479,8 @@ class DoctorMethods {
                 // ===2.  Construct dynamic fields string for SQL
                 const fields = stringifyFields( "joined",Object.entries(fieldsToUpdate))
 
-                    const query = `UPDATE doctor_patient SET ${fields} 
-                                    WHERE doctor_id = ? AND patient_id = ?;`;
+                    const query = `UPDATE staff_patient SET ${fields} 
+                                    WHERE staff_id = ? AND patient_id = ? AND relation_type = 'Doctor';`;
                     params.push(doctor_id, patient_id);
 
                     await executeMySqlQuery(query, params);

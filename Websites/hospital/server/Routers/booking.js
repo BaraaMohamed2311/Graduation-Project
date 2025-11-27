@@ -20,7 +20,8 @@ const JoinFiltering = require("../Utils/JoinFiltering.js");
 const isExist = require("../Utils/isExist.js");
 const getDayOfWeekByDate = require("../Utils/getDayOfWeekByDate.js");
 const isDayInPast = require("../Utils/isDayInPast.js");
-const myCache = new NodeCache({ stdTTL: 3600 }); // default TTL 1hr
+const isTimeSlotInPast= require("../Utils/isTimeSlotInPast.js");
+const isSameDay = require("../Utils/isSameDay.js");
 
 // =================================
 //  Get  Availability Details
@@ -41,7 +42,7 @@ router.get("/get-availability",async (req,res)=>{
 
 
     // Fetch the appointment
-    const available_days = await ConsultationMethods.getAllShiftAvailabilityDays(hosp_emp_id);
+    const available_days = await ConsultationMethods.getAllAvailabilityDays(hosp_emp_id);
 
     if (!available_days || available_days.length === 0) {
       return res.status(404).json({
@@ -87,7 +88,7 @@ router.get("/get-appointment",async (req,res)=>{
 
     // Optional validation: only doctors/surgeons can have appointments
     if (hosp_emp_id) {
-      const isValid = await HospitalUsersMethods.isVaildEmployeeTitleForAppointments(hosp_emp_id);
+      const isValid = await ConsultationMethods.isVaildEmployeeTitleForAppointments(hosp_emp_id);
       if (!isValid) {
         return res.status(403).json({
           success: false,
@@ -97,7 +98,7 @@ router.get("/get-appointment",async (req,res)=>{
     }
 
     // Fetch the appointment
-    const appointment = await ConsultationMethods.getSpecificAppointment(
+    const appointment = await ConsultationMethods.getConsultationSlot(
       hosp_emp_id,
       patient_id,
       consultation_date,
@@ -128,9 +129,9 @@ router.get("/get-appointment",async (req,res)=>{
 // =================================
 //  Get  All Appointment
 // =================================
-router.get("/get-all-appointments",async (req,res)=>{
+router.get("/get-all-consultations",async (req,res)=>{
     try {
-    const { user_id ,  user_email} = req.query;
+    const { user_id ,  user_email , pagination , size} = req.query;
 
     // Require at least one identifier
     if (!user_id ) {
@@ -139,42 +140,51 @@ router.get("/get-all-appointments",async (req,res)=>{
         message: "Bad Request."
       });
     }
-
-    let appointments;
+    
+    let consultations;
+    let consultationsCOUNT;
 
         // --2. See if user exists at one of the tables
-        const query_emp = `SELECT EXISTS(SELECT * FROM employees WHERE emp_email =?) AS data_exists`
-        const userIsEmployee = await isExist(query_emp,[user_email]);
-        // search for user inside patients table
-        const query_pat = `SELECT EXISTS(SELECT * FROM patients WHERE patient_email =?) AS data_exists`
-        const userIsPatient = await isExist(query_pat,[user_email]);
-
-
+        const userExists = await User.checkIfUserExistsByEmail(user_email);
+                const userType = await User.getUserTypeByEmail(user_email);
+    
+                const userIsEmployee = userType === 'employee';
+                const userIsPatient = userType === 'patient';
+    
+                if(!userExists){
+                    return res.status(404).json({
+                        success:false,
+                         message : "User Not Found"
+                    });
+                }
+    // Get method depending on user type
     if (userIsEmployee) {
-
-      appointments = await ConsultationMethods.getEmployeeAppointments(user_id);
+      consultations = await ConsultationMethods.getEmployeeAppointments(user_id,parseInt(size), parseInt((pagination - 1) * size ));
+      consultationsCOUNT = await ConsultationMethods.getEMPConsultationsCOUNT(user_id);
     } else if(userIsPatient){
-      appointments = await ConsultationMethods.getPatientAppointments(user_id);
+      consultations = await ConsultationMethods.getPatientAppointments(user_id,parseInt(size), parseInt((pagination - 1) * size ));
+      consultationsCOUNT = await ConsultationMethods.getPATConsultationsCOUNT(user_id);
     }
 
-    if (!appointments || appointments.length === 0) {
+    if (!consultations || consultations.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "No appointments found."
+        message: "No consultations found."
       });
     }
+    numOfPages = Math.max(1, Math.ceil(consultationsCOUNT / size));
 
     res.status(200).json({
       success: true,
-      count: appointments.length,
-      body: appointments
+      numOfPages: numOfPages, // we do not cache it in server  as it is specific for each user
+      body: consultations
     });
 
   } catch (err) {
-    console.error("Error in /get-all-appointments:", err);
+    console.error("Error in /get-all-consultations:", err);
     res.status(500).json({
       success: false,
-      message: err.message || "Server error while fetching appointments."
+      message: err.message || "Server error while fetching consultations."
     });
   }
 });
@@ -192,12 +202,13 @@ router.post("/book-consultation",async (req,res)=>{
             consultation_date,
             start_time,
             end_time,
-            booking_type
+            consultation_type,
+            bookedAt
         } = req.body;
 
         // ===1. Validate Input
 
-        if (!hosp_emp_id || !patient_id  || !consultation_date || !start_time) {
+        if (!hosp_emp_id || !patient_id  || !consultation_date || !start_time || !consultation_type || !bookedAt) {
             return res.status(400).json({
                 success: false,
                 message: "Missing required booking details."
@@ -206,10 +217,26 @@ router.post("/book-consultation",async (req,res)=>{
 
 
         // === Ceck if consultation_date is in the past
-        if(isDayInPast(consultation_date)){
+        console.log("isDayInPast",isDayInPast(bookedAt, consultation_date))
+        if(isDayInPast(bookedAt,consultation_date)){
             return res.status(400).json({
                 success: false,
-                message: "Cannot book consultation in the past."
+                message: "Cannot book consultation in the past days"
+            });
+        }
+        // compares bookedAt hour with start_tiem (all in 24-hrs format)
+        if(isTimeSlotInPast(bookedAt.split(" ")[1], start_time) && isSameDay(bookedAt,consultation_date)){
+          return res.status(400).json({
+                success: false,
+                message: "Cannot book consultation in the past hours"
+            });
+        }
+
+        
+        if(ConsultationMethods.patientHasOtherConsultationWithEmp(patient_id,hosp_emp_id)){
+          return res.status(400).json({
+                success: false,
+                message: "You already have a consultation scheduled with this user"
             });
         }
 
@@ -224,61 +251,65 @@ router.post("/book-consultation",async (req,res)=>{
                 message: "Invalid employee for booking consultation."
             });
         }
-
+      
         // ===3. Check if new patient exists 
-        const query_pat = `SELECT EXISTS(SELECT * FROM patients WHERE patient_id =?) AS data_exists`
-        const userIsPatient = await isExist(query_pat,[patient_id]);
-        const query_emp = `SELECT EXISTS(SELECT * FROM employees WHERE emp_id =?) AS data_exists`
-        const userIsEmployee = await isExist(query_emp,[patient_id]);
+        const userExists = await User.checkIfUserExistsById(patient_id);
+        const userType = await User.getUserTypeById(patient_id);
 
-        // Any user can book appointment with doctor but he must be at least patient or employee
-        if(!userIsPatient && !userIsEmployee){
-          return res.status(404).json({
-              success:false,
-              message : "You have to register as patient before booking an appointment."
-              });
+        const userIsEmployee = userType === 'employee';
+
+        if(!userExists || userIsEmployee){
+            return res.status(404).json({
+                      success:false,
+                      message : "You have to register as patient before booking an appointment."
+                        });
         }
 
-        // === Get day of week from date
-        const dayOfWeek  = new Date(consultation_date);
-        const dayOfWeekIndex = dayOfWeek.getDay(); // 0 (Sun) to 6 (Sat)
+
+
+      
+
+        // === Check if patient already booked it
+        const isPatientAvailable = await PatientMethods.isPatientAvailable(patient_id,consultation_date,start_time);
+        console.log("isPatientAvailable",isPatientAvailable)
+        if(!isPatientAvailable){
+            return res.status(400).json({
+                success: false,
+                message: "You have a pre-scheduled consultation at this time"
+            });
+        }
 
 
         // ===3. Check shift availability if vaild get availability details
-        const isShiftAvailable = await ConsultationMethods.checkShiftAvailability(hosp_emp_id,dayOfWeekIndex,start_time,end_time);
-
-        if(!isShiftAvailable.valid){
-            return res.status(400).json({
-                success: false,
-                message: isShiftAvailable.message
-            });
-        }
-        
-
-        const availability = await ConsultationMethods.getShiftAvailability(hosp_emp_id,dayOfWeekIndex); // Not used in this context
+        // === Get day of week from date
+        const dayOfWeek  = new Date(consultation_date);
+        const dayOfWeekIndex = dayOfWeek.getDay(); // 0 (Sun) to 6 (Sat)
+        const availability = await ConsultationMethods.getAvailabilityDay(hosp_emp_id,dayOfWeekIndex); // Not used in this context
+        if(!availability) return res.status(404).json({success:false,message:"Not Available on that date"})
         console.log("Availability for the day:", availability);
 
         // ===4. Check consultation_status 
 
-        const isSlotAvailable = await ConsultationMethods.getAppointmentAvailability(hosp_emp_id,consultation_date,start_time);
-        console.log("isSlotAvailable for the day:", isSlotAvailable);
-        if(!isSlotAvailable || (isSlotAvailable !== "Available" && isSlotAvailable !== "Completed" && isSlotAvailable !== "Cancelled")){
+        const consultation_slot = await ConsultationMethods.getEmployeeConsultationSlot(hosp_emp_id,consultation_date,start_time);
+        console.log("isSlotAvailable for the day:", consultation_slot);
+
+
+        const isConsultionAvailable = await ConsultationMethods.isConsultionAvailable(availability,consultation_slot);
+
+        if(!isConsultionAvailable){
             return res.status(400).json({
                 success: false,
-                message: "Selected slot is busy."
+                message: "Consultation is not available at this time"
             });
         }
-
-
-
 
         
         // =============================
         // ====6. Create Consultation Entry
         // =============================
-        const isAppointmentCreated = await ConsultationMethods.bookConsultationAppointment(hosp_emp_id, patient_id,availability.availability_id,consultation_date,start_time,end_time)
-        console.log("Appointment Creation Status:", isAppointmentCreated);
-        if(!isAppointmentCreated){
+        const isConsultationBooked = await ConsultationMethods.bookConsultationAppointment(hosp_emp_id, patient_id,availability.availability_id,consultation_date,start_time,end_time,consultation_type)
+        console.log("Appointment Creation Status:", isConsultationBooked);
+        if(!isConsultationBooked){
             return res.status(400).json({
                 success: false,
                 message: "Failed to book consultation. Please try again."
@@ -325,7 +356,7 @@ router.put("/update-appointment-status",async (req,res)=>{
 
         // ===2. Validate inputs check if appointment exists before updating
 
-        const existingAppointment = await ConsultationMethods.getSpecificAppointmentByID(consultation_id);
+        const existingAppointment = await ConsultationMethods.getConsultationById(consultation_id);
         if (!existingAppointment) {
         return res.status(404).json({
             success: false,
@@ -358,7 +389,7 @@ router.put("/update-appointment-status",async (req,res)=>{
 // =================================
 //  Update an patient id of Appointment
 // =================================
-router.put("/update-appointment-patient",async (req,res)=>{
+router.put("/update-consultation-patient",async (req,res)=>{
         try {
         const { consultation_id, patient_id } = req.body;
 
@@ -374,7 +405,7 @@ router.put("/update-appointment-patient",async (req,res)=>{
 
         // ===2. check if appointment exists before updating
 
-        const existingAppointment = await ConsultationMethods.getSpecificAppointmentByID(consultation_id);
+        const existingAppointment = await ConsultationMethods.getConsultationById(consultation_id);
         if (!existingAppointment) {
         return res.status(404).json({
             success: false,
@@ -382,19 +413,19 @@ router.put("/update-appointment-patient",async (req,res)=>{
         });
         }
 
+
         // ===3. Check if new patient exists 
-        const query_pat = `SELECT EXISTS(SELECT * FROM patients WHERE patient_id =?) AS data_exists`
-        const userIsPatient = await isExist(query_pat,[patient_id]);
+        const userExists = await User.checkIfUserExistsById(patient_id);
         
-        if(!userIsPatient){
-          return res.status(404).json({
-              success:false,
-              message : "Create patient before assigning to appointment."
-              });
+        if(!userExists){
+            return res.status(404).json({
+                      success:false,
+                      message : "Create patient before assigning to appointment."
+                        });
         }
 
         // ===4. Update appointment patient id
-        const result = await ConsultationMethods.updateAppointmentPatient(consultation_id, patient_id);
+        const result = await ConsultationMethods.updateConsultationPatient(consultation_id, patient_id);
 
         if (result) {
         res.status(200).json({
@@ -420,21 +451,38 @@ router.put("/update-appointment-patient",async (req,res)=>{
 // =================================
 router.put("/reschedule-appointment",async (req,res)=>{
         try {
-        const { hosp_emp_id,consultation_id, new_consultation_date , new_start_time,new_end_time } = req.body;
+        const { hosp_emp_id,patient_id,consultation_id, new_consultation_date , new_start_time,new_end_time } = req.body;
 
         // ===1. Validate inputs
-        if (!consultation_id || !new_consultation_date || !new_start_time) {
+        if (!consultation_id || !new_consultation_date || !new_start_time || !patient_id) {
         return res.status(400).json({
             success: false,
             message: "Bad Request",
         });
         }
 
+        // === Ceck if consultation_date is in the past
+        if(isDayInPast(new_consultation_date)){
+            return res.status(400).json({
+                success: false,
+                message: "Cannot book consultation in the past."
+            });
+        }
+
+        // === Check if patient already booked it
+        const isPatientAvailable = await PatientMethods.isPatientAvailable(patient_id,new_consultation_date,new_start_time);
+
+        if(!isPatientAvailable){
+            return res.status(400).json({
+                success: false,
+                message: "You have a pre-scheduled cnsultion at this time"
+            });
+        }
 
 
         // ===2. check if appointment exists before updating
-
-        const existingAppointment = await ConsultationMethods.getSpecificAppointmentByID(consultation_id);
+        // we get by id to make sure it's in db and we get latest update of other fields
+        const existingAppointment = await ConsultationMethods.getConsultationById(consultation_id);
         if (!existingAppointment) {
         return res.status(404).json({
             success: false,
@@ -442,33 +490,25 @@ router.put("/reschedule-appointment",async (req,res)=>{
         });
         }
 
-        // ===3.  Chech new Schedule Availability
-        // === Get day of week from date
-        const dayOfWeek  = new Date(new_consultation_date);
-        const dayOfWeekIndex = dayOfWeek.getDay(); // 0 (Sun) to 6 (Sat)
-
         // ===3. Check shift availability if vaild get availability details
-        const isShiftAvailable = await ConsultationMethods.checkShiftAvailability(hosp_emp_id,dayOfWeekIndex,new_start_time,new_end_time);
-
-        if(!isShiftAvailable.valid){
-            return res.status(400).json({
-                success: false,
-                message: isShiftAvailable.message
-            });
-        }
-        
-
-        const availability = await ConsultationMethods.getShiftAvailability(hosp_emp_id,dayOfWeekIndex); // Not used in this context
+        // === Get day of week from date
+        const dayOfWeek  = new Date(consultation_date);
+        const dayOfWeekIndex = dayOfWeek.getDay(); // 0 (Sun) to 6 (Sat)
+        const availability = await ConsultationMethods.getAvailabilityDay(hosp_emp_id,dayOfWeekIndex); // Not used in this context
         console.log("Availability for the day:", availability);
 
-        // ===4. Check Consultation state
+        // ===4. Check consultation_status 
 
-        const isSlotAvailable = await ConsultationMethods.getAppointmentAvailability(hosp_emp_id,new_consultation_date,new_start_time);
-        console.log("isSlotAvailable for the day:", isSlotAvailable);
-        if(!isSlotAvailable || (isSlotAvailable !== "Available" && isSlotAvailable !== "Completed" && isSlotAvailable !== "Cancelled")){
+        const consultation_slot = await ConsultationMethods.getEmployeeConsultationSlot(hosp_emp_id,new_consultation_date,new_start_time);
+        console.log("isSlotAvailable for the day:", consultation_slot);
+
+
+        const isConsultionAvailable = await ConsultationMethods.isConsultionAvailable(availability,consultation_slot);
+
+        if(!isConsultionAvailable){
             return res.status(400).json({
                 success: false,
-                message: "Selected slot is busy."
+                message: "Consultation is not available at this time"
             });
         }
 
@@ -514,7 +554,7 @@ router.delete("/delete-appointment",async (req,res)=>{
 
 
         // ===2. check if appointment exists before updating
-        const existingAppointment = await ConsultationMethods.getSpecificAppointmentByID(consultation_id);
+        const existingAppointment = await ConsultationMethods.getConsultationById(consultation_id);
         if (!existingAppointment) {
         return res.status(404).json({
             success: false,

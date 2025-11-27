@@ -82,6 +82,40 @@ router.get("/patient/:id",async (req,res)=>{
     }
 })
 
+
+// =================================
+//  Get One Patient Data MySQL
+// =================================
+router.get("/patient",async (req,res)=>{
+    try{
+        const {user_email, user_phone} = req.query;
+
+        //Bad Request if both do not exist
+        if( !user_email &&  !user_phone  ) return res.status(400).json({success:false,message:"Bad Request"});
+        const filter_email = JoinFiltering(Object.entries({user_email}),"u");
+        const filter_phone = JoinFiltering(Object.entries({patient_phone: user_phone}),"p");
+        // joins them with "AND" if both exists
+        const filter_fields = [filter_email, filter_phone].filter(Boolean).join(" AND ");
+        const patientData = await PatientMethods.getOnePatientDataByFilters(filter_fields);
+        console.log("patient", patientData)
+      if( patientData ){
+        res.status(200).json({success : true , body:patientData, message:"Successfully Fetched Data"})
+      }
+      else{
+        res.status(404).json({success : false , message:"No Users Found !"})
+      }
+
+        
+    }
+    catch(err){
+        console.error("Error GET Patient Data",err);
+        res.status(500).json({
+            success:false,
+            message: err.message || "Error GET Patient Data"
+        })
+    }
+})
+
 // =================================
 //  Get Patient Data  MongoDB
 // =================================

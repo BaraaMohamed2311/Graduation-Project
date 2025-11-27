@@ -4,7 +4,7 @@ function PatientCard({ selectedUser }){
         <>
           <div className={styles.infoRow}>
             <span className={styles.label}>Name:</span>
-            <span className={styles.value}>{selectedUser.patient_name}</span>
+            <span className={styles.value}>{selectedUser.user_name}</span>
           </div>
           <div className={styles.infoRow}>
             <span className={styles.label}>ID:</span>
@@ -12,7 +12,7 @@ function PatientCard({ selectedUser }){
           </div>
           <div className={styles.infoRow}>
             <span className={styles.label}>Email:</span>
-            <span className={styles.value}>{selectedUser.patient_email}</span>
+            <span className={styles.value}>{selectedUser.user_email}</span>
           </div>
           <div className={styles.infoRow}>
             <span className={styles.label}>Phone:</span>

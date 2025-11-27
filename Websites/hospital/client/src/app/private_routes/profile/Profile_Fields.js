@@ -173,7 +173,6 @@ const PatientProfile = ({ user_data, permissions }) => {
         <li><strong>Insurance Provider:</strong> {user_data.insurance_provider}</li>
         <li><strong>Insurance ID:</strong> {user_data.insurance_id}</li>
         <li><strong>Last Visit:</strong> {user_data.last_visit_date}</li>
-        <li><strong>Primary Physician:</strong> {user_data.primary_physician}</li>
         <li className={styles.role_box}><strong>Role: </strong>Patient <Image src={pickRoleIcon("Patient")} width={"30"} height={"30"} alt="patient role icon" /></li>
         <li className={styles.perms_box}>
           <strong className={styles.perms_header}>Permissions</strong>

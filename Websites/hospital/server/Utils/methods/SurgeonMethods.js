@@ -60,14 +60,16 @@ class SurgeonMethods {
     static async getAllSurgeonsFullData(limit=10,offset=0,whereClause='', perms_CONDITION=''){
         const query = `
                 SELECT 
+                    -- from users 
+                    u.user_email,
+                    u.user_name,
+
                     -- from employees
                     e.emp_id AS user_id,
-                    e.emp_name,
                     e.emp_abscence,
                     e.emp_rate,
                     e.emp_title,
                     e.emp_specialty,
-                    e.emp_email AS user_email,
                     
                     -- from surgeons
                     s.hosp_emp_id,
@@ -108,6 +110,7 @@ class SurgeonMethods {
 
                 FROM surgeons s
                 JOIN employees e ON s.hosp_emp_id = e.emp_id
+                JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
                 LEFT JOIN availability sa ON s.surgeon_id = sa.hosp_emp_id
 
                 -- Join with hospital_emp_perms to get perm_id
@@ -129,7 +132,8 @@ class SurgeonMethods {
                     s.followup_consultation_price, 
                     s.surgery_price, 
                     s.years_of_exp,
-                    hr.role_name
+                    hr.role_name,
+                    u.user_email
                 ${perms_CONDITION}
                 LIMIT ${limit} OFFSET ${offset}
             `;
@@ -140,14 +144,17 @@ class SurgeonMethods {
     static async getSurgeonFullData(surgeon_id){
         const query = `
                 SELECT 
+                    -- from users
+                    u.user_email,
+                    u.user_name,
+
                     -- from employees
                     e.emp_id AS user_id,
-                    e.emp_name,
                     e.emp_abscence,
                     e.emp_rate,
                     e.emp_title,
                     e.emp_specialty,
-                    e.emp_email AS user_email,
+
                     
                     -- from surgeons
                     s.hosp_emp_id,
@@ -196,6 +203,7 @@ class SurgeonMethods {
 
                 FROM surgeons s
                 JOIN employees e ON s.hosp_emp_id = e.emp_id
+                JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
                 WHERE s.surgeon_id = ?
 
             `;
@@ -205,13 +213,16 @@ class SurgeonMethods {
 
     static async getAllSurgeonsSpecificData(){
         const query = `SELECT 
+                        -- from users
+                        u.user_email,
+                        u.user_name,
+
+                        -- from employees
                         e.emp_id AS user_id,
-                        e.emp_name,
                         e.emp_abscence,
                         e.emp_rate,
                         e.emp_title,
                         e.emp_specialty,
-                        e.emp_email AS user_email,
                         
                         s.surgeon_id,
                         s.hosp_emp_id,
@@ -245,6 +256,7 @@ class SurgeonMethods {
 
                     FROM surgeons s
                     JOIN employees e ON s.hosp_emp_id = e.emp_id
+                    JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
                     LEFT JOIN availability sa ON s.surgeon_id = sa.hosp_emp_id
 
                     GROUP BY e.emp_id, s.surgeon_id, s.hosp_emp_id, s.initial_consultation_price, s.followup_consultation_price, s.surgery_price, s.years_of_exp;
@@ -254,17 +266,21 @@ class SurgeonMethods {
     }
     static async getSurgeonSpecificData(user_id){
         const query = `SELECT 
+                        -- from users 
+                        u.user_email
+                        u.user_password
+                        u.user_name,
+
+                        --from employees
                         e.emp_id AS user_id,
-                        e.emp_name,
                         e.emp_salary,
                         e.emp_abscence,
                         e.emp_bonus,
                         e.emp_rate,
                         e.emp_title,
                         e.emp_specialty,
-                        e.emp_email AS user_email,
-                        e.emp_password AS user_password, -- include password for authentication purposes
-                        
+
+                        --from surgeons
                         s.surgeon_id,
                         s.hosp_emp_id,
                         s.initial_consultation_price,
@@ -297,9 +313,18 @@ class SurgeonMethods {
 
                     FROM surgeons s
                     JOIN employees e ON s.hosp_emp_id = e.emp_id
+                    JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
                     LEFT JOIN availability sa ON s.surgeon_id = sa.hosp_emp_id
                     WHERE s.hosp_emp_id = ${user_id}
-                    GROUP BY e.emp_id, s.surgeon_id, s.hosp_emp_id, s.initial_consultation_price, s.followup_consultation_price, s.surgery_price, s.years_of_exp;
+                    GROUP BY 
+                    e.emp_id,
+                    s.surgeon_id,
+                    s.hosp_emp_id,
+                    s.initial_consultation_price,
+                    s.followup_consultation_price,
+                    s.surgery_price,
+                    s.years_of_exp
+                    u.user_email;
                     `;
         const result = await executeMySqlQuery(query);
         return result[0];

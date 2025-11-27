@@ -20,8 +20,7 @@ const fetchImagesForListedUsers = require("../Utils/fetchImagesForListedUsers");
 const stringifyFields = require("../Utils/stringifyFields.js");
 const JoinFiltering = require("../Utils/JoinFiltering.js")
 // FIX: Define myCache properly
-const myCache = new NodeCache({ stdTTL: 3600 }); // 1 hour default TTL
-const CACHE_TTL = 600; // 10 minutes in seconds (for specific overrides)
+const cacheCountNodeCache = require("../Utils/cacheCountNodeCache.js")
 const SurgeonMethods = require("../Utils/methods/SurgeonMethods.js");
 
 
@@ -46,30 +45,18 @@ router.get("/employees",jwtVerify,async (req,res)=>{
         // Ceck if list page can be accessible
         const Modifier_role = await User.getUserRole(user_id);
         const Modifier_perms = await User.getSetUserperms(user_id);
+        const filtering_for_query = restFilters? JoinFiltering(Object.entries(restFilters),"d") :null;
+        const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : "";
 
         if (Modifier_role === "NormalUser") return res.status(401).json({ success: false, message: "NormalUser Role cannot access The list" });
 
-        const freshEmployeesCount = await HospitalUsersMethods.getAllHospitalEmployeesCOUNT(restFilters,filter_role_name, filter_emp_perm);
-        
-        // =====================================
-        // Cache Count on Server Side - ONLY for non-filtered queries
-        // =====================================
-        let EmployeesCount = freshEmployeesCount; // Default to fresh count
-        
-        // Only cache and use cache for NON-FILTERED queries
-        if (!isFiltered && Object.keys(restFilters).length === 0) {
-            if (myCache.has("totalNumOfEmployees")) {
-                EmployeesCount = myCache.get("totalNumOfEmployees");
-            } else {
-                EmployeesCount = freshEmployeesCount; 
-                myCache.set("totalNumOfEmployees", EmployeesCount, CACHE_TTL); // 5 min TTL
-            }
-        }
 
-        const numOfPages = Math.ceil( Math.ceil(EmployeesCount / size));
+        // get cached count 
+        const EmployeesCount = await cacheCountNodeCache("totalNumOfEmployees",HospitalUsersMethods.getAllHospitalEmployeesCOUNT,whereClause)
+        const numOfPages = Math.max(1, Math.ceil( EmployeesCount / size));
 
         const users = await HospitalUsersMethods.getAllHospitalEmployeesFullData(parseInt(size), parseInt((pagination - 1) * size ),restFilters, filter_role_name, filter_emp_perm);
-
+        console.log("EmployeesCount",EmployeesCount)
 
       if( users && users.length > 0){
         res.status(200).json({success : true , body:users, message:"Successfully Fetched Data",numOfPages: numOfPages})
@@ -97,28 +84,17 @@ router.get("/doctors",async (req,res)=>{
     try{
         const { pagination, size,isFiltered , user_id, ...restFilters } = req.query;
         
-        const filtering_for_query = JoinFiltering(Object.entries(restFilters),"d")
+        const filtering_for_query = restFilters? JoinFiltering(Object.entries(restFilters),"d") : null;
         const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : "";
         const doctors = await PatientMethods.getListedDoctorDataForPaitent(  parseInt(size) , parseInt((pagination - 1) * size ),filtering_for_query);
         const doctorsRespone = await fetchImagesForListedUsers(doctors);
-        const freshDoctorsCount = await DoctorMethods.getAllDoctorsCOUNT(whereClause);
 
         // =====================================
         // Cache Count on Server Side - ONLY for non-filtered queries
         // =====================================
 
-        let doctorsCount = freshDoctorsCount; // Default to fresh count
-        
-        // Only cache and use cache for NON-FILTERED queries
-        if (!isFiltered && Object.keys(restFilters).length === 0) {
-            if (myCache.has("totalNumOfDoctors")) {
-                doctorsCount = myCache.get("totalNumOfDoctors");
-            } else {
-                doctorsCount = freshDoctorsCount; 
-                myCache.set("totalNumOfDoctors", doctorsCount, CACHE_TTL); // 5 min TTL
-            }
-        }
-        console.log("with images", doctorsRespone)
+        const doctorsCount = await cacheCountNodeCache("totalNumOfDoctors",DoctorMethods.getAllDoctorsCOUNT,whereClause)
+        const numOfPages = Math.max(1,Math.ceil(doctorsCount / size));
 
         // =====================================
         // Send Response
@@ -127,7 +103,7 @@ router.get("/doctors",async (req,res)=>{
             res.status(200).json({
                 success:true,
                 body:doctorsRespone,
-                numOfPages: Math.ceil(doctorsCount / size),
+                numOfPages:numOfPages ,
                  message:"Fetching Doctors List Was Successful"
                 })
         }
@@ -155,27 +131,21 @@ router.get("/surgeons",async (req,res)=>{
     try{
         const { pagination, size , isFiltered , user_id, ...restFilters } = req.query;
         
-        const filtering_for_query = JoinFiltering(Object.entries(restFilters),"s")
+        
         const surgeons = await PatientMethods.getListedSurgeonDataForPaitent(filtering_for_query , parseInt(size) , parseInt((pagination - 1) * size ));
+        const filtering_for_query = restFilters? JoinFiltering(Object.entries(restFilters),"s") : null;
         const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : "";
-        const freshSurgeonsCount = await SurgeonMethods.getAllSurgeonsCOUNT(whereClause);
         const surgeonsRespone = await fetchImagesForListedUsers(surgeons);
 
-        
         // =====================================
         // Cache Count on Server Side - ONLY for non-filtered queries
         // =====================================
-        let surgeonsCount = freshSurgeonsCount; // Default to fresh count
+        const doctorsCount = await cacheCountNodeCache("totalNumOfSurgeons",SurgeonMethods.getAllSurgeonsCOUNT,whereClause,isFiltered)
+        const numOfPages = Math.max(1,Math.ceil(doctorsCount / size));
         
-        // Only cache and use cache for NON-FILTERED queries
-        if (!isFiltered && Object.keys(restFilters).length === 0) {
-            if (myCache.has("totalNumOfSurgeons")) {
-                surgeonsCount = myCache.get("totalNumOfSurgeons");
-            } else {
-                surgeonsCount = freshSurgeonsCount; 
-                myCache.set("totalNumOfSurgeons", surgeonsCount, CACHE_TTL); // 5 min TTL
-            }
-        }
+
+        
+        
 
         // =====================================
         // Send Response 
@@ -184,7 +154,7 @@ router.get("/surgeons",async (req,res)=>{
             res.status(200).json({
                 success:true,
                 body:surgeonsRespone,
-                numOfPages: Math.ceil(surgeonsCount / size),
+                numOfPages,
                  message:"Fetching Surgeons List Was Successful"
                 })
         }
@@ -214,27 +184,17 @@ router.get("/patients",async (req,res)=>{
         if(!pagination || !size  ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
-        const filtering_for_query = JoinFiltering(Object.entries(restFilters))  
+        const filtering_for_query = restFilters? JoinFiltering(Object.entries(restFilters)) :null;
         const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : "";
-        const freshpatientsCOUNT = await PatientMethods.getAllPatientsCOUNT(whereClause);
 
-        let patientsCOUNT = freshpatientsCOUNT; // Default to fresh count
 
         // =====================================
         // Cache Count on Server Side - ONLY for non-filtered queries
         // =====================================
+        const patientsCount = await cacheCountNodeCache("totalNumOfPatients",PatientMethods.getAllPatientsCOUNT,whereClause,isFiltered)
+        const numOfPages = Math.max(1,Math.ceil(patientsCount / size));
+        
 
-        if (!isFiltered && Object.keys(restFilters).length === 0) {
-        if (myCache.has("totalNumOfPatients")) {
-            patientsCOUNT = myCache.get("totalNumOfPatients");
-        } else {
-            patientsCOUNT = freshpatientsCOUNT; 
-            myCache.set("totalNumOfPatients", patientsCOUNT, CACHE_TTL); 
-        }
-        }
-
-        // Calculate number of pages
-        const numOfPages = Math.ceil(patientsCOUNT / size);
 
 
         console.log("Patients Reest CONDITIONS",filtering_for_query)
@@ -272,26 +232,15 @@ router.get("/my-patients",async (req,res)=>{
         if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
-        const REST_CONDITIONS = JoinFiltering(Object.entries(restFilters),"p")  
-        const freshMyPatientsCOUNT = await DoctorMethods.getDoctorAllPatientsCOUNT(user_id,parseInt(size),parseInt((pagination - 1) * size ),REST_CONDITIONS);
-
+        const filtering_for_query = restFilters? JoinFiltering(Object.entries(restFilters),"p") :null; 
+        const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : ""; 
 
         // =====================================
         // Cache Count on Server Side - ONLY for non-filtered queries
         // =====================================
-        let mypatientsCOUNT = freshMyPatientsCOUNT; // Default to fresh count
-
-        // Only cache and use cache for NON-FILTERED queries
-        if (!isFiltered && Object.keys(restFilters).length === 0) {
-            if (myCache.has("totalNumOfMyPatients")) {
-                mypatientsCOUNT = myCache.get("totalNumOfMyPatients");
-            } else {
-                mypatientsCOUNT = freshMyPatientsCOUNT; 
-                myCache.set("totalNumOfMyPatients", mypatientsCOUNT, CACHE_TTL); 
-            }
-        }
-
-        const numOfPages = Math.ceil(mypatientsCOUNT / size);
+        
+        const patientsCount = await cacheCountNodeCache("totalNumOfMyPatients",DoctorMethods.getDoctorAllPatientsCOUNT,whereClause,isFiltered)
+        const numOfPages = Math.max(1,Math.ceil(patientsCount / size));
 
 
 
