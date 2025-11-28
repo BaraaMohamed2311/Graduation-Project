@@ -75,7 +75,7 @@ export default function BasicTable({currPage,sizeOfPage , setCurrPage ,numOfPage
             </tr>
           )})}
 
-          {(isFiltered && filteredResults.length > 0) && filteredResults.slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((row, idx) => (
+          {(isFiltered && filteredResults.length > 0) && filteredResults.slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((row, indx) => (
              <tr  className={styles.table_row}>
               <MapTableColumns tableType={tableType}
                 key={row.user_id}

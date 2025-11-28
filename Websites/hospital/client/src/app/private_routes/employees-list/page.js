@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import LoaderForComponents from "@/components/LoaderForComponents/LoaderForComponents";
 import SearchOptions from "@/components/SearchOptions/SearchOptions";
 import styles from "./list.module.css"
-import selectsElementsData from "./data";
+import {selectsElementsData , inputs_info} from "./data";
 import userNotification from "@/utils/userNotification";
 import stringifyFields from "@/utils/stringifyFields";
 import statusNotification from "@/utils/statusNotification";
@@ -112,20 +112,20 @@ function EmployeesListPage() {
 function handleFilterOption(e , cause){
     if(e) e.preventDefault();
     // get filter inputs 
-    const EMAIL_REF = inputsBoxsRef.current["Email"];
+    const EMAIL_REF = inputsBoxsRef.current["user_email"];
     const ByTitleREF = selectBoxsRef.current["emp_title"];
     const ByspecialtyREF = selectBoxsRef.current["emp_specialty"];
     const ByRoleREF = selectBoxsRef.current["role_name"];
     const ByPermsREF = selectBoxsRef.current["emp_perms"];
     
-    const emp_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
+    const user_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
     const role_name = ByRoleREF.value === "Role Filter" ? null : ByRoleREF.value;
     const emp_title = ByTitleREF.value === "Title Filter" ? null : ByTitleREF.value;
     const emp_specialty = ByspecialtyREF.value === "specialty Filter" ? null : ByspecialtyREF.value;
     const emp_perms = ByPermsREF.value === "Perms Filter" ? null : ByPermsREF.value;
     console.log("handleFilterOption: emp_perms", emp_perms);
     // making sure this checking is applied when only pressing btn 
-    if(!emp_email && !role_name && !emp_title && !emp_specialty && !emp_perms && cause === "button"){
+    if(!user_email && !role_name && !emp_title && !emp_specialty && !emp_perms && cause === "button"){
         userNotification("error","No Filters Entered");
         handleClearFilterOption(); // resets if no filtering specified
         return; // to escape rest of the function
@@ -136,7 +136,7 @@ function handleFilterOption(e , cause){
         setCurrPage(1)
 
     // we use stringifyFields function to exclude null values and do not add as query also join them
-    const filter_queries = stringifyFields("anded",Object.entries({isFiltered,emp_email : emp_email , role_name:role_name , emp_title:emp_title, emp_specialty:emp_specialty, emp_perms: emp_perms}))
+    const filter_queries = stringifyFields("anded",Object.entries({isFiltered,user_email , role_name:role_name , emp_title:emp_title, emp_specialty:emp_specialty, emp_perms: emp_perms}))
     
     // fetching data on filter 
     fetch(`${process.env.APIKEY}/list/employees?user_id=${user_data.user_id}&${filter_queries}&pagination=${currPage}&size=${sizeOfPage}`,{
@@ -180,7 +180,9 @@ function handleFilterOption(e , cause){
           sizeOfPage={sizeOfPage} 
           setIsFiltered= {setIsFiltered} 
           setFilteredResults={setFilteredResults} 
-          selectsElementsData={selectsElementsData}/>
+          selectsElementsData={selectsElementsData}
+          inputs_info={inputs_info}
+          />
       <Suspense fallback={<LoaderForComponents  styling={styles.loader_for_components_wrapper}/>}>
          <BasicTable 
                   currPage={currPage} 

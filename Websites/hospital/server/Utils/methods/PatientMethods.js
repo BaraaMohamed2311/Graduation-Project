@@ -45,15 +45,15 @@ class PatientMethods {
 
 
     static async getAllPatientsCOUNT(whereClause = ""){
-        let query = `SELECT COUNT(*) as count FROM patients `;
+        let query = `SELECT COUNT(*) as count FROM patients p JOIN users u ON p.patient_id = u.user_id`;
         if (whereClause) {
-            query += ` WHERE ${joinedFilters} `;
+            query += whereClause;
         }
         const result = await executeMySqlQuery(query);
         return result[0]?.count;
     }
 
-    static async getAllPatientsSpecificData(limit, offset,restFilters = null){
+    static async getAllPatientsSpecificData(limit, offset,filtering_string = null){
         let query = `SELECT  
                         -- from users
                         u.user_email, 
@@ -73,8 +73,8 @@ class PatientMethods {
                     FROM patients p 
                     JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id`;
 
-        if (restFilters) { 
-                query += ` WHERE ${restFilters} `;
+        if (filtering_string) { 
+                query += " WHERE " + filtering_string;
             }
         if(limit >0 &&  offset > -1) {
             query += " LIMIT ? OFFSET ? "
@@ -87,7 +87,8 @@ class PatientMethods {
     // Patient need his own functions for listing others, as we do not want to expose all data of doctors/surgeons/nurses to patients
     // ==========================================
 
-        static async getListedDoctorDataForPaitent(limit=null, offset=null,restFilters=null) {
+        static async getListedDoctorDataForPaitent(limit, offset,filtering_string , orderByClause) {
+            console.log("filtering_string", filtering_string , filtering_string.length)
             let query = `
                 SELECT
                     -- from users
@@ -106,20 +107,20 @@ class PatientMethods {
                     d.years_of_exp,
 
                     GROUP_CONCAT(
-                        CONCAT(da.day_of_week, ': ', DATE_FORMAT(da.start_time, '%H:%i'), '-', DATE_FORMAT(end_time, '%H:%i'))
-                        ORDER BY da.day_of_week
+                        CONCAT(a.day_of_week, ': ', DATE_FORMAT(a.start_time, '%H:%i'), '-', DATE_FORMAT(end_time, '%H:%i'))
+                        ORDER BY a.day_of_week
                         SEPARATOR '; '
                     ) AS availability_schedule
                 FROM doctors d
                 JOIN employees e ON d.hosp_emp_id = e.emp_id
                 JOIN users u ON u.user_type = 'employee' AND u.user_id = d.doctor_id
-                LEFT JOIN availability da 
-                    ON d.doctor_id = da.hosp_emp_id
+                LEFT JOIN availability a 
+                    ON d.doctor_id = a.hosp_emp_id
             `;
 
             const params = [];
-            if (restFilters) {
-                query += ` WHERE ${restFilters}`;
+            if (filtering_string) {
+                query += " WHERE " + filtering_string ;
             }
 
             query += `
@@ -132,6 +133,7 @@ class PatientMethods {
                     e.emp_specialty,
                     e.emp_title,
                     u.user_email
+                    ${orderByClause}
                     ${ limit ? `LIMIT ${limit}`:""}
                     ${ offset ? `OFFSET ${offset}`:""}
             `;
@@ -141,7 +143,8 @@ class PatientMethods {
             return result;
         }
 
-        static async getListedSurgeonDataForPaitent(restFilters = null,limit=null, offset=null) {
+        static async getListedSurgeonDataForPaitent(limit, offset , filtering_string ,orderByClause) {
+            console.log(limit, offset , filtering_string ,orderByClause)
             let query = `
                 SELECT 
                     -- from users
@@ -162,21 +165,21 @@ class PatientMethods {
                     
 
                     GROUP_CONCAT(
-                        CONCAT(da.day_of_week, ': ', DATE_FORMAT(sa.start_time, '%H:%i'), '-', DATE_FORMAT(sa.end_time, '%H:%i'))
-                        ORDER BY da.day_of_week
+                        CONCAT(a.day_of_week, ': ', DATE_FORMAT(a.start_time, '%H:%i'), '-', DATE_FORMAT(a.end_time, '%H:%i'))
+                        ORDER BY a.day_of_week
                         SEPARATOR '; '
                     ) AS availability_schedule
                     
                 FROM surgeons s
                 JOIN employees e ON s.hosp_emp_id = e.emp_id
                 JOIN users u ON u.user_type = 'employee' AND u.user_id = s.surgeon_id
-                LEFT JOIN availability sa 
-                    ON s.surgeon_id = sa.hosp_emp_id
+                LEFT JOIN availability a 
+                    ON s.surgeon_id = a.hosp_emp_id
             `;
 
             const params = [];
-            if (restFilters) {
-                query += ` WHERE ${restFilters}`;
+            if (filtering_string) {
+                query += " WHERE " + filtering_string;
             }
 
             query += `
@@ -190,6 +193,7 @@ class PatientMethods {
                     e.emp_title,
                     e.emp_specialty,
                     u.user_email
+                    ${orderByClause}
                     ${ limit ? `LIMIT ${limit}` :""}
                     ${ offset ? `OFFSET ${offset}` :""}
             `;

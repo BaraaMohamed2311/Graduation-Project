@@ -11,25 +11,9 @@ class HospitalUsersMethods   {
     // ========================================
     // Count ALL HOSPITAL EMPLOYEES 
     // ========================================
-    static async getAllHospitalEmployeesCOUNT(restFilters = null, role_name = null, emp_perms = null) { 
+    static async getAllHospitalEmployeesCOUNT(filtering_string = null, emp_perms = null) { 
         /** Filter Conditions **/
-        const conditions = [];
 
-        // Add rest filters on employee table
-        /**  
-        restFilters are fields in employees table as it is not logical to filter of specific table like price etc 
-        because authorized users to list employees cannot modify their specific fields 
-        **/
-        if (restFilters && Object.keys(restFilters).length > 0) {
-            conditions.push(JoinFiltering(Object.entries(restFilters), "e"));
-        }
-
-        // Add role filters
-        if (role_name && role_name !== "NormalUser") {
-            conditions.push(JoinFiltering(Object.entries({role_name: role_name}), "hr"));
-        }
-
-        const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
         const perms_CONDITION = emp_perms ? `HAVING FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT hp.perm_name)) > 0` : "";
 
 
@@ -51,7 +35,7 @@ class HospitalUsersMethods   {
                 LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
                 LEFT JOIN hospital_roles hr ON eh.hosp_emp_id = hr.hosp_emp_id
 
-                ${whereClause}
+                WHERE u.user_type = 'employee' AND eh.emp_title != 'Employee' ${filtering_string ? " AND " + filtering_string:""}
 
                 GROUP BY u.user_id
                 ${perms_CONDITION}
@@ -67,25 +51,10 @@ class HospitalUsersMethods   {
     // ========================================
     // GET ALL HOSPITAL EMPLOYEES DATA
     // ========================================
-    static async getAllHospitalEmployeesFullData(limit=10, offset=0,restFilters=null, role_name=null, emp_perms=null){ 
-        /** Filter Conditions **/
-        const conditions = [];
+    static async getAllHospitalEmployeesFullData(limit=10, offset=0,filtering_string=null,  emp_perms=null){ 
 
-        // Add rest filters on employee table
-        /**  
-        restFilters are fields in employees table as it is not logical to filter of specific table like price etc 
-        because authorized users to list employees cannot modify their specific fields 
-        **/
-        if (restFilters && Object.keys(restFilters).length > 0) {
-            conditions.push(JoinFiltering(Object.entries(restFilters), "e"));
-        }
 
-        // Add role filters
-        if (role_name && role_name !== "NormalUser") {
-            conditions.push(JoinFiltering(Object.entries({role_name: role_name}), "hr"));
-        }
         // by default there is a condition u.user_type = 'employee' AND eh.emp_title != 'Employee'  -- Exclude non-hospital staff
-        const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')} AND u.user_type = 'employee' AND eh.emp_title != 'Employee'` : `WHERE u.user_type = 'employee' AND eh.emp_title != 'Employee'`;
         const perms_CONDITION = emp_perms ? `HAVING FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT hp.perm_name)) > 0` : "";
 
         const query = `
@@ -172,7 +141,7 @@ class HospitalUsersMethods   {
             LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
             LEFT JOIN hospital_roles hr ON eh.hosp_emp_id = hr.hosp_emp_id
 
-            ${whereClause}
+            WHERE u.user_type = 'employee' AND eh.emp_title != 'Employee' ${filtering_string ? " AND " + filtering_string:""}
 
             GROUP BY 
                 u.user_id,

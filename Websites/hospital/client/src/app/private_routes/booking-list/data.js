@@ -14,7 +14,7 @@ let selectsElementsData = [
         key:"Consultation Price",
         label:"Consultation Price",
         name:"initial_consultation_price",
-        options:[{ value: "High To Low", text: "High To Low" },{ value: "Low To High", text: "Low To High" }],
+        options:[{ value: "htl", text: "High To Low" },{ value: "lth", text: "Low To High" }],
         
     },
     {   
@@ -22,9 +22,17 @@ let selectsElementsData = [
         key:"Surgery Price",
         label:"Surgery Price",
         name:"surgery_price",
-        options:[{ value: "High To Low", text: "High To Low" },{ value: "Low To High", text: "Low To High" }],
+        options:[{ value: "htl", text: "High To Low" },{ value: "lth", text: "Low To High" }],
         
     },
+    {   
+
+        key:"Years Of Experience",
+        label:"Years Of Experience",
+        name:"years_of_exp",
+        options:[{ value: "htl", text: "High To Low" },{ value: "lth", text: "Low To High" }],
+        
+    }
 
 
 ]

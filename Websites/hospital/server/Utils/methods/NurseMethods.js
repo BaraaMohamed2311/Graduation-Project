@@ -111,7 +111,7 @@ class NurseMethods {
             FROM nurses n
             JOIN employees e ON n.hosp_emp_id = e.emp_id
             JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id -- Added JOIN with users table
-            LEFT JOIN availability na ON n.nurse_id = na.hosp_emp_id
+            LEFT JOIN availability a ON n.nurse_id = a.hosp_emp_id
 
             -- Join with hospital_emp_perms to get perm_id
             LEFT JOIN hospital_emp_perms hep ON n.hosp_emp_id = hep.hosp_emp_id
@@ -253,7 +253,7 @@ class NurseMethods {
                     FROM nurses n
                     JOIN employees e ON n.hosp_emp_id = e.emp_id
                     JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id -- Added JOIN with users table
-                    LEFT JOIN availability na ON n.nurse_id = na.hosp_emp_id
+                    LEFT JOIN availability a ON n.nurse_id = a.hosp_emp_id
                     GROUP BY e.emp_id, n.nurse_id, n.hosp_emp_id, n.floor_number;
                     `;
         const result = await executeMySqlQuery(query);
@@ -306,7 +306,7 @@ class NurseMethods {
                     FROM nurses n
                     JOIN employees e ON n.hosp_emp_id = e.emp_id
                     JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id -- Added JOIN with users table
-                    LEFT JOIN availability na ON n.nurse_id = na.hosp_emp_id
+                    LEFT JOIN availability a ON n.nurse_id = a.hosp_emp_id
                     WHERE n.hosp_emp_id = ${nurse_id}
                     GROUP BY e.emp_id, n.nurse_id, n.hosp_emp_id, n.floor_number;
                     `;

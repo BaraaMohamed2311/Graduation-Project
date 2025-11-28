@@ -30,22 +30,23 @@ class DoctorMethods {
     //              Count
     // ============================
 
-    static async getAllDoctorsCOUNT(whereClause = "", perms_CONDITION = ""){
+    static async getAllDoctorsCOUNT(filtering_string = "", perms_CONDITION = ""){
+        console.log("filtering_string",filtering_string.length,perms_CONDITION)
         let query = "";
         // Optimize query construction based on presence of filters
-        if(!whereClause && !perms_CONDITION){
+        if(!filtering_string && !perms_CONDITION){
                 query = "SELECT COUNT(*) as count FROM doctors ";
             }
-        else if(whereClause && !perms_CONDITION){
+        else if(filtering_string && !perms_CONDITION){
                     query = `
                 SELECT COUNT(DISTINCT d.doctor_id) as count 
                 FROM doctors d
                 JOIN employees e ON d.hosp_emp_id = e.emp_id
                 LEFT JOIN hospital_roles hr ON d.hosp_emp_id = hr.hosp_emp_id
-                ${whereClause}
+                ${filtering_string ? " AND " + filtering_string : ""}
             `;
         }
-        else if(!whereClause && perms_CONDITION){
+        else if(!filtering_string && perms_CONDITION){
             query = `
                 SELECT COUNT(DISTINCT d.doctor_id) as count 
                 FROM doctors d
@@ -64,7 +65,7 @@ class DoctorMethods {
                 LEFT JOIN hospital_emp_perms hep ON d.hosp_emp_id = hep.hosp_emp_id
                 LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
                 LEFT JOIN hospital_roles hr ON d.hosp_emp_id = hr.hosp_emp_id
-                ${whereClause}
+                ${filtering_string ? " AND " + filtering_string : ""}
                 ${perms_CONDITION}
             `;
         }
@@ -132,7 +133,7 @@ class DoctorMethods {
             FROM doctors d
             JOIN employees e ON d.hosp_emp_id = e.emp_id
             JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
-            LEFT JOIN availability da ON d.doctor_id = da.hosp_emp_id
+            LEFT JOIN availability a ON d.doctor_id = a.hosp_emp_id
 
             -- Join with hospital_emp_perms to get perm_id
             LEFT JOIN hospital_emp_perms hep ON d.hosp_emp_id = hep.hosp_emp_id
@@ -381,7 +382,7 @@ class DoctorMethods {
             return result;
     }
 
-    static async getDoctorRangedPatients(staff_id,limit, offset,restfilters=null){
+    static async getDoctorRangedPatients(staff_id,limit, offset,filtering_string=null){
         let query = `SELECT 
                         -- from users
                         u.user_email,
@@ -404,8 +405,8 @@ class DoctorMethods {
                     JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
                     WHERE sp.staff_id = ?  AND relation_type = 'Doctor'
                     `;
-            if(restfilters){
-                
+            if(filtering_string){
+                query += " AND " + filtering_string
             }
             if(limit> 0 &&  offset > -1){
                 query += "LIMIT ? OFFSET ?"

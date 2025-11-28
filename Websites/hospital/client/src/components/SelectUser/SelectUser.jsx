@@ -148,6 +148,7 @@ function fetchUser(e)  {
             {selectsElementsData &&
         selectsElementsData.map((selectData) => (
             <Select 
+              defaultValue = {user_displayed && user_displayed[selectData.name] }
               key={selectData.key}
               styles={styles}
               isLabeld={false}

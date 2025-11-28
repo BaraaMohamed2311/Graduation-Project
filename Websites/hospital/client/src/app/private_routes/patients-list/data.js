@@ -1,8 +1,8 @@
 
 
 let inputs_info= [
-    {  key:"patient_email",label:"Email", name: "patient_email", type: "email" },
-    { key:"patient_name",label:"Name", name: "patient_name", type: "text" },
+    {  key:"user_email",label:"Email", name: "user_email", type: "email" },
+    { key:"user_name",label:"Name", name: "user_name", type: "text" },
     { key:"patient_phone",label:"Phone ", name: "patient_phone", type: "text" },
 ]
 

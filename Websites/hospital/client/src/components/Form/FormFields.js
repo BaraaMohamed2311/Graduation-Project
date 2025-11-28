@@ -13,28 +13,29 @@ function UpdateUserFormFields({
     isEditing,
     setIsEditing,
     formBtnState,
-    employee_displayed,
+    user_displayed,
     user_data,
     styles,
 }){
     /* Get Change of title's selected value */
-    const [selectedTitleValue, setSelectedTitleValue] = useState(employee_displayed?.emp_title ?? "");
+    console.log("UpdateUserFormFields user_displayed",user_displayed)
+    const [selectedTitleValue, setSelectedTitleValue] = useState(user_displayed?.emp_title ?? "");
 
     /* Get Corresponding specialities for title */
     const specialities_for_title = {label:"specialty",options: global_mapped_specialities[selectedTitleValue]};
 
-
+    console.log("UpdateUserFormFields",select_options,"selectedTitleValue",selectedTitleValue, "specialities_for_title",specialities_for_title)
     return (
         <>
         {/* display select for positions */}
-        <Select styles={styles} select_options={select_options.select_title_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
-        <Select styles={styles} select_options={specialities_for_title} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
+        <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_options.select_title_options.name] } select_options={select_options.select_title_options} user_displayed={user_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
+        <Select styles={styles} defaultValue = {user_displayed && user_displayed[specialities_for_title.name] } select_options={specialities_for_title} user_displayed={user_displayed} reference={references.selectBoxsRef}/>
         {/* display select for Role */}
-        <Select styles={styles} select_options={select_options.select_role_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
+        {select_options.select_role_options && <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_options.select_role_options.name] }  select_options={select_options.select_role_options} user_displayed={user_displayed} reference={references.selectBoxsRef}/>}
         {/* Update Role If you have permission*/}
         {user_data.role_name === "SuperAdmin" && 
                 <div className={styles.perms_checkbox}>
-                    {<Inputs inputs_info={check_box} type={"checkbox"} employee_displayed={employee_displayed}  references = {references.checkBoxsRef}/>}
+                    {<Inputs inputs_info={check_box} type={"checkbox"} user_displayed={user_displayed}  references = {references.checkBoxsRef}/>}
                 </div>
             }
         {/* cancel edit button */}

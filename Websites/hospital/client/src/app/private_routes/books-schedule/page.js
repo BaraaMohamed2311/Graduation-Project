@@ -148,14 +148,16 @@ function handlePagination(e){
     <main className={`${styles["list"]} wrapper`}>
       <h1>Your Appointments</h1>
       <SearchOptions />
-      {(!consultations || consultations.length == 0) && <p>No Consultations Scheduled</p> }
-      {consultations && consultations.length > 0 && consultations.map((consultation_data)=>{
-        return (
-          <ConsultationCard 
-          consultation_data={consultation_data}
-      />
-        )
-      })}
+      <div className={styles["consultation_cards_wrapper"]}>
+        {(!consultations || consultations.length == 0) && <p>No Consultations Scheduled</p> }
+        {consultations && consultations.length > 0 && consultations.map((consultation_data)=>{
+          return (
+            <ConsultationCard 
+            consultation_data={consultation_data}
+        />
+          )
+        })}
+      </div>
       
       <div className={styles.table_btn_wrapper}>
         <Pagination_Btns handlePagination={handlePagination} currPage={currPage} numOfPages={numOfPages} />

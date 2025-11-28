@@ -111,7 +111,7 @@ class SurgeonMethods {
                 FROM surgeons s
                 JOIN employees e ON s.hosp_emp_id = e.emp_id
                 JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
-                LEFT JOIN availability sa ON s.surgeon_id = sa.hosp_emp_id
+                LEFT JOIN availability a ON s.surgeon_id = a.hosp_emp_id
 
                 -- Join with hospital_emp_perms to get perm_id
                 LEFT JOIN hospital_emp_perms hep ON s.hosp_emp_id = hep.hosp_emp_id
@@ -257,7 +257,7 @@ class SurgeonMethods {
                     FROM surgeons s
                     JOIN employees e ON s.hosp_emp_id = e.emp_id
                     JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
-                    LEFT JOIN availability sa ON s.surgeon_id = sa.hosp_emp_id
+                    LEFT JOIN availability a ON s.surgeon_id = a.hosp_emp_id
 
                     GROUP BY e.emp_id, s.surgeon_id, s.hosp_emp_id, s.initial_consultation_price, s.followup_consultation_price, s.surgery_price, s.years_of_exp;
                     `;
@@ -314,7 +314,7 @@ class SurgeonMethods {
                     FROM surgeons s
                     JOIN employees e ON s.hosp_emp_id = e.emp_id
                     JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
-                    LEFT JOIN availability sa ON s.surgeon_id = sa.hosp_emp_id
+                    LEFT JOIN availability a ON s.surgeon_id = a.hosp_emp_id
                     WHERE s.hosp_emp_id = ${user_id}
                     GROUP BY 
                     e.emp_id,

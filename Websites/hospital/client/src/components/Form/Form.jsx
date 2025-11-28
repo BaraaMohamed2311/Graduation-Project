@@ -11,7 +11,7 @@ export default function Form({
     references, form_handler , formBtnState ,
      inputs_info,check_box, select_options ,
     formKind , isEditing , setIsEditing ,
-     employee_displayed , isLoadingBtn}) {
+     user_displayed , isLoadingBtn}) {
 
     let {user_data} = useUserDataContext();
      const Fields = FormFieldsMap[formKind] || (() => null);
@@ -20,7 +20,7 @@ export default function Form({
         <form className={formKind === "update_form" ? styles.sided_form :""} method="post" onSubmit={form_handler}>
             
             {/* for any page display input fields with corresponding label and type */}
-            <Inputs  styles={styles } type={"labled_input"} formKind={formKind} inputs_info={inputs_info} employee_displayed={employee_displayed} references = {references.inputsBoxsRef}/>
+            <Inputs  styles={styles } type={"labled_input"} formKind={formKind} inputs_info={inputs_info} user_displayed={user_displayed} references = {references.inputsBoxsRef}/>
 
             {/* Form-kind-specific fields */}
             <Fields
@@ -31,7 +31,7 @@ export default function Form({
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
                 formBtnState={formBtnState}
-                employee_displayed={employee_displayed}
+                user_displayed={user_displayed}
                 user_data={user_data}
                 styles={styles}
             />

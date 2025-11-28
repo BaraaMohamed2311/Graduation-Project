@@ -8,6 +8,7 @@ import statusNotification from "@/utils/statusNotification";
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 import { inputs_info } from "./data";
 import SelectUser from "@/components/SelectUser/SelectUser";
+import { useUserDataContext } from "@/contexts/user_data";
 
 export default function RoomDetailsPage() {
 
@@ -24,6 +25,7 @@ export default function RoomDetailsPage() {
   const queryString = new URLSearchParams(search_params);
   let {patient_id,...roomData} = Object.fromEntries(queryString.entries());
   const inputsBoxsRef = useRef({})
+  const {user_data} = useUserDataContext()
 
 // In RoomDetailsPage
 useEffect(() => {
@@ -35,7 +37,15 @@ const fetchPatientDetails = async (patientId, roomId) => {
   if (!roomId) return null;
 
   try {
-    const response = await fetch(`${process.env.APIKEY}/rooms/patient/${patientId}/details`);
+    const response = await fetch(`${process.env.APIKEY}/rooms/patient/${patientId}/details`,{
+      mode:"cors",
+      headers: {
+      Authorization: `BEARER ${user_data.token}`,
+      "Content-Type": "application/json"
+    }
+
+      }
+    );
     
     statusNotification(response.status);
     const data = await response.json();

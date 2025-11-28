@@ -53,8 +53,8 @@ const global_hospital_title = [
 
 // bookable titles of the hospital
 const global_bookable_hospital_title = [
-    { value: "Doctor", text: "Doctor" },
-    { value: "Surgeon", text: "Surgeon" }
+    { value: "Doctors", text: "Doctors" },
+    { value: "Surgeons", text: "Surgeons" }
 ];
 
 const global_specialty = [

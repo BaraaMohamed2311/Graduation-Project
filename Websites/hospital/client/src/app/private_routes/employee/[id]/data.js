@@ -54,7 +54,7 @@ let inputs_info = [
 ];
 
 let select_title_options ={
-
+ key:"emp_title",
     label:"Select Job Title",
     name:"emp_title",
     options:global_title,
@@ -62,7 +62,7 @@ let select_title_options ={
 }
 
 let select_specialty_options ={
-
+ key:"emp_specialty",
     label:"Select Job specialty",
     name:"emp_specialty",
     options:global_specialty,
@@ -71,7 +71,7 @@ let select_specialty_options ={
 
 
 let select_role_options ={
-
+     key:"role_name",
     label:"Select Role",
     name:"role_name",
     options:global_roles,

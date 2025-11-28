@@ -120,21 +120,22 @@ useEffect(()=>{console.log("fetched_my_patient_pages",fetched_my_patient_pages)}
 // 1. This Function Checks Inputs Then Update isFiltered state
 function handleFilterOption(e){
     if(e) e.preventDefault();
-    // get filter inputs 
-    const EMAIL_REF = inputsBoxsRef.current["Email"];
-    const Phone_REF = inputsBoxsRef.current["Phone"];
-
+    const EMAIL_REF = inputsBoxsRef.current["user_email"];
+        const NAME_REF = inputsBoxsRef.current["user_name"];
+        const Phone_REF = inputsBoxsRef.current["patient_phone"];
     
-    const patient_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
-    const patient_phone = Phone_REF.value === "" ? null : Phone_REF.value;
-
-
-    // making sure this checking is applied when only pressing btn 
-    if(!patient_email && !patient_phone && isFiltered){
-        userNotification("error","No Filters Entered");
-        handleClearFilterOption(); // resets if no filtering specified
-        return; 
-    }
+        
+        const user_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
+        const user_name = NAME_REF.value === "" ? null : NAME_REF.value;
+        const patient_phone = Phone_REF.value === "" ? null : Phone_REF.value;
+    
+    
+        // making sure this checking is applied when only pressing btn 
+        if(!user_email && !user_name &&  !patient_phone && isFiltered){
+            userNotification("error","No Filters Entered");
+            handleClearFilterOption(); // resets if no filtering specified
+            return; 
+        }
 
 
     // save filters for useEffect to pick up
@@ -147,16 +148,18 @@ function handleFilterOption(e){
 useEffect(() => {
   if (!isFiltered) return;
 
-    const EMAIL_REF = inputsBoxsRef.current["Email"];
-    const Phone_REF = inputsBoxsRef.current["Phone"];
+    const EMAIL_REF = inputsBoxsRef.current["user_email"];
+    const NAME_REF = inputsBoxsRef.current["user_name"];
+    const Phone_REF = inputsBoxsRef.current["patient_phone"];
 
-    
-    const patient_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
+
+    const user_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
+    const user_name = NAME_REF.value === "" ? null : NAME_REF.value;
     const patient_phone = Phone_REF.value === "" ? null : Phone_REF.value;
 
   const filter_queries = stringifyFields(
     "anded",
-    Object.entries({ patient_email, patient_phone })
+    Object.entries({ user_email, patient_phone , user_name })
   );
 
   fetch(`${process.env.APIKEY}/list/my-patients?user_id=${user_data.user_id}&${filter_queries}&pagination=${currPage}&size=${sizeOfPage}`, {

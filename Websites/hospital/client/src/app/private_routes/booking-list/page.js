@@ -20,7 +20,11 @@ function BookingListPage() {
   let [filteredResults , setFilteredResults] = useState([]); // as array not Map cuz we will not cache "pageNum":[{},{},...] like we did with cachedContext
   let [currPage , setCurrPage ] = useState(1);
   let [numOfPages , setNumOfPages] = useState(1);
-  let [targetedBooking , setTargetedBooking] = useState("doctors"); // default is booking a doctor appointment
+  // The “default booking type” / what the user is currently browsing
+  const [selectedBookingType, setSelectedBookingType] = useState("doctors");
+  // The endpoint actually used for fetch (updated only after confirmed)
+  const [activeBookingType, setActiveBookingType] = useState("doctors");
+
   const [filterTrigger, setFilterTrigger] = useState(0);
   const {user_data} = useUserDataContext();
   const {cached_booking_list, setCached_Booking_List,fetched_booking_pages, setFetched_Booking_Pages,saveSpecificToStore,isIndexedDBLoaded} = useBookingListCache();
@@ -32,56 +36,68 @@ function BookingListPage() {
 
 
 // ===========================================
-//        Initial Fetch
+//         Fetch
 // ===========================================
 useEffect(() => {
+  if (!isIndexedDBLoaded) return;
 
-  if (isFiltered) return;
-  if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
-  // Check if we already fetched this page for this target to avoid refetching
-  console.log("fetched_booking_pages",fetched_booking_pages , !fetched_booking_pages[targetedBooking]?.has(currPage))
-  if (!(fetched_booking_pages[targetedBooking]?.has(currPage))) {
-    fetch(`${process.env.APIKEY}/list/${targetedBooking}?pagination=${currPage}&size=${sizeOfPage}`, {
-      mode: "cors",
-      headers: {
-        Authorization: `BEARER ${user_data.token}`,
-        "Content-Type": "application/json",
-      },
+  let endpoint = selectedBookingType; // default
+  const filterEntries = {};
+
+  if (isFiltered) {
+    const titleRef = selectBoxsRef.current["emp_title"];
+    const initialPriceRef = selectBoxsRef.current["initial_consultation_price"];
+    const surgeryPriceRef = selectBoxsRef.current["surgery_price"];
+    const yearsExpRef = selectBoxsRef.current["years_of_exp"];
+
+    const emp_title = titleRef?.value || null;
+    const initial_consultation_price = initialPriceRef?.value || null;
+    const surgery_price = surgeryPriceRef?.value || null;
+    const years_of_exp = yearsExpRef?.value || null;
+
+    if (emp_title) {
+      endpoint = emp_title.toLowerCase();
+      setSelectedBookingType(emp_title.toLowerCase());
+    }
+
+    if (initial_consultation_price) filterEntries["orderBy_initial_consultation_price"] = initial_consultation_price;
+    if (surgery_price) filterEntries["orderBy_surgery_price"] = surgery_price;
+    if (years_of_exp) filterEntries["orderBy_years_of_exp"] = years_of_exp;
+  }
+
+  // Skip fetch if not filtering and page was fetched
+  if (fetched_booking_pages[endpoint]?.has(currPage) && !isFiltered) return;
+
+  const queryString = stringifyFields("anded", Object.entries(filterEntries));
+
+  fetch(`${process.env.APIKEY}/list/${endpoint}?pagination=${currPage}&size=${sizeOfPage}&${queryString}`, {
+    mode: "cors",
+    headers: {
+      Authorization: `BEARER ${user_data.token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    .then(res => {
+      statusNotification(res.status);
+      return res.json();
     })
-      .then((res) => {
-        statusNotification(res.status);
-        return res.json();
-      })
-      .then((data) => {
-        if (data?.success) {
-          setCached_Booking_List((prev) => {
-            const updated = { ...prev };
-            updated[targetedBooking] = data.body;
-            return updated;
-          });
-          setNumOfPages(data.numOfPages || 1);
-          setFetched_Booking_Pages(prev => {
-            const currentPages = prev[targetedBooking] || new Set();
-            const updatedPages = new Set([...currentPages, currPage]);
-            
-            return {
-              ...prev,
-              [targetedBooking]: updatedPages
-            };
-          });
-          // save to indexedDB
-          console.log("Saving specific to store" , data.body,targetedBooking)
-          saveSpecificToStore(data.body,targetedBooking)
+    .then(data => {
+      if (!data?.success) return userNotification("error", data.message || "Fetch failed");
 
-        } else if (data && !data.success) {
-          userNotification("error", data.message);
-        }
+      // Update cache
+      
+      setCached_Booking_List(prev => ({ ...prev, [endpoint]: data.body }));
+      setNumOfPages(data.numOfPages || 1);
+      setFetched_Booking_Pages(prev => {
+        const currentPages = prev[endpoint] || new Set();
+        return { ...prev, [endpoint]: new Set([...currentPages, currPage]) };
       });
-  
-    } 
+      saveSpecificToStore(data.body, endpoint);
+    })
+    .catch(() => userNotification("error", "Network error"));
 
-  
-}, [currPage,isIndexedDBLoaded]);
+}, [currPage, isFiltered, selectedBookingType, isIndexedDBLoaded, filterTrigger]);
+
 
 
 
@@ -101,16 +117,21 @@ useEffect(() => {
 //        Clear Filters
 // ===========================================
   function handleClearFilterOption(){
-    const EMAIL_REF = inputsBoxsRef.current[""];
-    const ByPhoneREF = inputsBoxsRef.current[""];
+    const Title_REF = selectBoxsRef.current["emp_title"];
+    const initial_consultation_price_REF = selectBoxsRef.current["initial_consultation_price"];
+    const Surgery_price_REF = selectBoxsRef.current["surgery_price"];
+    const Years_Of_Exp_REF = selectBoxsRef.current["years_of_exp"];
+
 
     setIsFiltered(false) // set to false to render cached employees with no filters
     setFilteredResults([]); //to remove all
     setCurrPage(1);
 
     // reset select filters back to no filter
-    EMAIL_REF.value = ""
-    ByPhoneREF.value = ""
+    Title_REF.value = ""
+    initial_consultation_price_REF.value = ""
+    Surgery_price_REF.value = ""
+    Years_Of_Exp_REF.value = ""
 }
 
 // ===========================================
@@ -121,16 +142,20 @@ useEffect(() => {
 function handleFilterOption(e){
     if(e) e.preventDefault();
     // get filter inputs 
-    const EMAIL_REF = inputsBoxsRef.current[""];
-    const Phone_REF = inputsBoxsRef.current[""];
+    const Title_REF = selectBoxsRef.current["emp_title"];
+    const initial_consultation_price_REF = selectBoxsRef.current["initial_consultation_price"];
+    const Surgery_price_REF = selectBoxsRef.current["surgery_price"];
+    const Years_Of_Exp_REF = selectBoxsRef.current["years_of_exp"];
 
     
-    const patient_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
-    const patient_phone = Phone_REF.value === "" ? null : Phone_REF.value;
+    const emp_title = Title_REF.value === "" ? null : Title_REF.value;
+    const initial_consultation_price = initial_consultation_price_REF.value === "" ? null : initial_consultation_price_REF.value;
+    const surgery_price = Surgery_price_REF.value === "" ? null : Surgery_price_REF.value;
+    const years_of_exp = Years_Of_Exp_REF.value === "" ? null : Years_Of_Exp_REF.value;
 
 
     // making sure this checking is applied when only pressing btn 
-    if(!patient_email && !patient_phone && isFiltered){
+    if(!emp_title && !initial_consultation_price&& !surgery_price && !years_of_exp){
         userNotification("error","No Filters Entered");
         handleClearFilterOption(); // resets if no filtering specified
         return; 
@@ -139,47 +164,10 @@ function handleFilterOption(e){
 
     // save filters for useEffect to pick up
   setIsFiltered(true);
-  setFilterTrigger(prev => prev + 1)
+  setFilterTrigger(prev => prev + 1);
+  
 
 }
-
-// 2. Then this useEffect gets triggered on isFiltered and currPage to fetch new filtered data
-useEffect(() => {
-  if (!isFiltered) return;
-
-    const EMAIL_REF = inputsBoxsRef.current[""];
-    const Phone_REF = inputsBoxsRef.current[""];
-
-    
-    const patient_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
-    const patient_phone = Phone_REF.value === "" ? null : Phone_REF.value;
-
-  const filter_queries = stringifyFields(
-    "anded",
-    Object.entries({ patient_email, patient_phone })
-  );
-
-  fetch(`${process.env.APIKEY}/list/`, {
-    mode: "cors",
-    headers: {
-      Authorization: `BEARER ${user_data.token}`,
-      "Content-Type": "application/json",
-    },
-  })
-    .then((res) => {
-      statusNotification(res.status);
-      return res.json();
-    })
-    .then((data) => {
-      if (data?.success) {
-        setFilteredResults(data.body);
-        setNumOfPages(data.numOfPages || 1);
-      } else {
-        userNotification("error", data.message);
-      }
-    })
-    .catch(() => userNotification("error", "Network error"));
-}, [currPage, isFiltered,filterTrigger]);
 
 
   function handlePagination(e){
@@ -209,10 +197,10 @@ useEffect(() => {
 
           />
             <div className={styles["booking-card-wrapper"]}>
-              {cached_booking_list && Object.keys(cached_booking_list).length > 0 && cached_booking_list[targetedBooking]  && cached_booking_list[targetedBooking].slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((booking , index)=>{
+              {cached_booking_list && Object.keys(cached_booking_list).length > 0 && cached_booking_list[selectedBookingType]  && cached_booking_list[selectedBookingType].slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((booking , index)=>{
                 return <BookingCard 
                 key={booking._id || index}
-                userType={targetedBooking} 
+                userType={selectedBookingType} 
                 bookingData={booking} 
                 handleBookBtn={handleBookBtn}
                 />

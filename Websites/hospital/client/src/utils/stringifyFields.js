@@ -27,10 +27,12 @@ function stringifyFields(isFor , entries){
 
                 // adding columns to be updated as col1 = newVal , col2 = newVal ....
                 entries.forEach(([key,value] , indx) => {
+                    if(!value) return;
                     if(value || value === 0){
                         joined += `${key}=${value}`
                     }
-                    if(indx !== entries.length - 1) joined += '&';
+                    // not last element and next's value is defined
+                    if(indx !== entries.length - 1 && entries[indx+1][1]) joined += '&';
                
                 })
 

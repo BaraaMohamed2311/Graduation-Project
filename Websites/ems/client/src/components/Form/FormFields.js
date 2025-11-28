@@ -19,8 +19,8 @@ function RegisterFormFields({
     return (
         <>
         {/*display select for positions */}
-        <Select styles={styles} select_options={select_options.select_title_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
-        <Select styles={styles} select_options={{name:select_options.select_specialty_options.name,options:specialities_for_title}} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
+        <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_element_data.name] } select_options={select_options.select_title_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
+        <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_element_data.name] } select_options={{name:select_options.select_specialty_options.name,options:specialities_for_title}} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
         </>
     )
 }
@@ -45,10 +45,10 @@ function UpdateUserFormFields({
     return (
         <>
         {/* display select for positions */}
-        <Select styles={styles} select_options={select_options.select_title_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
-        <Select styles={styles} select_options={{name:select_options.select_specialty_options.name,options:specialities_for_title}} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
+        <Select styles={styles}  defaultValue = {user_displayed && user_displayed[select_options.select_title_options.name] } select_options={select_options.select_title_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
+        <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_options.select_specialty_options.name] } select_options={{name:select_options.select_specialty_options.name,options:specialities_for_title}} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
         {/* display select for Role */}
-        <Select styles={styles} select_options={select_options.select_role_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
+        <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_options.select_role_options.name] } select_options={select_options.select_role_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
         {/* Update Role If you have permission*/}
         {user_data.role_name === "SuperAdmin" && 
                 <div className={styles.perms_checkbox}>

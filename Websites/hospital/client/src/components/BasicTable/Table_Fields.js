@@ -49,7 +49,7 @@ function PatientsTableColumns({ type, isSmallScreen, row, handleActionBtn, butto
   return (
     <>
       <td className={styles.table_col_1}>{row.indx}</td>
-      <td className={styles.table_col_1}>{row.patient_name}</td>
+      <td className={styles.table_col_1}>{row.user_name}</td>
       <td className={styles.table_col_1}>{row.patient_gender}</td>
       <td className={styles.table_col_2}>{row.user_email}</td>
       {!isSmallScreen && (

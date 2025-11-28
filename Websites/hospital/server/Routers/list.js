@@ -22,9 +22,9 @@ const JoinFiltering = require("../Utils/JoinFiltering.js")
 // FIX: Define myCache properly
 const cacheCountNodeCache = require("../Utils/cacheCountNodeCache.js")
 const SurgeonMethods = require("../Utils/methods/SurgeonMethods.js");
-
-
-
+const buildJoinedFilters = require("../Utils/buildJoinedFilters.js")
+const padBoth = require("../Utils/padsBoth.js")
+const createOrderByClause = require("../Utils/createOrderByClause.js")
 
 // ==================================================================
 
@@ -37,7 +37,7 @@ const SurgeonMethods = require("../Utils/methods/SurgeonMethods.js");
 // =================================
 router.get("/employees",jwtVerify,async (req,res)=>{
     try{
-        const { pagination, size , user_id,isFiltered, role_name: filter_role_name, emp_perms: filter_emp_perm, ...restFilters } = req.query;
+        const { pagination, size , user_id,isFiltered, role_name: filter_role_name, emp_perms: filter_emp_perm, ...restFilters } = req.query; 
         
         //Bad Request if modifier id or others doesn't exist
         if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
@@ -45,17 +45,18 @@ router.get("/employees",jwtVerify,async (req,res)=>{
         // Ceck if list page can be accessible
         const Modifier_role = await User.getUserRole(user_id);
         const Modifier_perms = await User.getSetUserperms(user_id);
-        const filtering_for_query = restFilters? JoinFiltering(Object.entries(restFilters),"d") :null;
-        const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : "";
+        // perms have there separate filtiring conditing using "HAVING" not "WHERE"
+        const filtering_string = Object.keys(restFilters).length > 0 ? padBoth(buildJoinedFilters({ role_name: filter_role_name,  ...restFilters}),1) :null;
+
 
         if (Modifier_role === "NormalUser") return res.status(401).json({ success: false, message: "NormalUser Role cannot access The list" });
 
 
         // get cached count 
-        const EmployeesCount = await cacheCountNodeCache("totalNumOfEmployees",HospitalUsersMethods.getAllHospitalEmployeesCOUNT,whereClause)
+        const EmployeesCount = await cacheCountNodeCache("totalNumOfEmployees",HospitalUsersMethods.getAllHospitalEmployeesCOUNT,filtering_string)
         const numOfPages = Math.max(1, Math.ceil( EmployeesCount / size));
 
-        const users = await HospitalUsersMethods.getAllHospitalEmployeesFullData(parseInt(size), parseInt((pagination - 1) * size ),restFilters, filter_role_name, filter_emp_perm);
+        const users = await HospitalUsersMethods.getAllHospitalEmployeesFullData(parseInt(size), parseInt((pagination - 1) * size ),filtering_string,filter_emp_perm);
         console.log("EmployeesCount",EmployeesCount)
 
       if( users && users.length > 0){
@@ -82,18 +83,30 @@ router.get("/employees",jwtVerify,async (req,res)=>{
 // =================================
 router.get("/doctors",async (req,res)=>{
     try{
-        const { pagination, size,isFiltered , user_id, ...restFilters } = req.query;
-        
-        const filtering_for_query = restFilters? JoinFiltering(Object.entries(restFilters),"d") : null;
-        const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : "";
-        const doctors = await PatientMethods.getListedDoctorDataForPaitent(  parseInt(size) , parseInt((pagination - 1) * size ),filtering_for_query);
+        const { pagination, size,isFiltered , user_id, ...rest } = req.query;
+
+        // Extract orderBy entries
+            const orderBy = {};
+            for (const [key, value] of Object.entries(rest)) {
+            if (key.startsWith("orderBy_")) {
+                const field = key.replace("orderBy_", "");
+                orderBy[field] = value;
+                delete rest[key];
+            }
+            }
+
+        const restFilters = rest; // other normal filters
+
+        const filtering_string = Object.keys(restFilters).length > 0 ? padBoth(buildJoinedFilters(restFilters),1) : "";
+        const orderByClause = createOrderByClause(orderBy);
+        const doctors = await PatientMethods.getListedDoctorDataForPaitent(  parseInt(size) , parseInt((pagination - 1) * size ),filtering_string, orderByClause);
         const doctorsRespone = await fetchImagesForListedUsers(doctors);
 
         // =====================================
         // Cache Count on Server Side - ONLY for non-filtered queries
         // =====================================
 
-        const doctorsCount = await cacheCountNodeCache("totalNumOfDoctors",DoctorMethods.getAllDoctorsCOUNT,whereClause)
+        const doctorsCount = await cacheCountNodeCache("totalNumOfDoctors",DoctorMethods.getAllDoctorsCOUNT,filtering_string)
         const numOfPages = Math.max(1,Math.ceil(doctorsCount / size));
 
         // =====================================
@@ -129,12 +142,25 @@ router.get("/doctors",async (req,res)=>{
 // =================================
 router.get("/surgeons",async (req,res)=>{
     try{
-        const { pagination, size , isFiltered , user_id, ...restFilters } = req.query;
+        const { pagination, size , isFiltered , user_id, ...rest } = req.query;
+        // Extract orderBy entries
+            const orderBy = {};
+            for (const [key, value] of Object.entries(rest)) {
+            if (key.startsWith("orderBy_")) {
+                const field = key.replace("orderBy_", "");
+                orderBy[field] = value;
+                delete rest[key];
+            }
+            }
+
+        const restFilters = rest; // other normal filters
         
         
-        const surgeons = await PatientMethods.getListedSurgeonDataForPaitent(filtering_for_query , parseInt(size) , parseInt((pagination - 1) * size ));
-        const filtering_for_query = restFilters? JoinFiltering(Object.entries(restFilters),"s") : null;
-        const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : "";
+        
+        const filtering_string = Object.keys(restFilters).length > 0 ? padBoth(buildJoinedFilters(restFilters),1) : null;
+        const orderByClause = createOrderByClause(orderBy);
+        const surgeons = await PatientMethods.getListedSurgeonDataForPaitent( parseInt(size) , parseInt((pagination - 1) * size ),filtering_string,orderByClause);
+        const whereClause = filtering_string ?  padBoth(`WHERE ${filtering_string}`,1) : "";
         const surgeonsRespone = await fetchImagesForListedUsers(surgeons);
 
         // =====================================
@@ -184,8 +210,8 @@ router.get("/patients",async (req,res)=>{
         if(!pagination || !size  ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
-        const filtering_for_query = restFilters? JoinFiltering(Object.entries(restFilters)) :null;
-        const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : "";
+        const filtering_string = Object.keys(restFilters).length > 0 ? padBoth(buildJoinedFilters(restFilters),1) :null;
+        const whereClause = filtering_string ?  padBoth(`WHERE ${filtering_string}`,1) : "";
 
 
         // =====================================
@@ -197,8 +223,8 @@ router.get("/patients",async (req,res)=>{
 
 
 
-        console.log("Patients Reest CONDITIONS",filtering_for_query)
-        const my_rangedpatients = await PatientMethods.getAllPatientsSpecificData(parseInt(size),parseInt((pagination - 1) * size ),filtering_for_query);
+        console.log("Patients Reest CONDITIONS",filtering_string)
+        const my_rangedpatients = await PatientMethods.getAllPatientsSpecificData(parseInt(size),parseInt((pagination - 1) * size ),filtering_string);
         // =====================================
         // Send Response
         // =====================================
@@ -232,8 +258,9 @@ router.get("/my-patients",async (req,res)=>{
         if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
-        const filtering_for_query = restFilters? JoinFiltering(Object.entries(restFilters),"p") :null; 
-        const whereClause = filtering_for_query ?  `WHERE ${filtering_for_query}` : ""; 
+        const filtering_string = Object.keys(restFilters).length > 0 ? padBoth(buildJoinedFilters(restFilters),1) :null; 
+        
+        const whereClause = filtering_string ?  padBoth(`WHERE ${filtering_string}`,1) : ""; 
 
         // =====================================
         // Cache Count on Server Side - ONLY for non-filtered queries
@@ -243,8 +270,8 @@ router.get("/my-patients",async (req,res)=>{
         const numOfPages = Math.max(1,Math.ceil(patientsCount / size));
 
 
-
-      const my_rangedpatients = await DoctorMethods.getDoctorRangedPatients(user_id,parseInt(size),parseInt((pagination - 1) * size ));
+    
+      const my_rangedpatients = await DoctorMethods.getDoctorRangedPatients(user_id,parseInt(size),parseInt((pagination - 1) * size ),filtering_string);
 
         // =====================================
         // Send Response

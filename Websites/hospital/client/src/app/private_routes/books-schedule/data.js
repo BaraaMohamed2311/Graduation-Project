@@ -3,37 +3,31 @@ import {  global_perms, global_roles , global_title,global_specialty} from "@/gl
 let selectsElementsData = [
     {   
 
-        key:"By Title",
-        label:"By Title",
-        name:"emp_title",
-        options:global_title,
+        key:"Status",
+        label:"Status",
+        name:"consultation_status",
+        options:,
         
     },
     {   
 
-        key:"By specialty",
-        label:"By specialty",
-        name:"emp_specialty",
-        options:global_specialty,
+        key:"Consultation Type",
+        label:"Consultation Type",
+        name:"consultation_type",
+        options:,
         
     },
     {   
 
-        key:"By Role",
-        label:"By Role",
-        name:"role_name",
-        options:global_roles,
+        key:"Date Order",
+        label:"Date Order",
+        name:"consultation_date",
+        options:[{ value: "htl", text: "High To Low" },{ value: "lth", text: "Low To High" }],
         
     },
-    {   
-
-        key:"By Perms",
-        label:"By Perms",
-        name:"emp_perms",
-        options:global_perms,
-    }
+   
 
 ]
  
 
-export  default selectsElementsData
+export   {selectsElementsData}
