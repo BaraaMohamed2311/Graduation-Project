@@ -17,8 +17,9 @@ class perms {
 
     // ================ Actual Execution of Perms ================= //
 
-    static async executeChangeOtherUserData(other_user_id, other_user_title, newOtherUserData , data_actions){
-        return await HospitalUsersMethods.MapUserToUpdateFunction(other_user_id, other_user_title, newOtherUserData , data_actions)
+    static async executeChangeOtherUserData(other_user_id, other_user_title, updating_string){
+        console.log("executeChangeOtherUserData",other_user_id, other_user_title, updating_string)
+        return await HospitalUsersMethods.MapUserToFullUpdateFunction(other_user_id, other_user_title, updating_string)
     }
 
     static async executeModifyPatientFiles(){
@@ -27,12 +28,12 @@ class perms {
 
 
 
-    static async executeChangeOtherPerms(hosp_emp_id , StringOfNewperms , oldUserpermsSet){
+    static async executeChangeOtherPerms(hosp_emp_id , newpermsSet , oldUserpermsSet){
         
         const permsHash =  await perms.getAllpermsInTable(); // fetch map hash of perms and their ids
-        const newpermsArray = StringOfNewperms.split(", ");
-        const newpermsSet = new Set(newpermsArray);
-
+        const ArrayOfNewPerms = newpermsSet ? Array.from(newpermsSet) : []
+        const StringOfNewperms = ArrayOfNewPerms.length > 0 ? ArrayOfNewPerms.join(", ") : "None"
+        console.log("StringOfNewperms", newpermsSet , oldUserpermsSet)
         /******************* Stage 1 = Delete All Old Perms *******************/
         if(!oldUserpermsSet.has("None")){
             let deletepermsIDS = [];
@@ -68,7 +69,7 @@ class perms {
     }
 
     // need other_user_Role as parameter 
-    static async executeChangeOtherRole(hosp_emp_id , other_user_Role , other_user_new_role , other_user_email){
+    static async executeChangeOtherRole(hosp_emp_id , other_user_Role , other_user_new_role ){
                     /*
                         (condition 1): If user was NormalUser && new role is differnt, this means user wasn't in hospital_roles table
                         (condition 2): If user was having another role then it was added and we just update
@@ -76,8 +77,8 @@ class perms {
                     */
                         console.log("execue other_user_new_role",other_user_new_role)
                         if(other_user_Role === "NormalUser" && other_user_new_role !== "NormalUser"){
-                            const query = `INSERT INTO hospital_roles (hosp_emp_id , emp_email , role_name) VALUES (?,?,?)`
-                            await executeMySqlQuery(query ,[hosp_emp_id , other_user_email , other_user_new_role]);
+                            const query = `INSERT INTO hospital_roles (hosp_emp_id  , role_name) VALUES (?,?)`
+                            await executeMySqlQuery(query ,[hosp_emp_id  , other_user_new_role]);
                         }
                         else if(other_user_Role !== "NormalUser" && other_user_new_role !== "NormalUser"){
                             const query = `UPDATE hospital_roles SET role_name = ? WHERE hosp_emp_id = ?`

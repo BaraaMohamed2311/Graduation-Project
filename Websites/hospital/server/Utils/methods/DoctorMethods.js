@@ -5,26 +5,6 @@ const stringifyFields = require("../stringifyFields");
 const JoinFiltering = require("../JoinFiltering");
 class DoctorMethods {
 
-    // ============================
-    //              Check
-    // ============================
-           static async IsMyPatient(doctor_id, patient_id) {
-            const query = `
-                SELECT EXISTS (
-                    SELECT 1
-                    FROM staff_patient sp
-                    JOIN patients p 
-                        ON sp.patient_id = p.patient_id
-                    WHERE sp.staff_id = ? 
-                    AND sp.patient_id = ? AND relation_type = 'Doctor'
-                ) AS patient_exists;
-            `;
-
-            const result = await executeMySqlQuery(query, [doctor_id, patient_id]);
-
-            // Returns true if the patient is linked to the doctor
-            return !!result[0].patient_exists;
-        }
 
     // ============================
     //              Count
@@ -85,10 +65,11 @@ class DoctorMethods {
         const query = `
             SELECT 
                 -- from users
+                u.user_id,
                 u.user_email,
                 u.user_name,
                 -- from employees
-                e.emp_id AS user_id,
+
                 e.emp_abscence,
                 e.emp_rate,
                 e.emp_title,
@@ -170,10 +151,11 @@ class DoctorMethods {
         const query = `
         SELECT 
             -- from users
+            u.user_id,
                 u.user_email,
                 u.user_name,
             -- from employees
-            e.emp_id AS user_id,
+
             e.emp_abscence,
             e.emp_rate,
             e.emp_title,
@@ -236,15 +218,21 @@ class DoctorMethods {
         return result;
     }
 
+    // =============================================
+    //  No Roles Or Perms are fetched in Specific queries
+    // =============================================
+
+
     static async getAllDoctorsSpecificData(){
         
         const query = `
                 SELECT 
                     -- from users
+                    u.user_id,
                     u.user_email,
                     u.user_name,
                     -- from employees
-                    e.emp_id AS user_id,
+
                     e.emp_abscence,
                     e.emp_rate,
                     e.emp_title,
@@ -297,11 +285,12 @@ class DoctorMethods {
                 SELECT 
 
                     -- from users
+                    u.user_id,
                     u.user_email,
                     u.user_password, -- include password for authentication purposes
                     u.user_name,
                     -- from employees
-                    e.emp_id AS user_id,
+
                     e.emp_salary,
                     e.emp_abscence,
                     e.emp_bonus,
@@ -435,35 +424,27 @@ class DoctorMethods {
     //              Update
     // ============================
 
-    
-    static async updateDoctorSpecificCore(doctor_id, data) {
-        try{
-        // ===1. Filter data to only include fields relevant to doctors table
-        const doctors_table_fields = Tables.doctors;
-        const MapOfData = new Map(Object.entries(data));
-        let fieldsToUpdate = {};
-        for (const field of doctors_table_fields) {
-            if( MapOfData.has(field)){
-                fieldsToUpdate[field] = MapOfData.get(field);
-            }
-        }
-        // ===2.  Construct dynamic fields string for SQL
-        const fields = stringifyFields( "joined",Object.entries(fieldsToUpdate))
-            const query = `
-                UPDATE doctors
-                SET 
-                    ${fields}
-                WHERE doctor_id = ${doctor_id};
-            `;
-        // ===3.  Update and return result
-            await executeMySqlQuery(query);
-            return true;
+    static async updateDoctorFullCore(doctor_id, updating_string){
+        const query = `
+        UPDATE doctors d
+            JOIN employees e 
+                ON d.hosp_emp_id = e.emp_id
+            JOIN users u 
+                ON u.user_type = 'employee' AND u.user_id = e.emp_id
+
+            SET
+                ${updating_string},
+                u.latest_update = NOW()
+
+            WHERE d.doctor_id = ${doctor_id};
+        `
+        
+        const result = await sqlTransaction([query])
+
+        return result[0]?.affectedRows > 0;
+
     }
-    catch(err){
-        console.error("Error updating doctor data:", err);
-        return false;
-    }
-        }
+
 
 
         static async updateDoctorPatient(doctor_id, patient_id, data ) {
@@ -525,26 +506,6 @@ class DoctorMethods {
 
             return await sqlTransaction(queries); 
             }
-
-
-            static #mapToAction ={
-                "Doctor core": DoctorMethods.updateDoctorSpecificCore,
-                "Doctor Patients": DoctorMethods.updateDoctorPatient,
-                "Doctor Availabilty": DoctorMethods.replaceDoctorAvailability,
-            }
-
-            static async MapToUpdateDoctorData(user_id, data, actions ) {
-                const results = [];
-                for( const action of actions){
-                    const fn = DoctorMethods.#mapToAction[action];
-                    if (!fn) continue; // skip if no function for this action
-                    const result = await fn.call(this, user_id, data);
-                    results.push({ action, result });
-            }
-
-                return results; // return array of results for each action
-            }
-
 
 
    

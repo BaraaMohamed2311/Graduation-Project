@@ -1,10 +1,16 @@
 const SuperAdmin = require("../../Classes/SuperAdmin");
 const Admin = require("../../Classes/Admin");
 const User = require("../../Classes/User");
-async function ModifyOtherUserData(other_user_id, other_user_Role,other_user_title, modifierRole, newOtherUserData, oldOtherUserEmail , data_actions,failing_messages) {
+const buildJoinedUpdate = require("../buildJoinedUpdate")
+//===========================================================
+//              Help in Choosing Role Class to Execute Task
+//===========================================================
+async function ModifyOtherUserData(other_user_id, other_user_Role,other_user_title, modifierRole, newOtherUserData, oldOtherUserEmail ,failing_messages) {
     // This function is used to modify data in the database
     // It will be implemented later
-        
+
+    console.log("newOtherUserData.emp_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.emp_email",newOtherUserData.emp_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.emp_email)
+        // If email is updated make sure it's not in the system
         if(newOtherUserData.emp_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.emp_email){
             // if email is changed we check if it exists in db
             const emailExists = await User.emailExists(newOtherUserData.emp_email);
@@ -13,14 +19,19 @@ async function ModifyOtherUserData(other_user_id, other_user_Role,other_user_tit
                     failing_messages.push({success:false , message: "That Email Already Exists"})
                 }
         }
+
+
+
+        const updating_string = buildJoinedUpdate(newOtherUserData);
+        console.log("updating_string",updating_string)
         if(modifierRole === "SuperAdmin"){
-            const succeeded = await SuperAdmin.EditOtherUserData(other_user_id ,other_user_Role, other_user_title , newOtherUserData , data_actions)
+            const succeeded = await SuperAdmin.EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updating_string )
             if(!succeeded){
                 failing_messages.push({success:false , message: "You Have To Be Admin Or SuperAdmin"})
             }
         }
         else if (modifierRole === "Admin"){
-        const succeeded = await Admin.EditOtherUserData(other_user_id ,other_user_Role,other_user_title , newOtherUserData , data_actions )
+        const succeeded = await Admin.EditOtherUserData(other_user_id ,other_user_Role,other_user_title , updating_string  )
             if(!succeeded){
                 failing_messages.push({success:false , message: "Failed To Modify User Data"})
             }

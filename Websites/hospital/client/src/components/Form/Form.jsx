@@ -20,7 +20,7 @@ export default function Form({
         <form className={formKind === "update_form" ? styles.sided_form :""} method="post" onSubmit={form_handler}>
             
             {/* for any page display input fields with corresponding label and type */}
-            <Inputs  styles={styles } type={"labled_input"} formKind={formKind} inputs_info={inputs_info} user_displayed={user_displayed} references = {references.inputsBoxsRef}/>
+            <Inputs  styles={styles } type={"labled_input"} formKind={formKind} inputs_info={inputs_info} defaultValues={user_displayed} references = {references.inputsBoxsRef}/>
 
             {/* Form-kind-specific fields */}
             <Fields

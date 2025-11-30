@@ -7,12 +7,12 @@ import deleteFetch from "@/utils/deleteFetch";
 import { useUserDataContext } from "@/contexts/user_data";
 import { useRouter } from "next/navigation";
 import getUserImage from "@/utils/getUserImg";
-import UpdateEmpForm from "@/components/UpdateUserForm/UpdateUserForm";
-import { useState ,useEffect} from "react";
+import UpdateUserForm from "@/components/UpdateUserForm/UpdateUserForm";
+import { useState ,useEffect, useRef} from "react";
 import userNotification from "@/utils/userNotification";
 import Image from "next/image";
 import PatientFiles from "@/components/FilesList/FilesList";
-
+import { inputs_info } from "./data";
 function PatientDetailsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [blobURL, setBlobURL] = useState("/avatar.jpg");
@@ -20,7 +20,7 @@ function PatientDetailsPage() {
   const { cached_patients, isIndexedDBLoaded, setCached_Patients } = usePatientsCache(); // Added setCached_Patients
   const { user_data } = useUserDataContext();
   const router = useRouter();
-
+  const inputsBoxsRef = useRef({})
   // Efficiently find the patient from cache
   const patient = cached_patients?.find(p => p.user_id === parseInt(user_id));
 
@@ -71,6 +71,65 @@ function PatientDetailsPage() {
     window.location.href = ``;
   };
 
+
+  /***************************************update_handler***************************************/
+     function update_handler(e, url, token) {
+        e.preventDefault();
+        // get updated user data and actions that were made
+        let {updatedPatientData , actionString} = checkActionsMade();
+        console.log("updatedPatientData , actionString",updatedPatientData , actionString)
+
+        const reqBody = {
+                      modifier_id: user_data.user_id,
+                      modifier_email:user_data.user_email,
+                      emp_id: patient.emp_id,
+                      other_user_email:patient.user_email,
+                      ...updatedPatientData
+                    }
+
+          updateEmpFetch( url, token, reqBody ,actionString , setCached_Employees , currPage );
+        
+
+        
+      }
+/***************************************checkActionsMade***************************************/
+      function checkActionsMade(){
+
+        let actions = [];
+        let updatedPatientData = {};
+
+
+    // ====================================================== Modify Data ======================================================
+
+       // === 1. Check for changes in general input fields
+
+        inputs_info.forEach((input_info) => {
+          //  Check If any inputBox is empty 
+          if ( (inputsBoxsRef.current[input_info.name] && !inputsBoxsRef.current[input_info.name].value) ){
+            userNotification("error", "Input fields cannot be empty");
+            return
+          }
+          
+          // we check at first that input element is rendered using current of reference
+          else if (inputsBoxsRef.current[input_info.name] && (inputsBoxsRef.current[input_info.name].value !== patient[input_info.name])) {
+              updatedPatientData[input_info.name] = inputsBoxsRef.current[input_info.name].value;
+            if (!actions.includes("Modify Employee Data")) actions.push("Modify Employee Data"); // Add "MD" if not already added
+          }
+          
+        });
+
+      
+        // Join actions array to form the action string
+        let actionString = actions.join("-");
+        console.log("actionString",actionString)
+        return {
+          updatedPatientData,
+          actionString,
+          
+        };
+
+    }
+
   // Move conditional returns AFTER all hooks
   if (!isIndexedDBLoaded) {
     return <div>Loading...</div>;
@@ -80,16 +139,28 @@ function PatientDetailsPage() {
     return <div>Patient not found in cache</div>;
   }
 
+  const can_modify_unrelated_patient = user_data?.emp_perms?.has('Modify Other Patient')
+
+  
+console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patient )
   return (
     <main className={styles["patient-main"]}>
-      {user_data?.emp_perms?.has("Modify Data") && isEditing ? (
-        <UpdateEmpForm
-          currPage={currPage}
-          user={patient}
-          isEditing={isEditing}
-          setIsEditing={setIsEditing}
-        />
-      ) : (
+      
+          {isEditing  && can_modify_unrelated_patient &&  
+              <UpdateUserForm
+                  url={`list/update-other/patient`}
+                  isEditing={isEditing}
+                  setIsEditing={setIsEditing}
+                  user_displayed={patient}
+                  currPage={currPage}
+                  userData={user_data}
+                  modifier_data={user_data}
+                  // Pass the references and functions as props
+                  references={{inputsBoxsRef}}
+                  inputs_info={inputs_info}
+                  update_handler={update_handler}
+                />
+            }
         <div className={styles["patient-container"]}>
           {/* --- Header Section --- */}
           <div className={styles["patient-header"]}>
@@ -110,7 +181,7 @@ function PatientDetailsPage() {
               <p><strong>Phone:</strong> {patient.patient_phone || "Not Provided"}</p>
               <p><strong>Address:</strong> {patient.patient_address || "Not Specified"}</p>
               <p><strong>Gender:</strong> {patient.patient_gender || "Not Specified"}</p>
-              <p><strong>Date of Birth:</strong> {patient.date_of_birth? new Date(patient.date_of_birth).toLocaleDateString() : "Not Specified"}</p>
+              <p><strong>Date of Birth:</strong> {patient.date_of_birth? patient.date_of_birth.split("T")[0]: "Not Specified"}</p>
               <p><strong>Emergency Contact:</strong> {patient.emergency_contact || "Not Provided"}</p>
               <p><strong>Assigned to Room:</strong> {patient.isAssignedToRoom ? "Yes" : "No"}</p>
               <p><strong>Room Number:</strong> 
@@ -135,13 +206,13 @@ function PatientDetailsPage() {
             <ul className={styles["activity-list"]}>
               <li className={styles["buttons-wrapper"]}>
                 <button
-                  onClick={() => setIsEditing(prev => !prev)}
+                  onClick={(e) => setIsEditing(prev => !prev)}
                   className="grey-button"
                 >
                   Edit Patient
                 </button>
                 <button
-                  onClick={() =>
+                  onClick={(e) =>
                     handleDeletion("list/delete-patient", user_data.token, {
                       user_id: patient.user_id,
                       patient_name: patient.patient_name,
@@ -159,7 +230,7 @@ function PatientDetailsPage() {
             </ul>
           </div>
         </div>
-      )}
+  
     </main>
   );
 }

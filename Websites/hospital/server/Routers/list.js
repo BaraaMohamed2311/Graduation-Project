@@ -13,7 +13,7 @@ const  ModifyOtherUserPerms = require("../Utils/ControlUsers/ModifyOtherUserPerm
 const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
 const deletePatient = require("../Utils/ControlUsers/deletePatient.js");
 const RemoveFixedFields = require("../Utils/RemoveFixedFields.js");
-const Tables = require("../Tables/data.js");
+const {Tables , setOfPerms} = require("../Tables/data.js");
 const DoctorMethods = require("../Utils/methods/DoctorMethods.js");
 const PatientMethods = require("../Utils/methods/PatientMethods.js");
 const fetchImagesForListedUsers = require("../Utils/fetchImagesForListedUsers");
@@ -24,7 +24,9 @@ const cacheCountNodeCache = require("../Utils/cacheCountNodeCache.js")
 const SurgeonMethods = require("../Utils/methods/SurgeonMethods.js");
 const buildJoinedFilters = require("../Utils/buildJoinedFilters.js")
 const padBoth = require("../Utils/padsBoth.js")
-const createOrderByClause = require("../Utils/createOrderByClause.js")
+const createOrderByClause = require("../Utils/createOrderByClause.js");
+const perms = require("../Classes/perms.js");
+const buildJoinedUpdate = require("../Utils/buildJoinedUpdate.js");
 
 // ==================================================================
 
@@ -311,10 +313,9 @@ router.get("/my-patients",async (req,res)=>{
         try {   
                 // ===1. Get Data From Body & Query of actions to be made
                     let { modifier_id ,modifier_email,   other_user_email , other_user_new_role ,  other_user_new_perms ,   ...newEmployeeData} = req.body;
-                    let {perms_requested,targeted_data} = req.query;
-                    const permsRequestedSet= new Set(perms_requested.split("-"));
-                    targeted_data = targeted_data.split("-");
-                    const targetedDataSet = new Set(targeted_data)
+                    let {perms_requested} = req.query;
+                    const permsRequestedSet= perms_requested ? new Set(perms_requested.split("-")) : null;
+
                     let failing_messages = [];
 
                 // ===2. Remove employees table fields
@@ -324,14 +325,22 @@ router.get("/my-patients",async (req,res)=>{
                 if(!permsRequestedSet || !modifier_id || !other_user_email || !modifier_email) 
                     return res.status(400).json({success:false,messages:[{success:false,message:"Bad Request"}]});
                 
-                // ===4. Check User is an Employee Not Patient
-                const modifierTitle = await User.getUserTitle(modifier_email );
-                const other_user_idANDtable = await User.getUserIDAndTable(other_user_email);
-                const other_user_id = other_user_idANDtable.user_id
-                const other_user_title = await User.getUserTitle(other_user_email);
-                if(modifierTitle === "Patient")  return res.status(401).json({success:false,messages:[{success:false,message:"You Are A Patient Not An Employee"}]});
-                if(other_user_title === "Patient" || other_user_idANDtable.table === "patient")  return res.status(401).json({success:false,messages:[{success:false,message:"That User Is A Patient Not An Employee"}]});
+                // ===4. Check Neither Modifer or Other user are patients
 
+                const ModifierUserType = await User.getUserTypeByEmail(modifier_email);
+                const OtherUserType = await User.getUserTypeByEmail(other_user_email);
+
+                if(ModifierUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"You Are A Patient Not An Employee"}]});
+                if(OtherUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"That User Is A Patient Not An Employee"}]});
+                // Get fresh title and id from db
+                const other_user_id = await User.getUserIDByEmail(other_user_email)
+                const other_user_title = await User.getUserTitle(other_user_email);
+
+
+                // Check that all requested perms are valid
+                    const isValidPerms =  [...permsRequestedSet].every(x => setOfPerms.has(x));
+                    if(!isValidPerms)
+                    return res.status(401).json({success:false,message:"No valid permission requested "});
 
                     // ===5. Get Required Roles and Permissions for execution
 
@@ -343,7 +352,7 @@ router.get("/my-patients",async (req,res)=>{
                     //===6. Check if modifier have perm to update other users data & action is requested
                     if(permsRequestedSet.has("Modify Employee Data")){
                         if(modifierSetperms.has("Modify Employee Data")){
-                            await ModifyOtherUserData(other_user_id, other_user_Role,other_user_title, modifierRole, newEmployeeData, other_user_email ,targeted_data,failing_messages)
+                            await ModifyOtherUserData(other_user_id, other_user_Role,other_user_title, modifierRole, newEmployeeData, other_user_email ,failing_messages)
                         }
                         else{ 
                             failing_messages.push({success:false , message: "Not Allowed To Modify User Data"})
@@ -364,9 +373,9 @@ router.get("/my-patients",async (req,res)=>{
                     if(permsRequestedSet.has("Modify Employee Perms")){
                         if (modifierSetperms.has("Modify Employee Perms")){
                             const oldUserpermsSet = await User.getSetUserperms(other_user_id)
-
+                            const newpermsSet = other_user_new_perms ? new Set(other_user_new_perms.split(", ")) : new Set()
                             
-                            await ModifyOtherUserPerms(other_user_id, other_user_Role, modifierRole, other_user_new_perms,oldUserpermsSet,failing_messages)
+                            await ModifyOtherUserPerms(other_user_id, other_user_Role, modifierRole, newpermsSet,oldUserpermsSet,failing_messages)
                         }
                         else{
                             failing_messages.push({success:false , message: "Not Allowed To Modify User Permissions"})
@@ -374,16 +383,15 @@ router.get("/my-patients",async (req,res)=>{
                     }
 
                     
-                    //===9. Get Updated User Data
-                    const UpdateUser = await HospitalUsersMethods.MapUserToGETSpecificDataFunction(other_user_id,other_user_title);
+
 
                     //===10. Send any failing messages or success
                     if(failing_messages.length > 0){
                         // 401 for unauthorized modifications
-                        return res.status(401).json({ success:false,body:UpdateUser[0], messages : failing_messages})
+                        return res.status(401).json({ success:false, messages : failing_messages})
                     }
                     else{
-                        return res.status(200).json({ success:true,body:UpdateUser[0], messages : [{success:true ,message:"Successful Updating User"}]})
+                        return res.status(200).json({ success:true, messages : [{success:true ,message:"Successful Updating User"}]})
                     }
         }
         catch (err) {
@@ -396,30 +404,106 @@ router.get("/my-patients",async (req,res)=>{
         }
     })
 
+    router.put("/update-other/employee/availability" ,async function(req , res){
+        try {   
+                // ===1. Get Data From Body & Query of actions to be made
+                    let { modifier_id ,modifier_email,   other_user_email , newAvailabilityString} = req.body;
+                    let {perms_requested} = req.query;
+                    const permsRequestedSet= perms_requested ? new Set(perms_requested.split("-")) : null;
+
+                    let failing_messages = [];
+
+                // ===2. Remove employees table fields
+                newEmployeeData = RemoveFixedFields(newEmployeeData,Tables.employees);
+
+                // ===3. Check Bad Request
+                if(!permsRequestedSet || !modifier_id || !other_user_email || !modifier_email) 
+                    return res.status(400).json({success:false,messages:[{success:false,message:"Bad Request"}]});
+                
+                // ===4. Check Neither Modifer or Other user are patients
+
+                const ModifierUserType = await User.getUserTypeByEmail(modifier_email);
+                const OtherUserType = await User.getUserTypeByEmail(other_user_email);
+
+                if(ModifierUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"You Are A Patient Not An Employee"}]});
+                if(OtherUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"That User Is A Patient Not An Employee"}]});
+                // Get fresh title and id from db
+                const other_user_id = await User.getUserIDByEmail(other_user_email)
+                const other_user_title = await User.getUserTitle(other_user_email);
+
+                
+                
+                // Check that all requested perms are valid
+                    const isValidPerms =  [...permsRequestedSet].every(x => setOfPerms.has(x));
+                    if(!isValidPerms)
+                    return res.status(401).json({success:false,message:"No valid permission requested "});
+
+                    // ===5. Get Required Roles and Permissions for execution
+
+                    // then modifier is different user 
+                    const modifierRole = await User.getUserRole(modifier_id);
+                    const  modifierSetperms = await User.getSetUserperms(modifier_id);
+                    const other_user_Role = await User.getUserRole(other_user_id );
+                    
+                    //===6. Check if modifier have perm to update other users data & action is requested
+                    if(permsRequestedSet.has("")){
+                        if(modifierSetperms.has("")){
+                            
+                        }
+                        else{ 
+                            failing_messages.push({success:false , message: "Not Allowed To "})
+                        }
+                    }
+                    
+                    
+
+                    //===10. Send any failing messages or success
+                    if(failing_messages.length > 0){
+                        // 401 for unauthorized modifications
+                        return res.status(401).json({ success:false, messages : failing_messages})
+                    }
+                    else{
+                        return res.status(200).json({ success:true, messages : [{success:true ,message:"Successful Updating User"}]})
+                    }
+        }
+        catch (err) {
+            consoleLog(`Error In Update Others Availability Api Path  `, "error")
+            console.log(err)
+            res.status(500).json({
+                success:false,
+                message: err.message || "Error In Update Others Api Path "
+            })
+        }
+    })
+
     router.put("/update-other/patient" ,async function(req , res){
         try {   
                 // ===1. Get Data From Body & Query of actions to be made
                     let { modifier_id , modifier_email,  other_user_email  ,   ...newPatientData} = req.body;
-                    let {perms_requested,targeted_data} = req.query;
-                    const permsRequestedSet= new Set(perms_requested.split("-"));
-                    targeted_data = targeted_data.split("-");
-                    let failing_messages = [];
+                    let {perms_requested} = req.query;
+                    const permsRequestedSet= perms_requested ? new Set(perms_requested.split("-")) : null;
+
                     
                     // ===2. Check Bad Request
                     if(!permsRequestedSet || !modifier_id || !other_user_email || !modifier_email ) 
                         return res.status(400 ).json({success:false,message:"Bad Request"});
+
+                    // Check that all requested perms are valid
+                    const isValidPerms =  [...permsRequestedSet].every(x => setOfPerms.has(x));
+                    if(!isValidPerms)
+                    return res.status(401).json({success:false,message:"No valid permission requested "});
+
+
+                    const ModifierUserType = await User.getUserTypeByEmail(modifier_email);
+                    const OtherUserType = await User.getUserTypeByEmail(other_user_email);
+
+                    if(ModifierUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"You Are A Patient Not An Employee"}]});
+                    if(OtherUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"That User Is An Employee Not A Patient"}]});
+                    // Get fresh title and id from db
+                    const other_user_id = await User.getUserIDByEmail(other_user_email)
+                    const other_user_title = await User.getUserTitle(other_user_email);
                 
                 
-                    // ===3. Check User is Patient
-                    const modifierTitle = await User.getUserTitle(modifier_email );
-                    const other_user_idANDTABLE = await User.getUserIDAndTable(other_user_email);
-                    const other_user_id = other_user_idANDTABLE.user_id
-                    const other_user_title = await User.getUserTitle(other_user_email );
-
-                    // Check if modifier is employee | Check if other user is patient
-                    if(modifierTitle === "Patient")  return res.status(401).json({success:false,messages:[{success:false,message:"You Are A Patient Not An Employee"}]});
-                    if(other_user_title !== "Patient" )  return res.status(401).json({success:false,messages:[{success:false,message:"That User Is Not A Patient"}]});
-
                     // Make sure to remove these fields so they are not getting updated
                     newPatientData = RemoveFixedFields(newPatientData,[...Tables.rooms,"room_number","floor_number","patient_email","patient_password"])
 
@@ -428,42 +512,32 @@ router.get("/my-patients",async (req,res)=>{
                     const other_user_Role = await User.getUserRole(other_user_id ); // Default gonna get NormalUser since he is a patient
                     const  modifierSetperms = await User.getSetUserperms(modifier_id);
 
+                    // Check Authorization using perms
+                    const isAuthorized = !modifierSetperms.has("Modify Other Patient") && !modifierSetperms.has("Access Other Patients");
+
                     // Check that user can modify patients that do not belong to him
-                    if(!modifierSetperms.has("Modify Other Patient")) return res.status(401).json({success:false,messages:[{success:false ,message:"Modify Other Patient Permission Is Required For This Action"}]});
-                    // remove all related to room fields, if modifier wants to update it he has to visit room's page
+                    if(!isAuthorized) return res.status(401).json({success:false,messages:[{success:false ,message:"Permission Is Required For This Action"}]});
 
-                    
+
+                    let isUpdated = false;
                     //===5. Check if modifier have perm to update other users data & action is requested
-                    if(permsRequestedSet.has("Modify Patient Data")){
-                        if(modifierSetperms.has("Modify Patient Data")){
-                            await ModifyOtherUserData(other_user_id, other_user_Role,other_user_title, modifierRole, newPatientData, other_user_email,targeted_data,failing_messages)
-                        }
-                        else{ 
-                            failing_messages.push({success:false , message: "Not Allowed To Modify User Data"})
-                        }
+                    if(permsRequestedSet.has("Modify Other Patient")){
+                            // build the updating string for query
+                            const updating_string = buildJoinedUpdate(newPatientData);
+                            // Since patient is treated as NormalUser we execute perm directly 
+                            isUpdated = perms.executeChangeOtherUserData(other_user_id,other_user_title,updating_string);
+                            
+
                     }
                     
-                    //===6. Check if modifier have perm to update other users files & action is requested
-                    if(permsRequestedSet.has("Modify Patient Files")){
-                        if(modifierSetperms.has("Modify Patient Files")){
-
-                            await ModifyOtherUserFiles()
-                        }
-                        else{ 
-                            failing_messages.push({success:false , message: "Not Allowed To Modify User Files"})
-                        }
-                    }
-
-                    //===7. Execute Update
-                    const UpdateUser = await HospitalUsersMethods.MapUserToGETSpecificDataFunction(other_user_id,other_user_title);
 
                     //===8. Send any failing messages or success
-                    if(failing_messages.length > 0){
+                    if(!isUpdated){
                         // 401 for unauthorized modifications
-                        return res.status(401).json({ success:false,body:UpdateUser[0], messages : failing_messages})
+                        return res.status(401).json({ success:false, messages : [{success:false ,message:"Failed To Update Patient"}]})
                     }
                     else{
-                        return res.status(200).json({ success:true,body:UpdateUser[0], messages : [{success:true ,message:"Successful Updating User"}]})
+                        return res.status(200).json({ success:true, messages : [{success:true ,message:"Successful Updating User"}]})
                     }
         }
         catch (err) {
@@ -480,28 +554,198 @@ router.get("/my-patients",async (req,res)=>{
         try {   
                 // ===1. Get Data From Body & Query of actions to be made
                     let { modifier_id , modifier_email,  other_user_email  ,   ...newPatientData} = req.body;
-                    let {perms_requested,targeted_data} = req.query;
+                    let {perms_requested} = req.query;
                     const permsRequestedSet= new Set(perms_requested.split("-"));
-                    targeted_data = targeted_data.split("-");
-                    let failing_messages = [];
+
                     
                 // ===2.Check Bad Request
                 if(!permsRequestedSet || !modifier_id || !other_user_email || !modifier_email ) 
                     return res.status(400).json({success:false,messages:[{success:false,message:"Bad Request"}]});
-                
-                    // ===3. Check User is Patient
-                    const modifierTitle = await User.getUserTitle(modifier_email );
-                    const other_user_idANDTABLE = await User.getUserIDAndTable(other_user_email);
-                    const other_user_id = other_user_idANDTABLE.user_id
-                    const other_user_title = await User.getUserTitle(other_user_email );
 
-                    // Check if modifier has this patient
-                    const belongsToModifier = await HospitalUsersMethods.MapUserToIsMyPatientFunction(modifier_id,modifierTitle,other_user_id);
+
+                //  ===3. Check that all requested perms are valid
+                    const isValidPerms =  [...permsRequestedSet].every(x => setOfPerms.has(x));
+                    if(!isValidPerms)
+                    return res.status(401).json({success:false,message:"No valid permission requested "});
+
+                //  ===4. Check valid user types
+                    const ModifierUserType = await User.getUserTypeByEmail(modifier_email);
+                    const OtherUserType = await User.getUserTypeByEmail(other_user_email);
+
+                    if(ModifierUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"You Are A Patient Not An Employee"}]});
+                    if(OtherUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"That User Is An Employee Not A Patient"}]});
+                    // Get fresh title and id from db
+                    const other_user_id = await User.getUserIDByEmail(other_user_email)
+                    const other_user_title = await User.getUserTitle(other_user_email);
+                
+                    
+
+                    //  ===5. Check patient belongs to staff
+                    const belongsToModifier = await HospitalUsersMethods.patientBelongsToStaff(modifier_id,other_user_id);
                     console.log("belongsToModifier",belongsToModifier)
                     if(!belongsToModifier) return res.status(401).json({success:false,messages:[{success:false,message:"This Isn't Your Patient"}]});
-                    // Check if modifier is employee | Check if other user is patient
-                    if(modifierTitle === "Patient")  return res.status(401).json({success:false,messages:[{success:false,message:"You Are A Patient Not An Employee"}]});
-                    if(other_user_title !== "Patient" )  return res.status(401).json({success:false,messages:[{success:false,message:"That User Is Not A Patient"}]});
+
+
+                    // Make sure to remove these fields so they are not getting updated
+                    newPatientData = RemoveFixedFields(newPatientData,[...Tables.rooms,"room_number","floor_number","patient_email","patient_password"])
+
+                    // ===4. Get Required Roles and Permissions for execution
+                    const modifierRole = await User.getUserRole(modifier_id);
+                    const other_user_Role = await User.getUserRole(other_user_id ); // Default gonna get NormalUser since he is a patient
+                    const  modifierSetperms = await User.getSetUserperms(modifier_id);
+
+                    // Check Authorization using perms
+                    const isAuthorized = modifierSetperms.has("Modify My Patient")
+
+                    // Check that user can modify patients that do not belong to him
+                    if(!isAuthorized) return res.status(401).json({success:false,messages:[{success:false ,message:"Permission Is Required For This Action"}]});
+
+                    let isUpdated= false;
+                    //===5. Check if modifier have perm to update other users data & action is requested
+                    if(permsRequestedSet.has("Modify My Patient")){
+                            // build the updating string for query
+                            const updating_string = buildJoinedUpdate(newPatientData);
+                            // Since patient is treated as NormalUser we execute perm directly 
+                            isUpdated = perms.executeChangeOtherUserData(other_user_id,other_user_title,updating_string);
+                            
+                    }
+                    
+
+                    //===8. Send any failing messages or success
+                    if(!isUpdated){
+                        // 401 for unauthorized modifications
+                        return res.status(401).json({ success:false, messages : [{success:false ,message:"Failed To Update Your Patient"}]})
+                    }
+                    else{
+                        return res.status(200).json({ success:true, messages : [{success:true ,message:"Successful Updating User"}]})
+                    }
+        }
+        catch (err) {
+            consoleLog(`Error In Update Others Api Path  `, "error")
+            console.log(err)
+            res.status(500).json({
+                success:false,
+                message: err.message || "Error In Update Others Api Path "
+            })
+        }
+    })
+
+    // =========================================================================
+    // Only at if your patient you can modify health state and patient files
+    // =========================================================================
+
+    router.put("/update-other/mypatient/health-state" ,async function(req , res){
+        try {   
+                // ===1. Get Data From Body & Query of actions to be made
+                    let { modifier_id , modifier_email,  other_user_email  ,   ...newPatientData} = req.body;
+                    let {perms_requested} = req.query;
+                    const permsRequestedSet= new Set(perms_requested.split("-"));
+
+                    
+                // ===2.Check Bad Request
+                if(!permsRequestedSet || !modifier_id || !other_user_email || !modifier_email ) 
+                    return res.status(400).json({success:false,messages:[{success:false,message:"Bad Request"}]});
+
+
+                //  ===3. Check that all requested perms are valid
+                    const isValidPerms =  [...permsRequestedSet].every(x => setOfPerms.has(x));
+                    if(!isValidPerms)
+                    return res.status(401).json({success:false,message:"No valid permission requested "});
+
+                //  ===4. Check valid user types
+                    const ModifierUserType = await User.getUserTypeByEmail(modifier_email);
+                    const OtherUserType = await User.getUserTypeByEmail(other_user_email);
+
+                    if(ModifierUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"You Are A Patient Not An Employee"}]});
+                    if(OtherUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"That User Is An Employee Not A Patient"}]});
+                    // Get fresh title and id from db
+                    const other_user_id = await User.getUserIDByEmail(other_user_email)
+                    const other_user_title = await User.getUserTitle(other_user_email);
+                
+
+
+                    //  ===5. Check patient belongs to staff
+                    const belongsToModifier = await HospitalUsersMethods.patientBelongsToStaff(modifier_id,other_user_id);
+                    console.log("belongsToModifier",belongsToModifier)
+                    if(!belongsToModifier) return res.status(401).json({success:false,messages:[{success:false,message:"This Isn't Your Patient"}]});
+
+
+                    // Make sure to remove these fields so they are not getting updated
+                    newPatientData = RemoveFixedFields(newPatientData,[...Tables.rooms,"room_number","floor_number","patient_email","patient_password"])
+
+                    // ===4. Get Required Roles and Permissions for execution
+                    const modifierRole = await User.getUserRole(modifier_id);
+                    const other_user_Role = await User.getUserRole(other_user_id ); // Default gonna get NormalUser since he is a patient
+                    const  modifierSetperms = await User.getSetUserperms(modifier_id);
+
+                    // Check Authorization using perms
+                    const isAuthorized = modifierSetperms.has('Modify Health Status')
+
+                    // Check that user can modify patients that do not belong to him
+                    if(!isAuthorized) return res.status(401).json({success:false,messages:[{success:false ,message:"Permission Is Required For This Action"}]});
+                    //===5. Check if modifier have perm to update other users data & action is requested
+                    let isUpdated = false;
+                    if(permsRequestedSet.has("")){
+
+                    }
+                    
+
+
+                    //===8. Send any failing messages or success
+                    if(!isUpdated){
+                        // 401 for unauthorized modifications
+                        return res.status(401).json({ success:false, messages : failing_messages})
+                    }
+                    else{
+                        return res.status(200).json({ success:true, messages : [{success:true ,message:"Successful Updating User"}]})
+                    }
+        }
+        catch (err) {
+            consoleLog(`Error In Update Others Api Path  `, "error")
+            console.log(err)
+            res.status(500).json({
+                success:false,
+                message: err.message || "Error In Update Others Api Path "
+            })
+        }
+    })
+
+    router.put("/update-other/mypatient/files" ,async function(req , res){
+        try {   
+                // ===1. Get Data From Body & Query of actions to be made
+                    let { modifier_id , modifier_email,  other_user_email  ,   ...newPatientData} = req.body;
+                    let {perms_requested} = req.query;
+                    const permsRequestedSet= new Set(perms_requested.split("-"));
+
+
+                    
+                // ===2.Check Bad Request
+                if(!permsRequestedSet || !modifier_id || !other_user_email || !modifier_email ) 
+                    return res.status(400).json({success:false,messages:[{success:false,message:"Bad Request"}]});
+
+
+                //  ===3. Check that all requested perms are valid
+                    const isValidPerms =  [...permsRequestedSet].every(x => setOfPerms.has(x));
+                    if(!isValidPerms)
+                    return res.status(401).json({success:false,message:"No valid permission requested "});
+
+                //  ===4. Check valid user types
+                    const ModifierUserType = await User.getUserTypeByEmail(modifier_email);
+                    const OtherUserType = await User.getUserTypeByEmail(other_user_email);
+
+                    if(ModifierUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"You Are A Patient Not An Employee"}]});
+                    if(OtherUserType === 'patient')  return res.status(401).json({success:false,messages:[{success:false,message:"That User Is An Employee Not A Patient"}]});
+                    // Get fresh title and id from db
+                    const other_user_id = await User.getUserIDByEmail(other_user_email)
+                    const other_user_title = await User.getUserTitle(other_user_email);
+                
+
+
+                    //  ===5. Check patient belongs to staff
+                    const belongsToModifier = await HospitalUsersMethods.patientBelongsToStaff(modifier_id,other_user_id);
+                    console.log("belongsToModifier",belongsToModifier)
+                    if(!belongsToModifier) return res.status(401).json({success:false,messages:[{success:false,message:"This Isn't Your Patient"}]});
+
 
                     // Make sure to remove these fields so they are not getting updated
                     newPatientData = RemoveFixedFields(newPatientData,[...Tables.rooms,"room_number","floor_number","patient_email","patient_password"])
@@ -512,37 +756,27 @@ router.get("/my-patients",async (req,res)=>{
                     const  modifierSetperms = await User.getSetUserperms(modifier_id);
 
                     
+                    // Check Authorization using perms
+                    const isAuthorized = modifierSetperms.has('Modify Patient Files')
+                    
+                    // Check that user can modify patients that do not belong to him
+                    if(!isAuthorized) return res.status(401).json({success:false,messages:[{success:false ,message:"Permission Is Required For This Action"}]});
+
+                    let isUpdated = false;
                     //===5. Check if modifier have perm to update other users data & action is requested
-                    if(permsRequestedSet.has("Modify Patient Data")){
-                        if(modifierSetperms.has("Modify Patient Data")){
-                            await ModifyOtherUserData(other_user_id, other_user_Role,other_user_title, modifierRole, newPatientData, other_user_email,targeted_data,failing_messages)
-                        }
-                        else{ 
-                            failing_messages.push({success:false , message: "Not Allowed To Modify User Data"})
-                        }
+                    if(permsRequestedSet.has("")){
+                        
                     }
                     
-                    //===6. Check if modifier have perm to update other users files & action is requested
-                    if(permsRequestedSet.has("Modify Patient Files")){
-                        if(modifierSetperms.has("Modify Patient Files")){
 
-                            await ModifyOtherUserFiles()
-                        }
-                        else{ 
-                            failing_messages.push({success:false , message: "Not Allowed To Modify User Files"})
-                        }
-                    }
-
-                    //===7. Execute Update
-                    const UpdateUser = await HospitalUsersMethods.MapUserToGETSpecificDataFunction(other_user_id,other_user_title);
-
+                    
                     //===8. Send any failing messages or success
-                    if(failing_messages.length > 0){
+                    if(!isUpdated){
                         // 401 for unauthorized modifications
-                        return res.status(401).json({ success:false,body:UpdateUser[0], messages : failing_messages})
+                        return res.status(401).json({ success:false, messages : [{success:true ,message:"Successful Updating User"}]})
                     }
                     else{
-                        return res.status(200).json({ success:true,body:UpdateUser[0], messages : [{success:true ,message:"Successful Updating User"}]})
+                        return res.status(200).json({ success:true, messages : [{success:true ,message:"Successful Updating User"}]})
                     }
         }
         catch (err) {

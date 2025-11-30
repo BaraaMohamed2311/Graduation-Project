@@ -5,7 +5,8 @@ import statusNotification from "./statusNotification"
 export default function updateEmpFetch(url , token , body, actionsString , setCached_Employees , currPage , router){
     
 
-    fetch(`${process.env.APIKEY}/${url}?actions=${actionsString}`,{
+    fetch(`${process.env.APIKEY}/${url}?perms_requested=${actionsString}`,{
+        mode:"cors",
         method:"PUT",
         headers:{
             authorization:`BEARER ${token}`,
@@ -19,7 +20,7 @@ export default function updateEmpFetch(url , token , body, actionsString , setCa
     .then(async (data)=>{
         console.log("data after updating employee")
             if(data && data.success){
-                await  setCached_Employees(prev => {
+                /**await  setCached_Employees(prev => {
                     // prevent direct modify
                     let newArray = Array.from(prev);
 
@@ -33,14 +34,14 @@ export default function updateEmpFetch(url , token , body, actionsString , setCa
                         }
                     })
                     
-                })
+                })**/
                 
                 data.messages.forEach((messageObj)=> userNotification(messageObj.success ?"success" : "error", messageObj.message));
-                router.replace("/private_routes/list");
+           
                 
             }
             
-            router.replace("/login");
+          
         
     })
     .catch((err)=>{

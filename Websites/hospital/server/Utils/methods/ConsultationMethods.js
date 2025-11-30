@@ -1,6 +1,6 @@
 const executeMySqlQuery = require("../executeMySqlQuery");
 const stringifyFields = require("../stringifyFields");
-
+const AvailabilityService = require("./AvailabilityMethods")
 class ConsultationMethods {
     // ========================================
     //   COUNT Data
@@ -69,44 +69,14 @@ class ConsultationMethods {
     //   availability Data
 
         static async getAllAvailabilityDays(hosp_emp_id) {
-            const query = `
-                SELECT 
-                    COALESCE(
-                        NULLIF(
-                            GROUP_CONCAT(
-                                DISTINCT CONCAT(day_of_week, ': ', DATE_FORMAT(start_time, '%H:%i'), '-', DATE_FORMAT(end_time, '%H:%i'))
-                                ORDER BY day_of_week
-                                SEPARATOR '; '
-                            ), 
-                            ''
-                        ), 
-                        'None'
-                    ) AS available_days
-                FROM availability
-                WHERE hosp_emp_id = ?
-            `;
-            const availability = await executeMySqlQuery(query, [hosp_emp_id]);
-            return availability[0].available_days;
+            return AvailabilityService.getAllAvailabilityDays(hosp_emp_id);
         }
 
         
     
     static async getAvailabilityDay(hosp_emp_id,dayIndx) {
 
-            // Fetch the doctor's availability for that day
-            const query = `
-                SELECT 
-                 *,
-                DATE_FORMAT(start_time, '%H:%i') AS start_time,
-                DATE_FORMAT(end_time, '%H:%i')   AS end_time
-                FROM availability
-                WHERE hosp_emp_id = ? AND day_of_week = ?
-                LIMIT 1
-            `;
-            const availability = await executeMySqlQuery(query, [hosp_emp_id, dayIndx]);
-
-            // If no availability found for that doctor/day
-            return availability[0] ;
+            return  AvailabilityService.getAvailabilityDay(hosp_emp_id,dayIndx);
 
     }
 
@@ -386,16 +356,32 @@ class ConsultationMethods {
     //   Delete Appointment
     // ========================================
 
-    static async deleteConsultation(consultation_id) {
-        try {
-            const query = `DELETE FROM consultations WHERE consultation_id = ?`;
-            const result = await executeMySqlQuery(query, [consultation_id]);
+
+ // deletes all consultations on specific day
+static async deleteEmpConsultation(hosp_emp_id , consultation_date) {
+
+            const query = `DELETE FROM consultations WHERE hosp_emp_id = ? AND consultation_date = ?`;
+            const result = await executeMySqlQuery(query, [hosp_emp_id , consultation_date]);
             return result.affectedRows > 0;
-        } catch(err) {
-            console.error("Error deleting consultation method:", err);
-            return false;
-        }
-}
+
+    }
+
+    // deletes specific consultation with specific employee on specific date
+    static async deleteConsultation(patient_id , hosp_emp_id , consultation_date) {
+
+            const query = `DELETE FROM consultations WHERE patient_id = ? AND hosp_emp_id = ? AND consultation_date = ?`;
+            const result = await executeMySqlQuery(query, [patient_id , hosp_emp_id,consultation_date]);
+            return result.affectedRows > 0;
+
+    }
+    // deletes all consultations on specific day
+    static async deletePatAllConsultation(patient_id , consultation_date) {
+
+            const query = `DELETE FROM consultations WHERE patient_id = ? AND consultation_date = ?`;
+            const result = await executeMySqlQuery(query, [patient_id,consultation_date]);
+            return result.affectedRows > 0;
+
+    }
 }
 
 module.exports = ConsultationMethods;

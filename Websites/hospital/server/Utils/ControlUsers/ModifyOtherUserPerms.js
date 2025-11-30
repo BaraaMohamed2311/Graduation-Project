@@ -1,9 +1,12 @@
 
 const SuperAdmin = require("../../Classes/SuperAdmin");
-async function ModifyOtherUserPerms(emp_id, userRole, modifierRole, newperms , oldUserpermsSet,failing_messages) {
+//===========================================================
+//              Help in Choosing Role Class to Execute Task
+//===========================================================
+async function ModifyOtherUserPerms(emp_id, userRole, modifierRole, newpermsSet , oldUserpermsSet,failing_messages) {
 
         if(modifierRole === "SuperAdmin"){
-            const succeeded =await SuperAdmin.ChangeOtherUserperms(emp_id , userRole , newperms , oldUserpermsSet)
+            const succeeded =await SuperAdmin.ChangeOtherUserperms(emp_id , userRole , newpermsSet , oldUserpermsSet)
             if(!succeeded){
                 failing_messages.push({success:false , message: "Failed To Modify User perms"})
             }

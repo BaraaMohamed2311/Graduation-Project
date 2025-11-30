@@ -1,14 +1,9 @@
 const executeMySqlQuery = require("../executeMySqlQuery");
 const Tables = require("../../Tables/data");
 const stringifyFields = require("../stringifyFields");
+const sqlTransaction = require("../sqlTransaction");
 class SurgeonMethods {
 
-    // ============================
-    //              Check
-    // ============================
-            static async IsMyPatient(doctor_id){
-                throw new Error("SurgeonMethods.IsMyPatient is not implemented yet")
-    }
     // ============================
     //              COUNT
     // ============================
@@ -61,11 +56,12 @@ class SurgeonMethods {
         const query = `
                 SELECT 
                     -- from users 
+                    u.user_id,
                     u.user_email,
                     u.user_name,
 
                     -- from employees
-                    e.emp_id AS user_id,
+
                     e.emp_abscence,
                     e.emp_rate,
                     e.emp_title,
@@ -145,11 +141,12 @@ class SurgeonMethods {
         const query = `
                 SELECT 
                     -- from users
+                    u.user_id,
                     u.user_email,
                     u.user_name,
 
                     -- from employees
-                    e.emp_id AS user_id,
+
                     e.emp_abscence,
                     e.emp_rate,
                     e.emp_title,
@@ -214,11 +211,12 @@ class SurgeonMethods {
     static async getAllSurgeonsSpecificData(){
         const query = `SELECT 
                         -- from users
+                        u.user_id,
                         u.user_email,
                         u.user_name,
 
                         -- from employees
-                        e.emp_id AS user_id,
+
                         e.emp_abscence,
                         e.emp_rate,
                         e.emp_title,
@@ -267,12 +265,13 @@ class SurgeonMethods {
     static async getSurgeonSpecificData(user_id){
         const query = `SELECT 
                         -- from users 
+                        u.user_id,
                         u.user_email
                         u.user_password
                         u.user_name,
 
                         --from employees
-                        e.emp_id AS user_id,
+
                         e.emp_salary,
                         e.emp_abscence,
                         e.emp_bonus,
@@ -337,6 +336,26 @@ class SurgeonMethods {
     // ============================
     //              Update
     // ============================
+    static async updateSurgeonFullCore(surgeon_id, updating_string){
+        const query = `
+        UPDATE surgeon s
+            JOIN employees e 
+                ON s.hosp_emp_id = e.emp_id
+            JOIN users u 
+                ON u.user_type = 'employee' AND u.user_id = e.emp_id
+
+            SET
+                ${updating_string},
+                u.latest_update = NOW()
+
+            WHERE s.surgeon_id = ${surgeon_id};
+        `
+
+        const result = await sqlTransaction([query])
+
+        return result[0]?.affectedRows > 0;
+
+    }
     static async updateSurgeonSpecificData(user_id, data) {
         try{
             // ===1. Filter data to only include fields relevant to nurses table

@@ -1,12 +1,28 @@
 import Select from "../Select/Select";
 import Link from "next/link";
 import Inputs from "../Inputs/Inputs"
-import { useEffect , useState} from "react";
+import { useEffect , useState , useMemo} from "react";
 import { global_mapped_specialities } from "@/global_data";
 
 
 
-function UpdateUserFormFields({
+function DynamicSelect({ selectOption, userDisplayed, references, onChange, styles }) {
+    console.log("selectOption",selectOption)
+    if (!selectOption) return null;
+
+    return (
+        <Select
+            styles={styles}
+            defaultValue={userDisplayed && userDisplayed[selectOption.name]}
+            select_options={selectOption}
+            user_displayed={userDisplayed}
+            reference={references.selectBoxsRef}
+            onChange={onChange}
+        />
+    );
+}
+
+export default function UpdateUserFormFields({
     references,
     check_box,
     select_options,
@@ -16,41 +32,71 @@ function UpdateUserFormFields({
     user_displayed,
     user_data,
     styles,
-}){
-    /* Get Change of title's selected value */
-    console.log("UpdateUserFormFields user_displayed",user_displayed)
+}) {
     const [selectedTitleValue, setSelectedTitleValue] = useState(user_displayed?.emp_title ?? "");
+    // If there is not title selectOptions and global specialities then return null
+    // Memoize specialty options for selected title 
+    const specialitiesForTitle  = useMemo(() => {
+        return global_mapped_specialities[selectedTitleValue] && select_options.select_title_options ? ({
+            label: "specialty",
+            options: global_mapped_specialities[selectedTitleValue] || [],
+            name: "specialty",
+        }) : null;
+    }, [selectedTitleValue]);
 
-    /* Get Corresponding specialities for title */
-    const specialities_for_title = {label:"specialty",options: global_mapped_specialities[selectedTitleValue]};
+    console.log("select_options select_options" , specialitiesForTitle )
 
-    console.log("UpdateUserFormFields",select_options,"selectedTitleValue",selectedTitleValue, "specialities_for_title",specialities_for_title)
     return (
         <>
-        {/* display select for positions */}
-        <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_options.select_title_options.name] } select_options={select_options.select_title_options} user_displayed={user_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
-        <Select styles={styles} defaultValue = {user_displayed && user_displayed[specialities_for_title.name] } select_options={specialities_for_title} user_displayed={user_displayed} reference={references.selectBoxsRef}/>
-        {/* display select for Role */}
-        {select_options.select_role_options && <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_options.select_role_options.name] }  select_options={select_options.select_role_options} user_displayed={user_displayed} reference={references.selectBoxsRef}/>}
-        {/* Update Role If you have permission*/}
-        {user_data.role_name === "SuperAdmin" && 
-                <div className={styles.perms_checkbox}>
-                    {<Inputs inputs_info={check_box} type={"checkbox"} user_displayed={user_displayed}  references = {references.checkBoxsRef}/>}
-                </div>
-            }
-        {/* cancel edit button */}
-        {isEditing && 
-            <button
-                onClick={()=>setIsEditing(false)}
-                className={styles.formButton}
-                disabled={formBtnState === "Submitting"}
-                type="button"
-            >
-                Cancel
-            </button>}
+            {/* Employee-specific selects */}
+            <DynamicSelect
+                selectOption={select_options?.select_title_options}
+                userDisplayed={user_displayed}
+                references={references}
+                onChange={(e) => setSelectedTitleValue(e.target.value)}
+                styles={styles}
+            />
+
+            <DynamicSelect
+                selectOption={specialitiesForTitle }
+                userDisplayed={user_displayed}
+                references={references}
+                styles={styles}
+            />
+
+            {/* Common selects */}
+            <DynamicSelect
+                selectOption={select_options?.select_role_options}
+                userDisplayed={user_displayed}
+                references={references}
+                styles={styles}
+            />
+
+            {/* Check Box Permissions */}
+            {check_box && (
+                <Inputs
+                    inputs_info={check_box}
+                    type={"checkbox"}
+                    defaultValues={user_displayed}
+                    references={references.checkBoxsRef}
+                />
+            )}
+
+            {/* Cancel Edit Button */}
+            {isEditing && (
+                <button
+                    onClick={() => setIsEditing(false)}
+                    className={styles.formButton}
+                    disabled={formBtnState === "Submitting"}
+                    type="button"
+                >
+                    Cancel
+                </button>
+            )}
         </>
-    )
+    );
 }
+
 
 function LoginFormFields({
   styles,

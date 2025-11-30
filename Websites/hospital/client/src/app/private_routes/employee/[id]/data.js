@@ -5,7 +5,7 @@ let inputs_info = [
 
         label:"Email",
         type:"email",
-        name:"emp_email",
+        name:"user_email",
         
 
     },
@@ -13,31 +13,7 @@ let inputs_info = [
 
         label:"Name",
         type:"text",
-        name:"emp_name",
-        
-
-    },
-    {
-
-        label:"Salary",
-        type:"Number",
-        name:"emp_salary",
-        
-
-    },
-    {
-
-        label:"Bonus",
-        type:"Number",
-        name:"emp_bonus",
-        
-
-    },
-    {
-
-        label:"Absence",
-        type:"Number",
-        name:"emp_abscence",
+        name:"user_name",
         
 
     }
@@ -78,67 +54,85 @@ let select_role_options ={
 
 }
 
-/* 
-       "AR" => Accept Registered User
-       "MD" => Modify Data Users
-       "MR" => Modify Role
-       "MP" => Modify Perms
-       "MS" => Modify Salary
-       */
+
 
 let check_box = [ 
     {
-        label:"Modify Data",
-        value:"Modify Data",
-        name:"Modify Data",
+        label:"Modify Employee Data",
+        value:"Modify Employee Data",
+        name:"Modify Employee Data",
         type:"checkbox",
         
 
     },
     {
 
-        label:"Modify Role",
-        value:"Modify Role",
-        name:"Modify Role",
+        label:"Modify Patient Files",
+        value:"Modify Patient Files",
+        name:"Modify Patient Files",
         type:"checkbox",
         
 
     },
     {
-        label:"Modify Perms",
-        value:"Modify Perms",
-        name:"Modify Perms",
+        label:"Modify Employee Perms",
+        value:"Modify Employee Perms",
+        name:"Modify Employee Perms",
         type:"checkbox",
         
 
     },
     {
-
-        label:"Modify Salary",
-        value:"Modify Salary",
-        name:"Modify Salary",
+        label:"Modify Employee Role",
+        value:"Modify Employee Role",
+        name:"Modify Employee Role",
         type:"checkbox",
         
 
     },
     {
-        
-        label:"Accept Registered User",
-        value:"Accept Registered",
-        name:"Accept Registered",
+        label:"Delete Patient",
+        value:"Delete Patient",
+        name:"Delete Patient",
         type:"checkbox",
         
 
     },
     {
+        label:"Access Rooms",
+        value:"Access Rooms",
+        name:"Access Rooms",
+        type:"checkbox",
+        
 
-        label:"Display Salary",
-        value:"Display Salary",
-        name:"Display Salary",
+    },
+    {
+        label:"Modify Rooms",
+        value:"Modify Rooms",
+        name:"Modify Rooms",
+        type:"checkbox",
+        
+
+    },
+    {
+        label:"Modify Other Patient",
+        value:"Modify Other Patient",
+        name:"Modify Other Patient",
+        type:"checkbox",
+        
+
+    },
+    {
+        label:"Modify Patient Data",
+        value:"Modify Patient Data",
+        name:"Modify Patient Data",
         type:"checkbox",
         
 
     }
+    
+
+
 
 ];
 

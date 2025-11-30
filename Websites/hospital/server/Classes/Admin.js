@@ -13,14 +13,14 @@ class Admin extends User {
         return this.priority
     }
     // other user must be admin or less role, cannot be superAdmin
-    static  EditOtherUserData(other_user_id ,other_user_Role, other_user_title , newOtherUserData , data_actions){
-    
+    static  EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updating_string ){
+    console.log("adnin EditOtherUserData",other_user_id, other_user_title, updating_string)
         return new Promise(async (resolve , reject )=>{
             try{
                
             if( this.priority >= roles.getRolePriority(other_user_Role)){
 
-                await perms.executeChangeOtherUserData(other_user_id , other_user_title, newOtherUserData , data_actions)
+                await perms.executeChangeOtherUserData(other_user_id , other_user_title, updating_string )
                 resolve(true);
             }
             else{

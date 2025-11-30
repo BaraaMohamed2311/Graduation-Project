@@ -2,7 +2,8 @@ import Form from "../Form/Form";
 import { useState } from "react";
 import styles from "./update_emp_form.module.css";
 import { useRouter } from "next/navigation";
-export default function UpdateForm({
+export default function UpdateUserForm({
+    url,
   isEditing,
   setIsEditing,
   user_displayed,
@@ -25,10 +26,12 @@ export default function UpdateForm({
     let checkBoxsRef = references.checkBoxsRef;
     let selectBoxsRef = references.selectBoxsRef;
 
-    const router = useRouter();
-    
 
-        console.log("select_optionss",select_options)
+    
+    const is_authorized_to_update_roles = modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Employee Role");
+    const is_authorized_to_update_perms = modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Employee Perms");
+
+
 
 
 
@@ -38,24 +41,16 @@ export default function UpdateForm({
                 {/* we have to check user modifier perms to check which inputs are displayed for editable fields  */}
                 <Form 
                     references ={{ inputsBoxsRef, checkBoxsRef ,selectBoxsRef}} 
-                    form_handler = {(e)=>update_handler(e ,"list/update-others" , modifier_data.token )}
+                    form_handler = {(e)=>update_handler(e ,url , modifier_data.token )}
                     // add employee_displayed to form to show prev values of inputs
                     user_displayed = {user_displayed} 
                     // removes Role selection if no permission
-                    select_options={  
-                    modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Role") ? select_options : {select_title_options :select_options.select_title_options }} 
+                    select_options={  is_authorized_to_update_roles ? select_options : {select_title_options :select_options.select_title_options }} 
                     /*removes check box of perms for user who\s not allowed to edit others perms */
-                    check_box={ modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Perms") ?
-                                check_box : null } 
+                    check_box={  is_authorized_to_update_perms ? check_box : null } 
 
 
-                    inputs_info = { modifier_data.emp_perms && !modifier_data.emp_perms.has("Modify Salary") && 
-                        inputs_info.forEach((input , indx)=>{
-                            /*this ensures only  delete salary input if no permission to edit */
-                            if(input.id === "emp_salary")
-                                inputs_info.splice(indx , 1)
-                            }) ? inputs_info : inputs_info
-                }
+                    inputs_info = {inputs_info}
                     formBtnState = {formBtnState}  
                     isLoginPage={false} 
                     isEditing={isEditing}  

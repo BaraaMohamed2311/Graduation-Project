@@ -8,7 +8,8 @@
     -- user_name varchar(255) NOT NULL,
 	-- user_password varchar(255) NOT NULL,
     -- user_type ENUM('patient', 'employee') NOT NULL,
-    -- created_at TIMESTAMP DEFAULT NOW()
+    -- created_at TIMESTAMP DEFAULT NOW(),
+    -- latest_update TIMESTAMP DEFAULT NOW() ON UPDATE NOW()
     
 -- );
 
@@ -1168,17 +1169,21 @@ VALUES
 -- ==========================================
 -- Perms 
 -- ==========================================
-
-INSERT INTO hospital_perms VALUES
- (1,'Modify Employee Data'),
- (3,'Modify Patient Files'),
- (4,'Modify Employee Perms'),
- (5,'Modify Employee Role'),
- (6,'Delete Patient'),
- (7,'Access Rooms'),
- (8,'Modify Rooms'),
-(9,'Modify Other Patient'),
-(10,'Modify Patient Data');
+INSERT INTO hospital_perms ( perm_name)
+VALUES
+  (  'Modify Employee Data'),
+  (  'Modify Patient Files'),
+  (  'Modify Employee Perms'),
+  (  'Modify Employee Role'),
+  (  'Delete Patient'),
+  (  'Access Rooms'),
+  (  'Modify Rooms'),
+  (  'Modify Other Patient'),
+  ( 'Modify My Patient'),
+  ( 'Modify Rooms'),
+  ( 'Modify Health Status'),
+  ( 'Modify Availability'),
+  ( 'Access Other Patients.');
 
 -- Insert all permissions for user_id=12
 INSERT INTO hospital_emp_perms (perm_id, hosp_emp_id)

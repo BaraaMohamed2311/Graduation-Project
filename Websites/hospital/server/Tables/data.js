@@ -186,7 +186,20 @@ const TableAliases = {
   hospital_perms: 'hp',
   hospital_emp_perms: 'hep',
 };
+const permissions = [
+  "Access Rooms",
+  "Delete Patient",
+  "Modify Employee Data",
+  "Modify Employee Perms",
+  "Modify Employee Role",
+  "Modify Other Patient",
+  "Modify Patient Files",
+  "Modify Rooms",
+  'Modify My Patient',
+  'Modify Health Status',
+  'Modify Availability',
+  'Access Other Patients'
+];
+const setOfPerms = new Set(permissions)
 
-
-
-module.exports = {TableAliases , Tables  };
+module.exports = {TableAliases , Tables ,setOfPerms };

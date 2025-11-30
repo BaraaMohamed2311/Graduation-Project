@@ -7,18 +7,19 @@ import { useParams } from "next/navigation";
 import { useEmployeesCache } from "@/hooks/useEmployeesCache";
 import private_routes from "../../page";
 import { useUserDataContext } from "@/contexts/user_data";
-import UpdateForm from "@/components/UpdateUserForm/UpdateUserForm";
+import UpdateUserForm from "@/components/UpdateUserForm/UpdateUserForm";
 import {inputs_info , select_options  , check_box} from "./data"
+import updateEmpFetch from "@/utils/updateEmpFetch"
  function EmployeeDetailsPage() {
   const [isEditing, setIsEditing] = useState(false);
   let [blobURL , setBlobURL] = useState("/avatar.jpg");
    const { id :user_id ,currPage} = useParams(); // Get user_id from URL
-   const { cached_employees,isIndexedDBLoaded } = useEmployeesCache();
+   const { cached_employees , setCached_Employees,isIndexedDBLoaded } = useEmployeesCache();
    const { user_data } = useUserDataContext();
 
   
 
-  function onSubmit(){}
+  
    // Efficiently find the patient from cache
     const originalEmployee = cached_employees?.find(
       e => e.user_id === parseInt(user_id)
@@ -41,17 +42,17 @@ import {inputs_info , select_options  , check_box} from "./data"
         e.preventDefault();
         // get updated user data and actions that were made
         let {updatedEmployeeData , actionString} = checkActionsMade();
-        
+        console.log("updatedEmployeeData , actionString",updatedEmployeeData , actionString)
 
         const reqBody = {
-                      modifier_id: user_data.emp_id,
-                      
-                      emp_id: employee_displayed.emp_id,
-                      employee_emp_email:employee_displayed.emp_email,
+                      modifier_id: user_data.user_id,
+                      modifier_email:user_data.user_email,
+                      emp_id: employee.emp_id,
+                      other_user_email:employee.user_email,
                       ...updatedEmployeeData
                     }
 
-          updateEmpFetch(url, token, reqBody ,actionString , setCached_Employees , currPage , router);
+          updateEmpFetch( url, token, reqBody ,actionString , setCached_Employees , currPage );
         
 
         
@@ -61,7 +62,8 @@ import {inputs_info , select_options  , check_box} from "./data"
 
         let actions = [];
         let updatedEmployeeData = {};
-        const employee_displayed_perms = new Set(employee_displayed.emp_perms.split(", "));
+        console.log("checkActionsMade",employee.emp_perms)
+        const employee_displayed_perms = employee.emp_perms;
 
     // ====================================================== Modify Data ======================================================
 
@@ -75,9 +77,9 @@ import {inputs_info , select_options  , check_box} from "./data"
           }
           
           // we check at first that input element is rendered using current of reference
-          else if (inputsBoxsRef.current[input_info.name] && (inputsBoxsRef.current[input_info.name].value !== employee_displayed[input_info.name])) {
+          else if (inputsBoxsRef.current[input_info.name] && (inputsBoxsRef.current[input_info.name].value !== employee[input_info.name])) {
               updatedEmployeeData[input_info.name] = inputsBoxsRef.current[input_info.name].value;
-            if (!actions.includes("Modify Data")) actions.push("Modify Data"); // Add "MD" if not already added
+            if (!actions.includes("Modify Employee Data")) actions.push("Modify Employee Data"); // Add "MD" if not already added
           }
           
         });
@@ -97,18 +99,18 @@ import {inputs_info , select_options  , check_box} from "./data"
 
 
           // we check at first that input element is rendered using current of reference
-          if (selectBoxsRef.current[select_options.select_title_options.name] && (selectBoxsRef.current[select_options.select_title_options.name].value !== employee_displayed[select_options.select_title_options.name])) {
+          if (selectBoxsRef.current[select_options.select_title_options.name] && (selectBoxsRef.current[select_options.select_title_options.name].value !== employee[select_options.select_title_options.name])) {
             updatedEmployeeData[select_options.select_title_options.name] = selectBoxsRef.current[select_options.select_title_options.name].value;
-            if (!actions.includes("Modify Data")) actions.push("Modify Data"); 
+            if (!actions.includes("Modify Employee Data")) actions.push("Modify Employee Data"); 
           }
 
           // === 4. Check for changes in specialty ===
 
           // we check at first that input element is rendered using current of reference
-          console.log("debugging",selectBoxsRef.current, selectBoxsRef.current[select_options.select_specialty_options.name],employee_displayed[select_options.select_specialty_options.name])
-          if (selectBoxsRef.current[select_options.select_specialty_options.name] && (selectBoxsRef.current[select_options.select_specialty_options.name].value !== employee_displayed[select_options.select_specialty_options.name])) {
+          console.log("debugging",selectBoxsRef.current, selectBoxsRef.current[select_options.select_specialty_options.name],employee[select_options.select_specialty_options.name])
+          if (selectBoxsRef.current[select_options.select_specialty_options.name] && (selectBoxsRef.current[select_options.select_specialty_options.name].value !== employee[select_options.select_specialty_options.name])) {
             updatedEmployeeData[select_options.select_specialty_options.name] = selectBoxsRef.current[select_options.select_specialty_options.name].value;
-            if (!actions.includes("Modify Data")) actions.push("Modify Data"); 
+            if (!actions.includes("Modify Employee Data")) actions.push("Modify Employee Data"); 
           }
 
 
@@ -117,9 +119,9 @@ import {inputs_info , select_options  , check_box} from "./data"
         
 
           // we check at first that input element is rendered using current of reference
-          if (selectBoxsRef.current[select_options.select_role_options.name] && (selectBoxsRef.current[select_options.select_role_options.name].value !== employee_displayed[select_options.select_role_options.name])) {
-            updatedEmployeeData[select_options.select_role_options.name] = selectBoxsRef.current[select_options.select_role_options.name].value;
-            if (!actions.includes("Modify Role")) actions.push("Modify Role"); // Add "MR" if not already added
+          if (selectBoxsRef.current[select_options.select_role_options.name] && (selectBoxsRef.current[select_options.select_role_options.name].value !== employee[select_options.select_role_options.name])) {
+            updatedEmployeeData.other_user_new_role= selectBoxsRef.current[select_options.select_role_options.name].value;
+            if (!actions.includes("Modify Employee Role")) actions.push("Modify Employee Role"); // Add "MR" if not already added
           }
         
       
@@ -146,17 +148,17 @@ import {inputs_info , select_options  , check_box} from "./data"
         // Scenario 3: If all permissions were unchecked but some existed before
         // OR if any permission was changed in any way
         if (permModified || (updated_emp_perms.length === 0 && employee_displayed_perms.size > 0)) {
-            if (!actions.includes("Modify Perms")) {
-                actions.push("Modify Perms");
+            if (!actions.includes("Modify Employee Perms")) {
+                actions.push("Modify Employee Perms");
             }
         }
         console.log("Updated Permissions:", updated_emp_perms);
-        updatedEmployeeData.newperms = updated_emp_perms.join(", ");
+        updatedEmployeeData.other_user_new_perms = updated_emp_perms.join(", ");
 
       
         // Join actions array to form the action string
         let actionString = actions.join("-");
-
+        console.log("actionString",actionString)
         return {
           updatedEmployeeData,
           actionString,
@@ -184,21 +186,23 @@ console.log("employee", employee);
 
   return (
     <main className={styles["employee-main"]}>
-      {isEditing ? (
-         <UpdateForm
+      {isEditing &&
+         <UpdateUserForm
+            url={`list/update-other/employee`}
             isEditing={isEditing}
             setIsEditing={setIsEditing}
             user_displayed={employee}
             currPage={currPage}
             userData={user_data}
-            onSubmit={onSubmit}
             modifier_data={user_data}
             // Pass the references and functions as props
             references={references}
             inputs_info={inputs_info}
             select_options={select_options}
+            check_box={check_box}
+            update_handler={update_handler}
           />
-      ) : (
+      }
         <div className={styles["employee-container"]}>
           {/* --- Header --- */}
           <div className={styles["employee-header"]}>
@@ -250,6 +254,7 @@ console.log("employee", employee);
                   ) : "No schedule available"}
                 </div>
               </li>
+              <li><strong>Role:</strong> {employee.role_name || "NormalUser"}</li>
               <li className={styles.perms_box}><strong className={styles.perms_header}>Permissions </strong>
                         <div className={styles.perms_wrapper}>
                             {employee.emp_perms && employee.emp_perms[0] !== "None" ?(Array.from(employee.emp_perms).map((perm)=>{
@@ -285,7 +290,7 @@ console.log("employee", employee);
             </div>
           </div>
         </div>
-      )}
+      
     </main>
   );
 }

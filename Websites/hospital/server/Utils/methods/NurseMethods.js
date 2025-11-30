@@ -1,15 +1,9 @@
 const executeMySqlQuery = require("../executeMySqlQuery");
 const Tables = require("../../Tables/data");
 const stringifyFields = require("../stringifyFields");
+const sqlTransaction = require("../sqlTransaction");
 class NurseMethods {
 
-
-    // ============================
-    //              Check
-    // ============================
-            static async IsMyPatient(doctor_id){
-                throw new Error("NurseMethodsv.IsMyPatient is not implemented yet")
-    }
 
 
     // ============================
@@ -65,10 +59,11 @@ class NurseMethods {
         const query = `
             SELECT 
                 -- from users 
+                u.user_id,
                 u.user_email,
                 u.user_name,
                 -- from employees
-                e.emp_id AS user_id,
+
                 e.emp_abscence,
                 e.emp_rate,
                 e.emp_title,
@@ -145,11 +140,12 @@ class NurseMethods {
         const query = `
             SELECT 
             -- from users 
+            u.user_id,
             u.user_email,
             u.user_name,
 
             -- from employees
-            e.emp_id AS user_id,
+
             e.emp_abscence,
             e.emp_rate,
             e.emp_title,
@@ -214,11 +210,12 @@ class NurseMethods {
         static async getAllNursesSpecificData(){
         const query = `SELECT 
                         -- from users
+                        u.user_id,
                         u.user_email,
                         u.user_name,
 
                         -- from employees
-                        e.emp_id AS user_id,
+
                         e.emp_abscence,
                         e.emp_rate,
                         e.emp_title,
@@ -263,12 +260,13 @@ class NurseMethods {
     static async getNurseSpecificData(nurse_id){
         const query = `SELECT 
                         -- from users
+                        u,user_id,
                         u.user_email,
                         u.user_password,
                         u.user_name,
 
                         -- from employees
-                        e.emp_id AS user_id
+
                         e.emp_salary,
                         e.emp_abscence,
                         e.emp_bonus,
@@ -316,50 +314,29 @@ class NurseMethods {
     // ============================
     //              Update
     // ============================
-    static async updateNurseSpecificData(nurse_id, data) {
-        try{
-            // ===1. Filter data to only include fields relevant to nurses table
-                const nurses_table_fields = Tables.nurses;
-                const MapOfData = new Map(Object.entries(data));
-                let fieldsToUpdate = {};
-                for (const field of nurses_table_fields) {
-                    if( MapOfData.has(field)){
-                        fieldsToUpdate[field] = MapOfData.get(field);
-                    }
-                }
-                // ===2.  Construct dynamic fields string for SQL
-                const fields = stringifyFields( "joined",Object.entries(fieldsToUpdate))
-            const query = `
-                UPDATE nurses
-                SET 
-                    ${fields}
-                WHERE hosp_emp_id = ${nurse_id};
-            `;
-            await executeMySqlQuery(query);
-            return true;
-        }
-        catch(err){
-            console.error("Error updating nurse data:", err);
-            return false;
-        }
-                
-        }
 
-        static #mapToAction ={
-            "Nurse core": NurseMethods.updateNurseSpecificData,
-            
-        }
-        static async MapToUpdateNurseData(nurse_id, data, actions ) {
-            const results = [];
-            for( const action of actions){
-                const fn = NurseMethods.#mapToAction[action];
-                if (!fn) continue; // skip if no function for this action
-                const result = await fn.call(this, nurse_id, data);
-                results.push({ action, result });
-            }
+    static async updateNurseFullCore(nurse_id, updating_string){
+        console.log("updateNurseFullCore",nurse_id, updating_string)
+        const query = `
+        UPDATE nurses n
+            JOIN employees e 
+                ON n.hosp_emp_id = e.emp_id
+            JOIN users u 
+                ON u.user_type = 'employee' AND u.user_id = e.emp_id
 
-                return results; // return array of results for each action
-        }
+            SET
+                ${updating_string},
+                u.latest_update = NOW()
+
+            WHERE n.nurse_id = ${nurse_id};
+        `
+
+        const result = await sqlTransaction([query])
+
+        return result[0]?.affectedRows > 0;
+
+    }
+
 
 
 }

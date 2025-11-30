@@ -244,7 +244,7 @@ class PatientMethods {
     // ============================
     //              Update
     // ============================
-    static async updatePatientCoreData(patient_id, data) {
+    static async updatePatientFullData(patient_id, data) {
         try {
         // ===1. Filter data to only include fields relevant to doctors table
                 const patients_table_fields = Tables.patients;
@@ -261,7 +261,8 @@ class PatientMethods {
             const query = `
                 UPDATE patients
                 SET 
-                    ${fields}
+                    ${fields},
+                    u.latest_update = NOW()
                     
                 WHERE patient_id = ${patient_id};
             `;
@@ -276,20 +277,6 @@ class PatientMethods {
         }
         }
 
-        static #mapToUpdateAction ={
-            "Patient core": PatientMethods.updatePatientCoreData,
-        }
-        static async MapToUpdatePatientData(patient_id, data, actions ) {
-            const results = [];
-            for( const action of actions){
-                const fn = PatientMethods.#mapToUpdateAction[action];
-                if (!fn) continue; // skip if no function for this action
-                const result = await fn.call(this, patient_id, data);
-                results.push({ action, result });
-            }
-
-            return results; // return array of results for each action
-        }
 
     // ============================
     //              Delete User (Only Patient; Any other user must use EMS website to delete) 

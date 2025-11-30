@@ -68,9 +68,11 @@ const stringifyFields = require("../Utils/stringifyFields.js");
                 });
             }
 
-            //format perms if employee
+            // Gets Perms Set and convert it to Array
+            // Gets Role
             if(userIsEmployee && isHospitalEmployee){
                 user.emp_perms =  Array.from (await User.getSetUserperms(user_id));
+                user.role_name = await User.getUserRole(user_id)
             }
 
             match = await bcrypt.compare(password, user.user_password);

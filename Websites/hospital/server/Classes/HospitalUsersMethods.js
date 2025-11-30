@@ -9,6 +9,27 @@ class HospitalUsersMethods   {
     static #hospital_users = new Set(["doctor", "nurse", "surgeon","patient"]);
 
     // ========================================
+    // Patient Belongs to Staff
+    // ========================================
+    static async patientBelongsToStaff(staff_id,patient_id) { 
+         const query = `
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM staff_patient sp
+                    JOIN patients p 
+                        ON sp.patient_id = p.patient_id
+                    WHERE sp.staff_id = ? 
+                    AND sp.patient_id = ? AND relation_type = 'Doctor'
+                ) AS patient_exists;
+            `;
+
+            const result = await executeMySqlQuery(query, [staff_id, patient_id]);
+
+            // Returns true if the patient is linked to the doctor
+            return !!result[0].patient_exists;
+    }
+
+    // ========================================
     // Count ALL HOSPITAL EMPLOYEES 
     // ========================================
     static async getAllHospitalEmployeesCOUNT(filtering_string = null, emp_perms = null) { 
@@ -177,25 +198,10 @@ class HospitalUsersMethods   {
         return this.#hospital_users.has(user_title.toLowerCase())
     }
 
-    // ========================================
-    // Check Data By Title
-    // ========================================
-    static #titleToIsMyPatientFunction = {
-        "Doctor": DoctorMethods.IsMyPatient,
-        "Surgeon": SurgeonMethods.IsMyPatient,
-        "Nurse": NurseMethods.IsMyPatient,
-    };
 
-    static async MapUserToIsMyPatientFunction(user_id, user_title,patient_id) {
-        const fn = HospitalUsersMethods.#titleToIsMyPatientFunction[user_title];
-        if (!fn) {
-            return null;
-        }
-        return await fn.call(this, user_id, patient_id); // call it in class context
-    }
 
     // ========================================
-    // Get Data By Title
+    // Get Specific Data By Title
     // ========================================
 
     static #titleToGETSpecificDataFunction = {
@@ -212,7 +218,9 @@ class HospitalUsersMethods   {
         }
         return await fn.call(this, user_id); // call it in class context
     }
-
+    // ========================================
+    // Get Full Data By Title
+    // ========================================
     static #titleToGETFullDataFunction = {
         "Doctor": DoctorMethods.getDoctorFullData,
         "Surgeon": SurgeonMethods.getSurgeonFullData,
@@ -248,6 +256,29 @@ class HospitalUsersMethods   {
         }
         
         return await fn.call(this, user_id, data, actions);
+    }
+
+
+    // ========================================
+    // Update Data By Title
+    // ========================================
+
+        static #titleFullUpdateMap = { 
+        "Doctor": DoctorMethods.updateDoctorFullCore,
+        "Surgeon": SurgeonMethods.updateSurgeonFullCore,
+        "Nurse": NurseMethods.updateNurseFullCore,
+        "Patient": PatientMethods.updatePatientFullCore,
+    };
+
+
+    static async MapUserToFullUpdateFunction(user_id, title, updating_string ) {
+        console.log(user_id, title)
+        const fn = HospitalUsersMethods.#titleFullUpdateMap[title];
+        if (!fn) {
+            return null;
+        }
+        
+        return await fn.call(this, user_id, updating_string);
     }
 
 

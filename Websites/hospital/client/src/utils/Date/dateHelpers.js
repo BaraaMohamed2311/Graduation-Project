@@ -157,6 +157,7 @@ export const convertLocalToUTC = (dateObj) =>{
 
 // Convert a UTC datetime string "YYYY-MM-DD HH:MM:SS" to local time string "YYYY-MM-DD HH:MM:SS"
 export const convertUTCToLocal = (dateTimeUTC) => {
+
   // Convert the string to a Date object in UTC by adding 'Z'
   const dateObj = new Date(dateTimeUTC.replace(' ', 'T') + 'Z');
 
