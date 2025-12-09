@@ -225,7 +225,7 @@ class HospitalUsersMethods   {
         "Doctor": DoctorMethods.getDoctorFullData,
         "Surgeon": SurgeonMethods.getSurgeonFullData,
         "Nurse": NurseMethods.getNurseFullData,
-        "Patient": PatientMethods.getPatientSpecificData, // Patient has no full data function so we use specific data function (all fields exist in his specific table)
+        "Patient": PatientMethods.getPatientFullData, // Patient has no full data function so we use specific data function (all fields exist in his specific table)
     };
 
     static async MapUserToGETFullDataFunction(user_id, user_title) {
@@ -267,7 +267,7 @@ class HospitalUsersMethods   {
         "Doctor": DoctorMethods.updateDoctorFullCore,
         "Surgeon": SurgeonMethods.updateSurgeonFullCore,
         "Nurse": NurseMethods.updateNurseFullCore,
-        "Patient": PatientMethods.updatePatientFullCore,
+        "Patient": PatientMethods.updatePatietnFullCore,
     };
 
 

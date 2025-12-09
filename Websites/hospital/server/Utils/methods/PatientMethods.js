@@ -1,10 +1,38 @@
 const executeMySqlQuery = require("../executeMySqlQuery");
 const stringifyFields = require("../stringifyFields");
 const Tables = require("../../Tables/data");
+const sqlTransaction = require("../../Utils/sqlTransaction")
 class PatientMethods {
     // ============================
     //              GET
     // ============================
+    static async getPatientFullData(patient_id){
+        const query = `SELECT 
+                            -- from users
+                            u.user_email,
+                            u.user_password,
+                            u.user_name,
+
+                            -- from patients
+                            p.patient_id AS user_id,    
+                            p.patient_phone,
+                            p.patient_address,
+                            p.isAssignedToRoom,  
+                            p.room_number,
+                            p.floor_number,
+                            p.date_of_birth,
+                            p.next_check_date,
+                            p.patient_gender,
+                            p.emergency_contact
+                        FROM patients p
+                        JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
+                        WHERE p.patient_id = ${patient_id}`;
+                        
+        const result = await executeMySqlQuery(query);
+
+        return result[0];
+    }
+
     static async getPatientSpecificData(patient_id){
         const query = `SELECT 
                             -- from users
@@ -26,7 +54,9 @@ class PatientMethods {
                         FROM patients p
                         JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
                         WHERE p.patient_id = ${patient_id}`;
+                        
         const result = await executeMySqlQuery(query);
+        console.log(query,result)
         return result[0];
     }
 
@@ -77,9 +107,9 @@ class PatientMethods {
                 query += " WHERE " + filtering_string;
             }
         if(limit >0 &&  offset > -1) {
-            query += " LIMIT ? OFFSET ? "
+            query += ` LIMIT ${limit} OFFSET ${offset} `
         }
-
+        
         const result = await executeMySqlQuery(query,[limit, offset]);
         return result;
     }
@@ -244,38 +274,26 @@ class PatientMethods {
     // ============================
     //              Update
     // ============================
-    static async updatePatientFullData(patient_id, data) {
-        try {
-        // ===1. Filter data to only include fields relevant to doctors table
-                const patients_table_fields = Tables.patients;
-                const MapOfData = new Map(Object.entries(data));
-                let fieldsToUpdate = {};
-                for (const field of patients_table_fields) {
-                    if( MapOfData.has(field)){
-                        fieldsToUpdate[field] = MapOfData.get(field);
-                    }
-                }
-                // ===2.  Construct dynamic fields string for SQL
-                const fields = stringifyFields( "joined",Object.entries(fieldsToUpdate));
-                
-            const query = `
-                UPDATE patients
-                SET 
-                    ${fields},
-                    u.latest_update = NOW()
-                    
-                WHERE patient_id = ${patient_id};
-            `;
 
-            await executeMySqlQuery(query);
+    static async updatePatietnFullCore(patient_id, updating_string){
+        const query = `
+        UPDATE patients p
+            JOIN users u 
+                ON u.user_type = 'patient' AND u.user_id = p.patient_id
 
-            return true;
-        } 
-        catch (error) {
-            console.error("Error updating patient data:", error);
-            return false;
-        }
-        }
+            SET
+                ${updating_string},
+                u.latest_update = NOW()
+
+            WHERE p.patient_id = ${patient_id};
+        `
+        
+        const result = await sqlTransaction([query])
+
+        return result[0]?.affectedRows > 0;
+
+    }
+    
 
 
     // ============================

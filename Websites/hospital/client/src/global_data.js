@@ -125,6 +125,19 @@ const global_mapped_specialities = {
             {value:"NormalUser", text:"NormalUser"},
     ]
 
+    const global_consultation_types = [
+            {value:"initial_consultation_price", text:"initial consultation price"},
+            {value:"followup_consultation_price", text:"followup consultation price"},
+    ]
+
+    const global_consultation_status = [
+            {value:"Available", text:"Available"},
+            {value:"Scheduled", text:"Scheduled"},
+            {value:"Completed", text:"Completed"},
+            {value:"Cancelled", text:"Cancelled"}
+
+    ]
+
     // --------------------------------------------------
 //        IndexedDB 
 // --------------------------------------------------
@@ -152,6 +165,8 @@ const globally_mapped_booking_stores = {
           global_hospital_title,
           global_bookable_hospital_title,
           global_store_names,
-          globally_mapped_booking_stores
+          globally_mapped_booking_stores,
+          global_consultation_types,
+          global_consultation_status
         };
 

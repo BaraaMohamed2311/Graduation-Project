@@ -1,18 +1,53 @@
 .files-section {
   margin-top: 2rem;
-  background: #fff;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  font-family: "Inter", sans-serif;
 }
+
+/* Header */
+
 
 .files-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 18px;
 }
 
+.files-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2a4d69;
+}
+
+.file-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+
+.add-file-button {
+  background: #e8f5ff;
+  color: #0077cc;
+  border: 1px solid #bcdfff;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.add-file-button:hover {
+  background: #d7edff;
+  border-color: #a7d8ff;
+}
+
+/* File List */
 .files-list {
   list-style: none;
   padding: 0;
@@ -20,38 +55,71 @@
 }
 
 .file-item {
-  padding: 0.8rem 1rem;
-  border-bottom: 1px solid #e5e5e5;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #f9fbfd;
+  border: 1px solid #eef2f7;
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  transition: background 0.2s;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
 }
 
 .file-item:hover {
-  background-color: #f5f7fa;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+  background: #f5f9fc;
 }
 
 .file-name {
-  font-weight: 500;
+  font-weight: 600;
+  color: #2b4d66;
 }
 
 .file-type {
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 14px;
+  color: #6c7f93;
 }
 
+.file-date {
+  font-size: 14px;
+  color: #6c7f93;
+}
+
+/* Empty State */
+.no-files {
+  color: #7c8a96;
+  font-style: italic;
+  text-align: center;
+  padding: 16px;
+}
+
+/* Pagination */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 14px;
+  margin-top: 20px;
 }
 
-.no-files {
-  color: #999;
-  font-style: italic;
-  text-align: center;
+.pagination button {
+  background: #ffffff;
+  border: 1px solid #d8e2eb;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-weight: 500;
+}
+
+.pagination button:hover {
+  background: #f0f4f9;
+}
+
+.pagination .page-number {
+  font-weight: 600;
+  color: #2d4f6c;
 }

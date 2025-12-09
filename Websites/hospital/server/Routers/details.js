@@ -7,7 +7,7 @@ const PatientMethods = require("../Utils/methods/PatientMethods.js");
 const deletePatient = require("../Utils/ControlUsers/deletePatient.js");
 const JoinFiltering = require("../Utils/JoinFiltering.js");
 const PatientFile = require("../Models/Patient_file.js");
-const PatientHealthState = require("../Models/Patient_health_state.js");
+const PatientHealthStatus = require("../Models/Patient_health_status.js");
 const User = require("../Classes/User.js");
 const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
 
@@ -27,7 +27,7 @@ router.get("/employee/:id",async (req,res)=>{
         //Bad Request if modifier id or others doesn't exist
         if( !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
 
-        const employeeTitle = await User.getUserTitle(user_id);
+        const employeeTitle = await User.getUserTitleByID(user_id);
 
         if(!employeeTitle || !User.isHospitalUser(employeeTitle)){
             return res.status(404).json({success : false , message:"No Users Found !"})
@@ -119,11 +119,11 @@ router.get("/patient",async (req,res)=>{
 // =================================
 //  Get Patient Data  MongoDB
 // =================================
-router.get("/patient-health-state/:patientId",async (req,res)=>{
+router.get("/patient-health-status/:patientId",async (req,res)=>{
     try{
         const {patientId} = req.params
 
-        const record = await PatientHealthState.findOne({ patient_id: patientId });
+        const record = await PatientHealthStatus.findOne({ user_id: patientId });
 
         if (!record) {
             return res.status(404).json({ success: false, message: "Patient not found" });

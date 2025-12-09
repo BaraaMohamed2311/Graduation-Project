@@ -22,6 +22,9 @@ const getDayOfWeekByDate = require("../Utils/getDayOfWeekByDate.js");
 const isDayInPast = require("../Utils/isDayInPast.js");
 const isTimeSlotInPast= require("../Utils/isTimeSlotInPast.js");
 const isSameDay = require("../Utils/isSameDay.js");
+const createOrderByClause = require("../Utils/createOrderByClause.js");
+const padBoth = require("../Utils/padsBoth.js");
+const buildJoinedFilters = require("../Utils/buildJoinedFilters.js")
 
 // =================================
 //  Get  Availability Details
@@ -68,57 +71,68 @@ router.get("/get-availability",async (req,res)=>{
 //  Get  Specific Appointment
 // =================================
 
-router.get("/get-appointment",async (req,res)=>{
+router.get("/get-consultation/:user_id/:consultation_id",async (req,res)=>{
 
     try {
-    const {
-      hosp_emp_id,
-      patient_id,
-      consultation_date,
-      start_time
-    } = req.query;
+    const {user_id, consultation_id } = req.params;
+
 
     // Validate required fields
-    if (!consultation_date || !start_time) {
+    if (!consultation_id || !user_id) {
       return res.status(400).json({
         success: false,
-        message: "consultation_date and start_time are required."
+        message: "Missing Parameters."
       });
     }
-
-    // Optional validation: only doctors/surgeons can have appointments
-    if (hosp_emp_id) {
-      const isValid = await ConsultationMethods.isVaildEmployeeTitleForAppointments(hosp_emp_id);
-      if (!isValid) {
-        return res.status(403).json({
-          success: false,
-          message: "This employee cannot have appointments (must be Doctor or Surgeon)."
-        });
-      }
-    }
-
-    // Fetch the appointment
-    const appointment = await ConsultationMethods.getConsultationSlot(
-      hosp_emp_id,
-      patient_id,
-      consultation_date,
-      start_time
-    );
-    console.log("Fetched Appointment:", appointment);
-    if (!appointment) {
-      return res.status(404).json({
+    // Get consultation details
+    const consultationDetails = await ConsultationMethods.getConsultationById(consultation_id);
+    // check consultation details
+   if(!consultationDetails){
+    return res.status(404).json({success:false,message:"No Consultation Details"})
+   }
+   // Check if user exists
+    const userExists = await User.checkIfUserExistsById(user_id);
+    if(!userExists){
+    return res.status(400).json({
         success: false,
-        message: "No appointment found matching provided details."
+        message: "Missing Parameters."
       });
-    }
+   }
+   // Get user type
+   const userType = await User.getUserTypeById(user_id);
 
-    res.status(200).json({
-      success: true,
-      body: appointment
-    });
+   let other_user_id = null;
+   // for patient we care about getting consultation details and employee details
+   // for employee we care about getting consultation details and patient details
+   if(userType === "patient"){
+      other_user_id = consultationDetails.hosp_emp_id;
+      
+      
+   }
+   else if(userType === "employee"){
+      other_user_id = consultationDetails.patient_id;
+   }
+   
+   const otherUserTitle = await User.getUserTitleByID(other_user_id)
+   console.log("other_user_id",other_user_id,"otherUserTitle",otherUserTitle,"userType",userType)
+   const otherUserDetails = await HospitalUsersMethods.MapUserToGETFullDataFunction(other_user_id,otherUserTitle);
+   
+   console.log("otherUserDetails",otherUserDetails)
+
+   
+
+   // check consultation details
+   if(!otherUserDetails){
+    return res.status(200).json({success:true,body:{consultationDetails},message:"Consultation Is Fetched, But no user Data"})
+   }
+   // add title for client side rendering
+   otherUserDetails.emp_title = otherUserTitle;
+
+    res.status(200).json({success:true,body:{consultationDetails,otherUserDetails} ,message:"Successfully Fetched consultation details"})
+   
 
   } catch (err) {
-    console.error("Error in /get-appointment:", err);
+    console.error("Error in /get-consultation/details:", err);
     res.status(500).json({
       success: false,
       message: err.message || "Server error while fetching appointment."
@@ -131,7 +145,7 @@ router.get("/get-appointment",async (req,res)=>{
 // =================================
 router.get("/get-all-consultations",async (req,res)=>{
     try {
-    const { user_id ,  user_email , pagination , size} = req.query;
+    const { user_id ,  user_email , pagination , size , ...rest} = req.query;
 
     // Require at least one identifier
     if (!user_id ) {
@@ -140,6 +154,23 @@ router.get("/get-all-consultations",async (req,res)=>{
         message: "Bad Request."
       });
     }
+
+
+    
+    // Extract orderBy entries
+                const orderBy = {};
+                for (const [key, value] of Object.entries(rest)) {
+                if (key.startsWith("orderBy_")) {
+                    const field = key.replace("orderBy_", "");
+                    orderBy[field] = value;
+                    delete rest[key];
+                }
+                }
+    
+            const restFilters = rest; // other normal filters
+                console.log("restFilters",restFilters,"orderBy",orderBy)
+            const filtering_string = Object.keys(restFilters).length > 0 ? padBoth(JoinFiltering(Object.entries(restFilters)),1) : "";
+            const orderByClause = createOrderByClause(orderBy);
     
     let consultations;
     let consultationsCOUNT;
@@ -159,10 +190,10 @@ router.get("/get-all-consultations",async (req,res)=>{
                 }
     // Get method depending on user type
     if (userIsEmployee) {
-      consultations = await ConsultationMethods.getEmployeeAppointments(user_id,parseInt(size), parseInt((pagination - 1) * size ));
+      consultations = await ConsultationMethods.getEmployeeAppointments(user_id,parseInt(size), parseInt((pagination - 1) * size ) , filtering_string , orderByClause);
       consultationsCOUNT = await ConsultationMethods.getEMPConsultationsCOUNT(user_id);
     } else if(userIsPatient){
-      consultations = await ConsultationMethods.getPatientAppointments(user_id,parseInt(size), parseInt((pagination - 1) * size ));
+      consultations = await ConsultationMethods.getPatientAppointments(user_id,parseInt(size), parseInt((pagination - 1) * size ) , filtering_string , orderByClause);
       consultationsCOUNT = await ConsultationMethods.getPATConsultationsCOUNT(user_id);
     }
 
@@ -233,12 +264,7 @@ router.post("/book-consultation",async (req,res)=>{
         }
 
         
-        if(ConsultationMethods.patientHasOtherConsultationWithEmp(patient_id,hosp_emp_id)){
-          return res.status(400).json({
-                success: false,
-                message: "You already have a consultation scheduled with this user"
-            });
-        }
+        
 
 
         // ===2. Check employee eligibility
@@ -265,8 +291,14 @@ router.post("/book-consultation",async (req,res)=>{
                         });
         }
 
-
-
+        // check that patient has no booked consultion before
+        const patietn_has_incomplete_consultation = await ConsultationMethods.patientHasOtherConsultationWithEmp(patient_id,hosp_emp_id)
+        if(patietn_has_incomplete_consultation){
+          return res.status(400).json({
+                success: false,
+                message: "You already have a consultation scheduled with this user"
+            });
+        }
       
 
         // === Check if patient already booked it
@@ -340,7 +372,7 @@ router.post("/book-consultation",async (req,res)=>{
 // =================================
 //  Update status of Appointment
 // =================================
-router.put("/update-appointment-status",async (req,res)=>{
+router.put("/update-consultation-status",async (req,res)=>{
         try {
         const { consultation_id, new_status } = req.body;
 
@@ -353,7 +385,12 @@ router.put("/update-appointment-status",async (req,res)=>{
         }
 
 
-
+        if(new_status === "Scheduled"){
+            return res.status(404).json({
+            success: false,
+            message: "You Cannot Update Status to be Scheduled. Must be Scheduled by a patient",
+        });
+        }
         // ===2. Validate inputs check if appointment exists before updating
 
         const existingAppointment = await ConsultationMethods.getConsultationById(consultation_id);
@@ -363,6 +400,16 @@ router.put("/update-appointment-status",async (req,res)=>{
             message: "Appointment not found.",
         });
         }
+        // Check if consultation is updateable
+        console.log(existingAppointment)
+        if(existingAppointment.consultation_status !== "Available" && existingAppointment.consultation_status !== "Scheduled"){
+            return res.status(404).json({
+            success: false,
+            message: "You Cannot Update Status Of A Completed Consultation.",
+        });
+        }
+
+        
 
         // ===3. Update appointment status
         const result = await ConsultationMethods.updateAppointmentStatus(consultation_id, new_status);
@@ -570,9 +617,10 @@ router.delete("/delete-appointment",async (req,res)=>{
             });
         }
         // ===2. delete appointment
-        const result = await ConsultationMethods.deleteConsultation(consultation_id);
 
-        if (result) {
+        const isdeleted = await ConsultationMethods.deleteConsultation(consultation_id);
+
+        if (isdeleted) {
         res.status(200).json({
             success: true,
             message: "Appointment deleted successfully.",
@@ -580,7 +628,7 @@ router.delete("/delete-appointment",async (req,res)=>{
         } else {
         res.status(500).json({
             success: false,
-            message: "Failed to deleted appointment.",
+            message: "Failed to delete appointment.",
         });
         }
     } catch (err) {

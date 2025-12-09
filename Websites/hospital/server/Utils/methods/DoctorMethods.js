@@ -215,7 +215,7 @@ class DoctorMethods {
 
         const result = await executeMySqlQuery(query,[doctor_id]);
         
-        return result;
+        return result[0];
     }
 
     // =============================================

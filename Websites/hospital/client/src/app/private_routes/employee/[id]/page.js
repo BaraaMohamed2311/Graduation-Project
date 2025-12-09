@@ -9,7 +9,7 @@ import private_routes from "../../page";
 import { useUserDataContext } from "@/contexts/user_data";
 import UpdateUserForm from "@/components/UpdateUserForm/UpdateUserForm";
 import {inputs_info , select_options  , check_box} from "./data"
-import updateEmpFetch from "@/utils/updateEmpFetch"
+import updateUserFetch from "@/utils/updateUserFetch"
  function EmployeeDetailsPage() {
   const [isEditing, setIsEditing] = useState(false);
   let [blobURL , setBlobURL] = useState("/avatar.jpg");
@@ -47,12 +47,11 @@ import updateEmpFetch from "@/utils/updateEmpFetch"
         const reqBody = {
                       modifier_id: user_data.user_id,
                       modifier_email:user_data.user_email,
-                      emp_id: employee.emp_id,
                       other_user_email:employee.user_email,
                       ...updatedEmployeeData
                     }
 
-          updateEmpFetch( url, token, reqBody ,actionString , setCached_Employees , currPage );
+          updateUserFetch( url, token, reqBody ,actionString , setCached_Employees , currPage );
         
 
         
@@ -130,7 +129,7 @@ import updateEmpFetch from "@/utils/updateEmpFetch"
         let updated_emp_perms = [];
         let permModified = false; // Track if any permission was modified
 
-        check_box.forEach((check_box_info) => {
+        check_box.perms_check_box.forEach((check_box_info) => {
             const isCurrentlyChecked = checkBoxsRef.current[check_box_info.name].checked;
             const wasPreviouslyChecked = employee_displayed_perms.has(check_box_info.value);
             

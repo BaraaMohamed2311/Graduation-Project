@@ -94,10 +94,7 @@ static async getUserEmailByID(user_id) {
         }
         }
 
-        static async getUserTitle(user_email ){
-            // Get user external id first to search in employees table
-            const user_id = await this.getUserIDByEmail(user_email);
-            if (!user_id) return console.error("User user_id is undefined");
+        static async getUserTitleByID(user_id ){
 
             const query = `
                 SELECT COALESCE(
@@ -110,6 +107,22 @@ static async getUserEmailByID(user_id) {
             return result[0]?.emp_title; 
         
         }
+
+        static async getUserTitleByEmail(user_email ){
+
+            const query = `
+                SELECT COALESCE(
+                (SELECT emp_title FROM employees e JOIN users u ON u.user_id = e.emp_id WHERE u.user_email = ? LIMIT 1),
+                'Patient'
+            ) AS emp_title`;
+
+            const result = await executeMySqlQuery(query,[user_email]);
+            
+            return result[0]?.emp_title; 
+        
+        }
+
+        
 
     
 

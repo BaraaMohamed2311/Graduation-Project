@@ -56,7 +56,8 @@ let select_role_options ={
 
 
 
-let check_box = [ 
+let check_box = {
+    perms_check_box :[ 
     {
         label:"Modify Employee Data",
         value:"Modify Employee Data",
@@ -134,7 +135,7 @@ let check_box = [
 
 
 
-];
+]};
 
 let select_options = {select_title_options, select_specialty_options  , select_role_options }
 

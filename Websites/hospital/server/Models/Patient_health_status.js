@@ -4,9 +4,9 @@ const mongoose = require('mongoose');
 
 
 
-const Patient_Health_State_Schema = new mongoose.Schema({
-        patient_id: {type:Number, required:true},
-        patient_email: {type:String, required:true},
+const Patient_Health_Status_Schema = new mongoose.Schema({
+        user_id: {type:Number, required:true},
+
         // Allergies as a list of strings
         patient_allergic: { type: [String], default: [] },
 
@@ -25,7 +25,7 @@ const Patient_Health_State_Schema = new mongoose.Schema({
                 }
 
 
-},{timestamps:true , collection:"Patients_Health_State"})
+},{timestamps:true , collection:"Patients_Health_Status"})
 
-module.exports = mongoose.model("Patient Health State",Patient_Health_State_Schema);
+module.exports = mongoose.model("Patient Health Status",Patient_Health_Status_Schema);
 

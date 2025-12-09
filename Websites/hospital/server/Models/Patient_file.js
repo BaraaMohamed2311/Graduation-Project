@@ -3,21 +3,21 @@ const mongoose = require('mongoose');
 
 
 const File_Schema = new mongoose.Schema({
-  // we store image id of metadata at file collection and binary itself at Employees collection
+  // we store files meta data
       file_name:{type:String},
       file_id:{type:String},
       file_type: { type: String, required: true },
 
 
-},{timestamps:false })
+},{timestamps:true })
 
 
 const Patient_File_Schema = new mongoose.Schema({
     
     
         
-        patient_id: {type:String, required:true},
-        file: File_Schema 
+        user_id: {type:String, required:true},
+        files: [File_Schema] 
       
     
     

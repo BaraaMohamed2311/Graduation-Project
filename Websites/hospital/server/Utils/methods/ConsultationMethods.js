@@ -32,7 +32,79 @@ class ConsultationMethods {
     // ========================================
     //   Based On Title
 
-        static async getEmployeeAppointments(hosp_emp_id,limit=null,offset=null) {
+       static async getEmployeeAppointments(hosp_emp_id, limit = null, offset = null, filtering_string = null, orderByClause = null) {
+    
+            let query = `
+                SELECT 
+                    *,
+                    DATE_FORMAT(start_time, '%H:%i') AS start_time,
+                    DATE_FORMAT(end_time, '%H:%i') AS end_time
+                FROM consultations
+                WHERE hosp_emp_id = ?
+            `;
+            
+            const params = [hosp_emp_id];
+            
+            // Add filtering_string with AND if provided
+            if (filtering_string && filtering_string.trim()) {
+                query += ` AND ${filtering_string}`;
+            }
+            
+            // Add ORDER BY clause if provided
+            if (orderByClause && orderByClause.trim()) {
+                query += ` ${orderByClause}`;
+            }
+            
+            // Add LIMIT and OFFSET
+            if (limit !== null && offset !== null) {
+                query += ` LIMIT ? OFFSET ?`;
+                params.push(limit, offset);
+            } else if (limit !== null) {
+                query += ` LIMIT ?`;
+                params.push(limit);
+            }
+            
+            const result = await executeMySqlQuery(query, params);
+            return result;
+        }
+
+    static async getPatientAppointments(patient_id, limit = null, offset = null, filtering_string = null, orderByClause = null) {
+    
+            let query = `
+                SELECT 
+                    *,
+                    DATE_FORMAT(start_time, '%H:%i') AS start_time,
+                    DATE_FORMAT(end_time, '%H:%i') AS end_time
+                FROM consultations
+                WHERE patient_id = ?
+            `;
+            
+            const params = [patient_id];
+            
+            // Add filtering_string with AND if provided
+            if (filtering_string && filtering_string.trim()) {
+                query += ` AND ${filtering_string}`;
+            }
+            
+            // Add ORDER BY clause if provided
+            if (orderByClause && orderByClause.trim()) {
+                query += ` ${orderByClause}`;
+            }
+            
+            // Add LIMIT and OFFSET if provided
+            if (limit !== null && offset !== null) {
+                query += ` LIMIT ? OFFSET ?`;
+                params.push(limit, offset);
+            } else if (limit !== null) {
+                query += ` LIMIT ?`;
+                params.push(limit);
+            }
+            
+            const result = await executeMySqlQuery(query, params);
+            return result;
+        }
+
+    static async getEmployeeAppointment(hosp_emp_id) {
 
         let query = `
             SELECT 
@@ -42,15 +114,15 @@ class ConsultationMethods {
             FROM consultations
             WHERE hosp_emp_id = ?
         `;
-        if(limit && offset) query += ` limit ${limit} offset ${offset}`
+
         
         const result = await executeMySqlQuery(query, [hosp_emp_id]);
-        return result;
+        return result[0];
 
         
     }
 
-    static async getPatientAppointments(patient_id,limit=null,offset=null) {
+    static async getPatientAppointment(patient_id) {
         let query = `
            SELECT 
             *,
@@ -59,10 +131,10 @@ class ConsultationMethods {
             FROM consultations
             WHERE patient_id = ?
         `;
-        if(limit && offset) query += `limit ${limit} offset ${offset}`
+
 
         const result = await executeMySqlQuery(query, [patient_id]);
-        return result;
+        return result[0];
     }
 
     // ========================================
@@ -224,11 +296,8 @@ class ConsultationMethods {
 
     static async patientHasOtherConsultationWithEmp(patient_id,hosp_emp_id){
         const query = `SELECT 
-             *,
-            DATE_FORMAT(start_time, '%H:%i') AS start_time,
-            DATE_FORMAT(end_time, '%H:%i')   AS end_time
-            FROM consultations
-            WHERE patient_id = ? AND hosp_emp_id = ? AND consultation_status = 'Scheduled' AND CURDATE() <  consultation_date`
+             *
+            from consultations WHERE patient_id = ? AND hosp_emp_id = ? AND consultation_status = 'Scheduled'`
 
         const result = await executeMySqlQuery(query,[patient_id,hosp_emp_id]);
 
@@ -367,10 +436,11 @@ static async deleteEmpConsultation(hosp_emp_id , consultation_date) {
     }
 
     // deletes specific consultation with specific employee on specific date
-    static async deleteConsultation(patient_id , hosp_emp_id , consultation_date) {
+    static async deleteConsultation(consultation_id) {
 
-            const query = `DELETE FROM consultations WHERE patient_id = ? AND hosp_emp_id = ? AND consultation_date = ?`;
-            const result = await executeMySqlQuery(query, [patient_id , hosp_emp_id,consultation_date]);
+            const query = `DELETE FROM consultations WHERE consultation_id = ?`;
+            const result = await executeMySqlQuery(query, [consultation_id]);
+
             return result.affectedRows > 0;
 
     }

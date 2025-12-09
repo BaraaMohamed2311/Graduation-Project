@@ -78,6 +78,15 @@ export const minutesTo12Hour = (totalMinutes) => {
   // Return in 24-hour format (always 2 digits)
   return `${hours.toString().padStart(2, "0")}:${minutes}`;
 }
+
+export function to12Hour(time24) {
+    const [hours, minutes] = time24.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = hours % 12 || 12; // Convert 0 to 12, 13 to 1, etc.
+    return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
+
 // Get current time in HH:MM format
 export const getCurrentTime24 = () => {
   const now = new Date();

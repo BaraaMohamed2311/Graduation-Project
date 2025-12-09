@@ -8,18 +8,19 @@ import statusNotification from "@/utils/statusNotification";
 import userNotification from "@/utils/userNotification";
 import SearchOptions from "@/components/SearchOptions/SearchOptions";
 import Pagination_Btns from "@/components/Pagination_Btns/Pagination_Btns";
+import { useRouter } from "next/navigation";
+import {select_options} from "./data"
+import stringifyFields from "@/utils/stringifyFields";
 
 function BooksSchedulePage() {
   let [isFiltered , setIsFiltered]  = useState(false);
-  let [filteredResults , setFilteredResults] = useState([]); // as array not Map cuz we will not cache "pageNum":[{},{},...] like we did with cachedContext
   let [currPage , setCurrPage ] = useState(1);
   let [numOfPages , setNumOfPages] = useState(1);
   let [ consultations, setConsultations] = useState([])
-  const [filterTrigger, setFilterTrigger] = useState(0);
   const {user_data} = useUserDataContext();
+  const router = useRouter()
 
    // Refrences
-  const inputsBoxsRef= useRef({});
   const selectBoxsRef= useRef({});
 
   const sizeOfPage = 12;
@@ -30,6 +31,7 @@ function BooksSchedulePage() {
 // =========================
 
   useEffect(() => {
+
     if(isFiltered) return;
     fetch(`${process.env.APIKEY}/booking/get-all-consultations?user_id=${user_data.user_id}&user_email=${user_data.user_email}&pagination=${currPage}&size=${sizeOfPage}`, {
       mode: "cors",
@@ -51,40 +53,34 @@ function BooksSchedulePage() {
     .catch(err=>{
       userNotification("error","Error fetching your schedule")
     })
-  }, [currPage]);
+  }, [currPage , isFiltered]);
 
   
   
   
 
-  
+  function handleViewConsultation(consultation_id){
+    router.push(`/private_routes/consultation-details/${user_data.user_id}/${consultation_id}?currPage=${currPage}`)
+  }
 
 // =========================
 //    handleClearFilterOption
 // =========================
 
   function handleClearFilterOption(){
-    selectsElementsData.forEach((el) => {
-      
-    if (selectBoxsRef.current[el.name]) {
-      
-    }
-  });
+    const ConType_REF = selectBoxsRef.current["consultation_type"];
+    const ConStat_REF = selectBoxsRef.current["consultation_status"];
+    const ConDate_REF = selectBoxsRef.current["consultation_date"];
 
-  setIsFiltered(false)
+    setIsFiltered(false) // set to false to render cached employees with no filters
+    setConsultations([]); //to remove all
+    setCurrPage(1);
 
-  fetch(`${process.env.APIKEY}/  /?pagination=${currPage}&size=${sizeOfPage}`)
-  .then(res=>{ 
-            statusNotification(res.status)  
-            return res.json();})
-  .then(data=>{
-    if(data.success){
-      setRooms(data.rooms)
-    }
-    else{
-      userNotification("error",data.message)
-    }
-  })
+    // reset select filters back to no filter
+    ConType_REF.value = "";
+    ConStat_REF.value = "";
+    ConDate_REF.value = "";
+
 }
 
 
@@ -95,12 +91,17 @@ function BooksSchedulePage() {
 function handleFilterOption(e, showNotif = true) {
   e && e.preventDefault();
 
-  const roomValue = selectBoxsRef.current["room_number"]?.value;
-  const floorValue = selectBoxsRef.current["floor_id"]?.value;
-  const statusValue = selectBoxsRef.current["status"]?.value;
-  console.log(roomValue,floorValue,statusValue)
+  const consultation_type = selectBoxsRef.current["consultation_type"]?.value;
+  const consultation_status = selectBoxsRef.current["consultation_status"]?.value;
+  const consultation_date = selectBoxsRef.current["consultation_date"]?.value;
+  let filterEntries = {consultation_type,consultation_status}
+  if (consultation_date) filterEntries["orderBy_consultation_date"] = consultation_date;
+  console.log(filterEntries);
 
-  let endpoint = `${process.env.APIKEY}/`;
+  // we use stringifyFields function to exclude null values and do not add as query also join them
+    const filter_queries = stringifyFields("anded",Object.entries(filterEntries))
+console.log("filter_queries",filter_queries)
+  let endpoint = `${process.env.APIKEY}/booking/get-all-consultations?user_id=${user_data.user_id}&user_email=${user_data.user_email}&pagination=${currPage}&size=${sizeOfPage}&${filter_queries}`;
  
 
   fetch(endpoint)
@@ -111,7 +112,7 @@ function handleFilterOption(e, showNotif = true) {
     .then((data) => {
       if (data.success) {
         setIsFiltered(true);
-        setRooms(data.rooms);
+        setConsultations(data.body);
         setNumOfPages(data.numOfPages || 1);
         if (showNotif) {
           userNotification("success", data.message || "Filters applied successfully");
@@ -122,10 +123,11 @@ function handleFilterOption(e, showNotif = true) {
         }
       }
     })
-    .catch(() => {
+    .catch((err) => {
       if (showNotif) {
-        userNotification("error", "Failed to fetch filtered rooms");
+        userNotification("error", "Failed to fetch filtered consultations schedule");
       }
+      console.log("err",err)
     });
 }
 
@@ -147,13 +149,24 @@ function handlePagination(e){
   return (
     <main className={`${styles["list"]} wrapper`}>
       <h1>Your Appointments</h1>
-      <SearchOptions />
+      <SearchOptions 
+        selectsElementsData={select_options}
+        references={{selectBoxsRef}}
+        isFiltered={isFiltered}
+        clearBtn = {handleClearFilterOption} 
+        handleFilterOption={handleFilterOption} 
+        setCurrPage={setCurrPage} 
+        currPage={currPage} 
+        sizeOfPage={sizeOfPage}
+      />
       <div className={styles["consultation_cards_wrapper"]}>
         {(!consultations || consultations.length == 0) && <p>No Consultations Scheduled</p> }
         {consultations && consultations.length > 0 && consultations.map((consultation_data)=>{
           return (
             <ConsultationCard 
+            handleViewConsultation={handleViewConsultation}
             consultation_data={consultation_data}
+            setConsultations={setConsultations}
         />
           )
         })}

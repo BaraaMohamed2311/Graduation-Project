@@ -45,11 +45,12 @@ function LabeledInput({inputs_info  , formKind , defaultValues , references } ){
 }
 
 function NormalInput({inputs_info  , formKind , defaultValues , references } ){
+
     const wrapperClass = inputsWrapperClassMap[formKind] || inputsWrapperClassMap.default;
 
   return (
     <div className={wrapperClass}>
-      {inputs_info?.map((input) => {
+      {inputs_info && inputs_info.length > 0 && inputs_info.map((input) => {
         const InputComponent = InputMaps[input.type] || InputMaps.default;
         return (
           <div key={input.name} className={styles.txt_field}>

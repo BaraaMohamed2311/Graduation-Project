@@ -1,25 +1,21 @@
 Server/
-Added New Update Full Data Functions
-Changed stringifyFields to use aliases
-Created buildJoinedUpdate function
-Updated ControlUsers/* to match new parameters and build updating_string
-Added Set of all perms at Tables/ 
-Added Checking that requested_perms are valid and exists at Tables/ 
-Removed old logic of update specific Data
-Added latest_update column to update queries
-Modified list of perms at Tables
-Created AvailabilityMethods.js and imported it at other
-Modified Updating methods at AvailabilityMethods.js and ConsultationMethods.js
+Fixed booking with same employee twice's condition at /book-consultation
+updated methods at \hospital\server\Utils\methods of Get[Title]FullData to return result[0]
+Created Api for consultation-details page
+prevented updating completed consultations
+throw error at connect mongodb
+files api routes for FilesList component at patient/[id] and mypatient/[id]
 
 Client/
-fixed mismatch in the names of fields emplyee update pages  at server
-Seperated conditions at UpdateUserForm to variable
-Updated Inputs component to use defaulValues
-Added Missing <li> for role_name in profile and employee/[id] pages
-Fixed inCorrect conversion of emp_perms to Set when it's already a Set
-Removed Localizing birth_date at patient/[id] and mypatient[id]
-Separated Concerns at Inputs 
+Updated UpdateUserForm and Form_FIelds to be more generic and render all select options
+fixed render patient profile ( check if emp_title exists before using toLowerCase)
+Created consultation-details
+Added direct function to convert to 12hrs format at timeHelpers
+Added Health State Component 
+Used PatientFiles Component in profile and updated its style
+prevented updating completed consultations
+Fixed patient_email => user_email at patient/[id] and mypatient/[id]
+FilesList functionable and recieves external handlers and state
 
 Db Init/
-Added latest_update column
-Modified Inserted perms to hospital_perms
+A script to create documents to insert them manually to mongodb for healthStates

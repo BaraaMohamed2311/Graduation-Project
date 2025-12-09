@@ -1,13 +1,14 @@
 
 
 function stringifyFields(isFor , entries){
+    const validEntries = entries.filter(([_, value]) => value || value === 0);
     // seperate values from fields
     switch(isFor){
         case "seperate" :
             // to return text like <field1> , <field2>  , <field3> and  <value1> , <value2> , <value3>
             let columns_field = "";
             let values_field = "";
-                    entries.forEach(([key , value ],indx)=>{
+                    validEntries.forEach(([key , value ],indx)=>{
                         columns_field += key;
                         if(value || value === 0){
                             values_field += `${value}`
@@ -26,13 +27,13 @@ function stringifyFields(isFor , entries){
                 let joined = "";
 
                 // adding columns to be updated as col1 = newVal , col2 = newVal ....
-                entries.forEach(([key,value] , indx) => {
+                validEntries.forEach(([key,value] , indx) => {
                     if(!value) return;
                     if(value || value === 0){
                         joined += `${key}=${value}`
                     }
                     // not last element and next's value is defined
-                    if(indx !== entries.length - 1 && entries[indx+1][1]) joined += '&';
+                    if(indx !== validEntries.length - 1 && validEntries[indx+1][1]) joined += '&';
                
                 })
 
@@ -42,9 +43,9 @@ function stringifyFields(isFor , entries){
             case "fields" :
                 // as field1 , field2 , .....
                 let fields = ""
-                entries.forEach(( field , indx) => {
+                validEntries.forEach(( field , indx) => {
                     fields += field;
-                    if(indx !== entries.length - 1) fields += ','
+                    if(indx !== validEntries.length - 1) fields += ','
                 });
 
                 return fields

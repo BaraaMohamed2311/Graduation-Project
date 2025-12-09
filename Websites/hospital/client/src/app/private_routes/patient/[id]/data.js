@@ -52,7 +52,17 @@ let inputs_info = [
     
 ];
 
+let gender_select = {
+    key:"patient_gender",
+    label:"Select Gender",
+    name:"patient_gender",
+    options:[{value:"Male", text:"Male"},{value:"Female", text:"Female"}],
+}
 
 
+let select_options ={
+    gender_select
+}
 
-export  {inputs_info  }
+
+export  {inputs_info ,select_options}

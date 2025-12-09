@@ -205,7 +205,7 @@ class SurgeonMethods {
 
             `;
         const result = await executeMySqlQuery(query,[surgeon_id]);
-        return result;
+        return result[0];
     }
 
     static async getAllSurgeonsSpecificData(){

@@ -9,9 +9,9 @@ export default function UpdateUserForm({
   user_displayed,
   currPage,
   user_data,
-  inputs_info,
-  select_options,
-  check_box,
+  inputs_info=[],
+  select_options={},
+  check_box={},
   // New props
   references, // Contains all refs: inputsBoxsRef, checkBoxsRef, selectBoxsRef
   update_handler,
@@ -30,10 +30,10 @@ export default function UpdateUserForm({
     
     const is_authorized_to_update_roles = modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Employee Role");
     const is_authorized_to_update_perms = modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Employee Perms");
+    const { select_role_options, ...otherOptions } = select_options;
+    const { perms_check_box, ...otherCheckBoxes } = check_box;
 
-
-
-
+    console.log("inputs_info",inputs_info,"select_options",select_options,"check_box",check_box)
 
     return (
         <div className={styles["update-emp-page"]}>
@@ -45,9 +45,9 @@ export default function UpdateUserForm({
                     // add employee_displayed to form to show prev values of inputs
                     user_displayed = {user_displayed} 
                     // removes Role selection if no permission
-                    select_options={  is_authorized_to_update_roles ? select_options : {select_title_options :select_options.select_title_options }} 
+                    select_options={  is_authorized_to_update_roles ? select_options : otherOptions} 
                     /*removes check box of perms for user who\s not allowed to edit others perms */
-                    check_box={  is_authorized_to_update_perms ? check_box : null } 
+                    check_box={  is_authorized_to_update_perms ? check_box : otherCheckBoxes } 
 
 
                     inputs_info = {inputs_info}

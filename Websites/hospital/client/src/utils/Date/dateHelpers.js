@@ -150,23 +150,63 @@ export function getYYYYMMDD(date) {
 }
 
 // Convert a Date object to UTC string: "YYYY-MM-DD HH:MM:SS" we can use new Date and pass it as parameter
-export const convertLocalToUTC = (dateObj) =>{
-  // toISOString gets UTC YYYY-MM-DDTHH:MM:SS 
-  return dateObj.toISOString().slice(0,19).replace('T', ' ');  // YYYY-MM-DD HH:MM:SS in UTC
-}
+// ================================
+// Convert Local Date → UTC string
+// ================================
+export const convertLocalToUTC = (dateObj) => {
+  try {
+    // Reject null, undefined, numbers, strings, etc.
+    if (!(dateObj instanceof Date) || isNaN(dateObj)) {
+      console.warn("convertLocalToUTC: Invalid date object:", dateObj);
+      return null;
+    }
 
-// Convert a UTC datetime string "YYYY-MM-DD HH:MM:SS" to local time string "YYYY-MM-DD HH:MM:SS"
+    // Returns "YYYY-MM-DD HH:MM:SS" in UTC
+    return dateObj.toISOString().slice(0, 19).replace("T", " ");
+  } catch (err) {
+    console.error("convertLocalToUTC error:", err);
+    return null;
+  }
+};
+
+
 export const convertUTCToLocal = (dateTimeUTC) => {
+  try {
+    if (typeof dateTimeUTC !== "string") {
+      console.warn("convertUTCToLocal: Expected string but got:", dateTimeUTC);
+      return null;
+    }
 
-  // Convert the string to a Date object in UTC by adding 'Z'
-  const dateObj = new Date(dateTimeUTC.replace(' ', 'T') + 'Z');
+    let normalized = dateTimeUTC;
 
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // 0-indexed
-  const day = String(dateObj.getDate()).padStart(2, '0');
-  const hours = String(dateObj.getHours()).padStart(2, '0');    // local hours
-  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-  const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+    // Normalize only if it has a space instead of 'T'
+    if (dateTimeUTC.includes(" ") && !dateTimeUTC.includes("T")) {
+      normalized = dateTimeUTC.replace(" ", "T");
+    }
 
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`; // YYYY-MM-DD HH:MM:SS local
-}
+    // Ensure it is treated as UTC
+    if (!normalized.endsWith("Z")) {
+      normalized += "Z";
+    }
+
+    const dateObj = new Date(normalized);
+
+    if (isNaN(dateObj)) {
+      console.warn("convertUTCToLocal: Invalid date string:", dateTimeUTC);
+      return null;
+    }
+
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const hours = String(dateObj.getHours()).padStart(2, "0");
+    const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+    const seconds = String(dateObj.getSeconds()).padStart(2, "0");
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  } catch (err) {
+    console.error("convertUTCToLocal error:", err);
+    return null;
+  }
+};
+

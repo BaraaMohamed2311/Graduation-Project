@@ -1,0 +1,322 @@
+/* components/ConsultationDisplay/ConsultationDisplay.module.css */
+
+.consultation_details_wrapper{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: fit-content;
+}
+/* Main Container */
+.consultationContainer {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin: 16px 0;
+  max-width: 900px;
+
+  
+}
+
+.noData {
+  padding: 20px;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  margin: 20px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #f3f4f6;
+  padding-bottom: 16px;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+/* Status Badge */
+.statusBadge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.statusAvailable {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.statusScheduled {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.statusCompleted {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.statusCancelled {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.statusDefault {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+/* Content */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Time Grid */
+.timeGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+/* ================================
+   Profile Header
+================================== */
+.profileHeader {
+  background: var(--surface);
+  padding: 1.8rem;
+  border-radius: 18px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+  margin-bottom: 2rem;
+}
+
+.profileHeader__name {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.profileHeader__title {
+  margin-top: .4rem;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
+/* ================================
+   Details List
+================================== */
+.profileDetails {
+  background: var(--surface);
+  padding: 1.8rem;
+  border-radius: 18px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+}
+
+.profileDetails__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.profileDetails__list li {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+/* Role Box */
+.profileDetails__role {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+/* Actions */
+.profileActions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+}
+
+/* ================================
+   Availability Section
+================================== */
+.availability__title {
+  display: block;
+  font-weight: 600;
+  margin-bottom: .6rem;
+}
+
+.availability__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.availability__item {
+  background: var(--surface-2);
+  padding: .8rem 1rem;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+
+.availability__day {
+  font-weight: 600;
+}
+
+.availability__time {
+  color: var(--text-muted);
+}
+
+
+@media (min-width: 768px) {
+  .timeGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.timeCard {
+  background-color: #f9fafb;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+  transition: transform 0.2s ease;
+}
+
+.timeCard:hover {
+  transform: translateY(-2px);
+}
+
+.timeLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.timeValue {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+/* Duration Card */
+.durationCard {
+  background-color: #eff6ff;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #1d4ed8;
+}
+
+.durationLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1d4ed8;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.durationValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e40af;
+  margin: 0;
+}
+
+/* Type Card */
+.typeCard {
+  background-color: #f9fafb;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.typeLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.typeContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.typeValue {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.typeBadge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.typeInitial {
+  background-color: #ede9fe;
+  color: #5b21b6;
+  border: 1px solid #ddd6fe;
+}
+
+.typeFollowup {
+  background-color: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+/* Footer */
+.footer {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+  margin-top: 8px;
+}
+
+.createdInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.timeIcon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}

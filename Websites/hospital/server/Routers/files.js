@@ -4,13 +4,17 @@ const { GridFsStorage } = require("multer-gridfs-storage");
 const Profile_Pic_Module = require("../Models/Profile_Pic");
 const Patient_File_Module = require("../Models/Patient_file");
 const mongo_url = process.env.Hospital_MongoDB;
+const {Tables , setOfPerms} = require("../Tables/data.js");
 const conect_mongodb = require("../Utils/connect_mongodb");
 const connect_bucket = require("../Utils/connect_mongo_bucket");
 const deleteFromBucket = require("../middlewares/deleteFromBucket");
-
+const User = require("../Classes/User");
+const HospitalUsersMethods = require("../Classes/HospitalUsersMethods");
 const jwtVerify = require("../middlewares/jwtVerify");
+const mongoose = require("mongoose")
 
 let gfs_bucket;
+
 // ===1. Define allowed types
 const ProfileImagemimetypes = new Set([
   "image/jpeg",
@@ -36,8 +40,10 @@ async function initializeConnectionMDB() {
   return bucket;
 }
 
+
 // ===3. Initialize bucket for GridFS operations
 initializeConnectionMDB().then((bucket) => (gfs_bucket = bucket));
+
 
 // ===4. Configure multer-gridfs-storage for profile images
 const profileStorage = new GridFsStorage({
@@ -61,7 +67,7 @@ const patientStorage = new GridFsStorage({
   file: (req, file) => {
     if (patientFileTypes.has(file.mimetype)) {
       return {
-        bucketName: "uploads",
+        bucketName: "patient_uploads",
         filename: `${Date.now()}_${file.originalname}`,
       };
     } else {
@@ -128,78 +134,110 @@ router.get("/prof-img", async (req, res) => {
 
 
 // ==============================================
-//                Get Patient File
-// ==============================================
-router.get("/patient-file", async (req, res) => {
-  try {
-    if (!gfs_bucket) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Mongo Bucket is undefined" });
-    }
-
-    const patientFile = await Patient_File_Module.findOne({
-      patient_id: req.query["patient_id"],
-      "file.file_name": req.query["file_name"],
-    });
-
-    if (!patientFile || !patientFile.file.file_name) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Patient has no such file" });
-    }
-
-    const cursor = await gfs_bucket.find({
-      filename: patientFile.file.file_name,
-    });
-    const docsArray = await cursor.toArray();
-
-    if (docsArray[0] && docsArray[0].filename) {
-      res.set(
-        "Content-Type",
-        docsArray[0].contentType || patientFile.file.file_type
-      );
-      gfs_bucket.openDownloadStreamByName(docsArray[0].filename).pipe(res);
-    } else {
-      res.status(404).json({ success: false, message: "File not found" });
-    }
-  } catch (err) {
-    console.error("Error GET Patient File", err);
-    res.status(500).json({ success: false, message: err.message || "Error GET Patient File" });
-  }
-});
-
-// ==============================================
 //                Get Patient Files
 // ==============================================
-router.get("/patient-files/view/:fileId", async (req, res) => {
+router.get("/patient/:user_id", async (req, res) => {
   try {
-    const { fileId } = req.params;
-    const db = mongoose.connection.db;
+    const { user_id } = req.params;
+    const {pagination , size} = req.query;
+
+    const limit = parseInt(size);
+    const offset = parseInt((pagination - 1) * size );
+
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: "user_id is required"
+      });
+    }
+
+    if (!gfs_bucket) {
+      return res.status(500).json({
+        success: false,
+        message: "Mongo GridFS bucket is undefined"
+      });
+    }
+
+    // 1. Fetch all file metadata for this user
+    const patientObject = await Patient_File_Module.findOne({ user_id });
+    const patientFiles = patientObject && patientObject.files ? patientObject.files.slice(offset, offset + limit) : [] ; 
+    const numOfPages = await Patient_File_Module.countDocuments({ user_id });
 
 
-    const downloadStream = gfs_bucket.openDownloadStream(new mongoose.Types.ObjectId(fileId));
+    if (!patientFiles || patientFiles.length === 0) {
+      return res.status(200).json({
+        success: true,
+        files: [],
+        message: "No files found for this user"
+      });
+    }
+    console.log("patientFiles",patientFiles)
 
-    downloadStream.on("error", (err) => {
-      console.error("Error reading file", err);
-      res.status(404).send("File not found");
+    return res.status(200).json({
+      success: true,
+      files: patientFiles,
+      numOfPages
     });
 
-    downloadStream.pipe(res);
   } catch (err) {
-    console.error("Error retrieving file", err);
-    res.status(500).json({ success: false, message: err.message || "Error retrieving file"});
+    console.error("Error GET Patient Files", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Error retrieving patient files"
+    });
   }
 });
 
 
 // ==============================================
-//                Upload Patient File
+//                Download Patient File
+// ==============================================
+router.get("/patient/:file_id/download", async (req, res) => {
+  try {
+    const { file_id } = req.params;
+
+    if (!file_id) return res.status(400).json({ success: false, message: "file_id is required" });
+
+    // Create GridFSBucket for patient files
+    const patientBucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+      bucketName: "patient_uploads",
+    });
+
+    if (!patientBucket) return res.status(500).json({ success: false, message: "Mongo patientBucket undefined" });
+
+    // Find the file in GridFS
+    const file = await patientBucket.find({ _id: new mongoose.Types.ObjectId(file_id) }).toArray();
+    if (!file || file.length === 0) return res.status(404).json({ success: false, message: "File not found" });
+
+    const readStream = patientBucket.openDownloadStream(file[0]._id);
+
+    res.set({
+      "Content-Type": file[0].contentType,
+      "Content-Disposition": `attachment; filename="${file[0].filename}"`,
+    });
+
+    readStream.pipe(res);
+
+  } catch (err) {
+    console.error("Error downloading file", err);
+    res.status(500).json({ success: false, message: err.message || "Error downloading file" });
+  }
+});
+
+
+
+
+
+// ==============================================
+//                Upload Patient Files
 // ==============================================
 router.post(
-  "/upload-patient-file",
-  uploadPatientFile.single("patient_file"),
+  "/patient/:user_id",
+  uploadPatientFile.array("patient_file", 10),  // multiple files
   async (req, res) => {
+    const { user_id } = req.params;
+    
+
     try {
       if (!gfs_bucket) {
         return res
@@ -207,41 +245,174 @@ router.post(
           .json({ success: false, message: "Mongo Bucket is undefined" });
       }
 
-      if (!req.file) {
+      if (!req.files || req.files.length === 0) {
         return res
           .status(400)
-          .json({ success: false, message: "No file uploaded" });
+          .json({ success: false, message: "No files uploaded" });
       }
 
-      // Save/update file record in Patients_Files collection
-      await Patient_File_Module.findOneAndUpdate(
-        { patient_id: req.query["patient_id"] },
-        {
-          file: {
-            file_name: req.file.filename,
-            file_id: req.file.id,
-            file_type: req.file.mimetype,
-          },
-        },
-        { upsert: true, new: true }
-      );
+      const session = await mongoose.startSession();
+      session.startTransaction();
 
-      res.status(200).json({
-        success: true,
-        message: "Patient file uploaded successfully",
-        file: {
-          name: req.file.filename,
-          type: req.file.mimetype,
-        },
-      });
+      try {
+        // 1️⃣ Map uploaded files to metadata objects
+        const uploadedMeta = req.files.map((file) => ({
+          file_name: file.filename,
+          file_id: file.id,
+          file_type: file.mimetype,
+        }));
+
+        // 2️⃣ Append to user's files array inside the transaction
+        const updatedRecord = await Patient_File_Module.findOneAndUpdate(
+          { user_id },
+          { $push: { files: { $each: uploadedMeta } } },
+          { upsert: true, new: true, session } // important: include session
+        );
+
+        // 3️⃣ Commit the transaction
+        await session.commitTransaction();
+        session.endSession();
+
+        // 4️⃣ Send success response
+        res.status(200).json({
+          success: true,
+          message: "Patient files uploaded successfully",
+          uploaded: uploadedMeta,
+          record: updatedRecord,
+        });
+
+      } catch (err) {
+        // 5️⃣ Rollback if anything fails
+        await session.abortTransaction();
+        session.endSession();
+
+        console.error("Error uploading patient files:", err);
+        res.status(500).json({
+          success: false,
+          message: err.message || "Error uploading patient files",
+        });
+      }
+
+
     } catch (err) {
-      console.error("Error UPDATE Patient File", err);
-      res
-        .status(500)
-        .json({ success: false, message: err.message || "Error Update Patient File" });
+      console.error("Error uploading patient files", err);
+      res.status(500).json({
+        success: false,
+        message: err.message || "Error uploading patient files",
+      });
     }
   }
 );
+
+// ==============================================
+//                Update other patient's file 
+// ==============================================
+
+router.post("/other/patient", uploadPatientFile.array("patient_file", 10),async function(req , res){
+        try {   
+                // ===1. Get Data From Body & Query of actions to be made
+                    let { modifier_id , modifier_email,  other_user_email} = req.body;
+                    let {my} = req.query
+
+
+                    
+                // ===2.Check Bad Request
+                if(!modifier_id || !other_user_email || !modifier_email ) 
+                    return res.status(400).json({success:false,messages:[{success:false,message:"Bad Request"}]});
+                if (!gfs_bucket) {
+                    return res
+                        .status(404)
+                        .json({ success: false, message: "Mongo Bucket is undefined" });
+                }
+
+                if (!req.files || req.files.length === 0) {
+                    return res
+                        .status(400)
+                        .json({ success: false, message: "No files uploaded" });
+                          }
+
+
+
+                //  ===4. Check valid user types
+                    const ModifierUserType = await User.getUserTypeByEmail(modifier_email);
+                    const OtherUserType = await User.getUserTypeByEmail(other_user_email);
+
+                    if(ModifierUserType === 'patient')  return res.status(401).json({success:false,message:"You Are A Patient Not An Employee"});
+                    if(OtherUserType !== 'patient')  return res.status(401).json({success:false,message:"That User Is An Employee Not A Patient"});
+                    // Get fresh title and id from db
+                    const other_user_id = await User.getUserIDByEmail(other_user_email)
+
+                
+
+                    // ===4. Get Required  Permissions for execution
+                    const  modifierSetperms = await User.getSetUserperms(modifier_id);
+
+                    
+                    // Check Authorization using perms
+                    const isAuthorized = modifierSetperms.has('Modify Patient Files')
+                    
+                    // Check that user can modify patients that do not belong to him
+                    if(!isAuthorized) return res.status(401).json({success:false,message:"Permission Is Required For This Action"});
+
+                    //  ===5. Check patient belongs to staff
+                    const belongsToModifier = my ? await HospitalUsersMethods.patientBelongsToStaff(modifier_id,other_user_id) : true;
+
+                    if(!belongsToModifier) return res.status(401).json({success:false,message:"This Isn't Your Patient"});
+                    
+
+                    // ===6. Apply Transaction
+                    const session = await mongoose.startSession();
+                      session.startTransaction();
+
+                      try {
+                        // 1️⃣ Map uploaded files to metadata objects
+                        const uploadedMeta = req.files.map((file) => ({
+                          file_name: file.filename,
+                          file_id: file.id,
+                          file_type: file.mimetype,
+                        }));
+
+                        // 2️⃣ Append to user's files array inside the transaction
+                        const updatedRecord = await Patient_File_Module.findOneAndUpdate(
+                          { user_id: other_user_id },
+                          { $push: { files: { $each: uploadedMeta } } },
+                          { upsert: true, new: true, session } // <-- important: pass session
+                        );
+
+                        // 3️⃣ Commit the transaction
+                        await session.commitTransaction();
+                        session.endSession();
+
+                        res.status(200).json({
+                          success: true,
+                          message: "Patient files uploaded successfully",
+                          uploaded: uploadedMeta,
+                          record: updatedRecord,
+                        });
+                      } catch (err) {
+                        // Rollback if anything goes wrong
+                        await session.abortTransaction();
+                        session.endSession();
+
+                        console.error("Error uploading patient files:", err);
+                        res.status(500).json({
+                          success: false,
+                          message: err.message || "Error uploading patient files",
+                        });
+                      }
+
+
+                     
+                    
+        }
+        catch (err) {
+            console.log(err)
+            res.status(500).json({
+                success:false,
+                message: err.message || "Error In Update Others Api Path "
+            })
+        }
+    })
 
 
 // ==============================================
@@ -300,5 +471,173 @@ router.put(
     }
   }
 );
+
+
+
+// ==============================================
+//                Delete User Image
+// ==============================================
+
+router.delete("/patient/:file_id/delete", async (req, res) => {
+  const session = await mongoose.startSession();
+  // Opened transaction so both deleting meta-data and file itself must succeed
+  session.startTransaction();
+
+  try {
+    const { file_id } = req.params;
+
+    if (!file_id)
+      return res.status(400).json({ success: false, message: "file_id is required" });
+
+    const db = mongoose.connection.db;
+
+    // 1️⃣ GridFS bucket for patient files (same db as session)
+    const patientBucket = new mongoose.mongo.GridFSBucket(db, {
+      bucketName: "patient_uploads",
+    });
+
+    // 2️⃣ Find the file in GridFS
+    const files = await patientBucket.find({ _id: new mongoose.Types.ObjectId(file_id) }).toArray();
+
+    if (!files || files.length === 0)
+      return res.status(404).json({ success: false, message: "File not found" });
+
+    const file = files[0];
+
+    // 3️⃣ Delete the GridFS file
+    await patientBucket.delete(file._id, { session }); // pass session for transaction
+
+    // 4️⃣ Delete metadata from Patients_Files
+    const updateResult = await Patient_File_Module.updateOne(
+      { "files.file_id": file_id },
+      { $pull: { files: { file_id: file_id } } },
+      { session }
+    );
+
+    // 5️⃣ Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({
+      success: true,
+      message: `File "${file.filename}" and its metadata deleted successfully`,
+      deletedMetadataCount: updateResult.modifiedCount,
+    });
+
+  } catch (err) {
+    // Rollback on error
+    await session.abortTransaction();
+    session.endSession();
+
+    console.error("Error deleting file with transaction", err);
+    res.status(500).json({ success: false, message: err.message || "Error deleting file" });
+  }
+});
+
+// =================================================
+//  
+router.delete("/other/patient/:file_id/delete", async (req, res) => {
+
+  let { modifier_id , modifier_email,  other_user_email} = req.body;
+  let {my} = req.query // so no need to have separate api routes for patients and my patient in this case
+ try {
+                    
+                // ===2.Check Bad Request
+                if(!modifier_id || !other_user_email || !modifier_email ) 
+                    return res.status(400).json({success:false,messages:[{success:false,message:"Bad Request"}]});
+                if (!gfs_bucket) {
+                    return res
+                        .status(404)
+                        .json({ success: false, message: "Mongo Bucket is undefined" });
+                }
+
+                if (!req.files || req.files.length === 0) {
+                    return res
+                        .status(400)
+                        .json({ success: false, message: "No files uploaded" });
+                          }
+
+
+                //  ===4. Check valid user types
+                    const ModifierUserType = await User.getUserTypeByEmail(modifier_email);
+                    const OtherUserType = await User.getUserTypeByEmail(other_user_email);
+
+                    if(ModifierUserType === 'patient')  return res.status(401).json({success:false,message:"You Are A Patient Not An Employee"});
+                    if(OtherUserType !== 'patient')  return res.status(401).json({success:false,message:"That User Is An Employee Not A Patient"});
+                    // Get fresh title and id from db
+                    const other_user_id = await User.getUserIDByEmail(other_user_email)
+
+                    //  ===5. Check patient belongs to staff
+                    const belongsToModifier = my ? await HospitalUsersMethods.patientBelongsToStaff(modifier_id,other_user_id) : true;
+
+                    if(!belongsToModifier) return res.status(401).json({success:false,message:"This Isn't Your Patient"});
+
+                    // ===4. Get Required Roles and Permissions for execution
+                    const  modifierSetperms = await User.getSetUserperms(modifier_id);
+
+                    
+                    // Check Authorization using perms
+                    const isAuthorized = modifierSetperms.has('Modify Patient Files')
+                    
+                    // Check that user can modify patients that do not belong to him
+                    if(!isAuthorized) return res.status(401).json({success:false,message:"Permission Is Required For This Action"});
+
+          //  Start A transaction for deletion
+          const session = await mongoose.startSession();
+            // Opened transaction so both deleting meta-data and file itself must succeed
+            session.startTransaction();
+
+          
+              const { file_id } = req.params;
+
+              if (!file_id)
+                return res.status(400).json({ success: false, message: "file_id is required" });
+
+              const db = mongoose.connection.db;
+
+              // 1️⃣ GridFS bucket for patient files (same db as session)
+              const patientBucket = new mongoose.mongo.GridFSBucket(db, {
+                bucketName: "patient_uploads",
+              });
+
+              // 2️⃣ Find the file in GridFS
+              const files = await patientBucket.find({ _id: new mongoose.Types.ObjectId(file_id) }).toArray();
+
+              if (!files || files.length === 0)
+                return res.status(404).json({ success: false, message: "File not found" });
+
+              const file = files[0];
+
+              // 3️⃣ Delete the GridFS file
+              await patientBucket.delete(file._id, { session }); // pass session for transaction
+
+              // 4️⃣ Delete metadata from Patients_Files
+              const updateResult = await Patient_File_Module.updateOne(
+                { "files.file_id": file_id },
+                { $pull: { files: { file_id: file_id } } },
+                { session }
+              );
+
+              // 5️⃣ Commit the transaction
+              await session.commitTransaction();
+              session.endSession();
+
+              return res.status(200).json({
+                success: true,
+                message: `File "${file.filename}" and its metadata deleted successfully`,
+                deletedMetadataCount: updateResult.modifiedCount,
+              });
+
+  } catch (err) {
+    // Rollback on error
+    await session.abortTransaction();
+    session.endSession();
+
+    console.error("Error deleting file with transaction", err);
+    res.status(500).json({ success: false, message: err.message || "Error deleting file" });
+  }
+});
+
+
 
 module.exports = router;

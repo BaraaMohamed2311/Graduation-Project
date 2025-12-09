@@ -80,7 +80,7 @@ useEffect(()=>{
   })
 
 
-},[currPage])
+},[currPage,isFiltered])
 
 function handleFilterOption(e, showNotif = true) {
   e && e.preventDefault();

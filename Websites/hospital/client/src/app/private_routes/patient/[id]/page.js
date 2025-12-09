@@ -12,18 +12,25 @@ import { useState ,useEffect, useRef} from "react";
 import userNotification from "@/utils/userNotification";
 import Image from "next/image";
 import PatientFiles from "@/components/FilesList/FilesList";
-import { inputs_info } from "./data";
+import { inputs_info ,select_options} from "./data";
+import updateUserFetch from "@/utils/updateUserFetch";
+import HealthStatus from "@/components/HealthStatus/HealthStatus";
+import statusNotification from "@/utils/statusNotification";
+import uploadPatientFile from "@/utils/uploadPatientFile";
 function PatientDetailsPage() {
   const [isEditing, setIsEditing] = useState(false);
+  const [files_meta , setFilesMeta] = useState([]);
   const [blobURL, setBlobURL] = useState("/avatar.jpg");
   const { id: user_id, currPage } = useParams();
   const { cached_patients, isIndexedDBLoaded, setCached_Patients } = usePatientsCache(); // Added setCached_Patients
   const { user_data } = useUserDataContext();
   const router = useRouter();
   const inputsBoxsRef = useRef({})
+  const selectBoxsRef = useRef({})
   // Efficiently find the patient from cache
   const patient = cached_patients?.find(p => p.user_id === parseInt(user_id));
 
+  // Load User Image
   useEffect(() => {
     if (!patient || !user_data?.token) return; // Add null checks
     
@@ -60,16 +67,6 @@ function PatientDetailsPage() {
     router.replace("/private_routes/list");
   }
 
-  const handleDownloadFile = (file) => {
-    const link = document.createElement("a");
-    link.href = ``;
-    link.download = file.name;
-    link.click();
-  };
-
-  const handleDownloadAll = () => {
-    window.location.href = ``;
-  };
 
 
   /***************************************update_handler***************************************/
@@ -82,12 +79,11 @@ function PatientDetailsPage() {
         const reqBody = {
                       modifier_id: user_data.user_id,
                       modifier_email:user_data.user_email,
-                      emp_id: patient.emp_id,
                       other_user_email:patient.user_email,
                       ...updatedPatientData
                     }
 
-          updateEmpFetch( url, token, reqBody ,actionString , setCached_Employees , currPage );
+          updateUserFetch( url, token, reqBody ,actionString , setCached_Patients , currPage );
         
 
         
@@ -113,10 +109,25 @@ function PatientDetailsPage() {
           // we check at first that input element is rendered using current of reference
           else if (inputsBoxsRef.current[input_info.name] && (inputsBoxsRef.current[input_info.name].value !== patient[input_info.name])) {
               updatedPatientData[input_info.name] = inputsBoxsRef.current[input_info.name].value;
-            if (!actions.includes("Modify Employee Data")) actions.push("Modify Employee Data"); // Add "MD" if not already added
+            if (!actions.includes("Modify Other Patient")) actions.push("Modify Other Patient"); // Add "MD" if not already added
           }
           
         });
+
+        // Check changes of gender which is related to "Modify Other Patient" permission
+
+        if ( (selectBoxsRef.current[select_options.gender_select.name] && !selectBoxsRef.current[select_options.gender_select.name].value) ){
+            userNotification("error", "Input fields cannot be empty");
+            return
+          }
+          
+          // we check at first that input element is rendered using current of reference
+          else if (selectBoxsRef.current[select_options.gender_select.name] && (selectBoxsRef.current[select_options.gender_select.name].value !== patient[select_options.gender_select.name])) {
+              updatedPatientData[select_options.gender_select.name] = selectBoxsRef.current[select_options.gender_select.name].value;
+            if (!actions.includes("Modify Other Patient")) actions.push("Modify Other Patient"); // Add "MD" if not already added
+          }
+
+        
 
       
         // Join actions array to form the action string
@@ -130,6 +141,69 @@ function PatientDetailsPage() {
 
     }
 
+    // ================================================================
+      //      File Handlers
+      // ================================================================
+    
+      // ================================
+      //      Upload
+      function onUploadFile(file) {
+        const other_req_data = {
+          other_user_email: patient.user_email,
+          modifier_email: user_data.user_email,
+          modifier_id: user_data.user_id,
+        };
+    
+        uploadPatientFile(`files/other/patient?my=true`, file, other_req_data, user_data.token);
+      }
+      // ================================
+      //      Delete
+      async function onDeleteFile(e, entry) {
+        e.stopPropagation(); // prevent triggering download if button inside file item
+    
+        if (!entry || !entry.file_id) {
+          return userNotification("error", "Invalid file selected");
+        }
+    
+        // 1️⃣ Ask for confirmation
+        const confirmDelete = window.confirm(`Are you sure you want to delete "${entry.file_name}"?`);
+        if (!confirmDelete) return;
+    
+        // 2️⃣ Optimistic UI update
+        const prevFiles = [...files_meta];
+        setFilesMeta((files) => files.filter((f) => f.file_id !== entry.file_id));
+    
+        try {
+          // 3️⃣ Call the DELETE endpoint
+          const res = await fetch(
+            `${process.env.APIKEY}/files/patient/${entry.file_id}/delete`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${user_data.token}`,
+              },
+            }
+          );
+    
+          const data = await res.json();
+    
+          if (!data.success) {
+            // rollback if deletion failed
+            setFilesMeta(prevFiles);
+            return userNotification("error", data.message || "Failed to delete file");
+          }
+    
+          // 4️⃣ Success notification
+          userNotification("success", `Deleted "${entry.file_name}" successfully`);
+        } catch (err) {
+          // rollback if error
+          setFilesMeta(prevFiles);
+          console.error(err);
+          userNotification("error", "Error deleting file");
+        }
+    }
+    
+
   // Move conditional returns AFTER all hooks
   if (!isIndexedDBLoaded) {
     return <div>Loading...</div>;
@@ -139,7 +213,8 @@ function PatientDetailsPage() {
     return <div>Patient not found in cache</div>;
   }
 
-  const can_modify_unrelated_patient = user_data?.emp_perms?.has('Modify Other Patient')
+  const can_modify_unrelated_patient = user_data?.emp_perms?.has('Modify Other Patient');
+  
 
   
 console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patient )
@@ -156,8 +231,9 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
                   userData={user_data}
                   modifier_data={user_data}
                   // Pass the references and functions as props
-                  references={{inputsBoxsRef}}
+                  references={{inputsBoxsRef,selectBoxsRef}}
                   inputs_info={inputs_info}
+                  select_options={select_options}
                   update_handler={update_handler}
                 />
             }
@@ -177,7 +253,7 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
 
             <div className={styles["patient-info"]}>
               <h1 className={styles["patient-name"]}>{patient.patient_name}</h1>
-              <p><strong>Email:</strong> {patient.patient_email || "Not Provided"}</p>
+              <p><strong>Email:</strong> {patient.user_email || "Not Provided"}</p>
               <p><strong>Phone:</strong> {patient.patient_phone || "Not Provided"}</p>
               <p><strong>Address:</strong> {patient.patient_address || "Not Specified"}</p>
               <p><strong>Gender:</strong> {patient.patient_gender || "Not Specified"}</p>
@@ -196,10 +272,15 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
           </div>
           
           <PatientFiles
+          urls={{initial_url:`files/patient/${patient.user_id}`,download_one_url:`files/patient`}}
             files={[]}
-            onDownloadFile={handleDownloadFile}
-            onDownloadAll={handleDownloadAll}
+            onUploadFile={onUploadFile}
+            onDeleteFile={onDeleteFile}
+            patient={patient}
+            files_meta ={files_meta}
+            setFilesMeta ={setFilesMeta}
           />
+          <HealthStatus user_id={patient.user_id}/>
 
           {/* --- Actions --- */}
           <div className={styles["patient-details"]}>
@@ -209,8 +290,11 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
                   onClick={(e) => setIsEditing(prev => !prev)}
                   className="grey-button"
                 >
-                  Edit Patient
+                  Edit Data
                 </button>
+
+                
+
                 <button
                   onClick={(e) =>
                     handleDeletion("list/delete-patient", user_data.token, {

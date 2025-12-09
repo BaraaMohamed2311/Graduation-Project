@@ -11,6 +11,7 @@ const mongoose = require("mongoose");
     }
     catch(err){
         console.log("Error connection to DB")
+        throw err
     }
   
 }

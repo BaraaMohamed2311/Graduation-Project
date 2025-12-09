@@ -3,6 +3,9 @@ import Link from "next/link";
 import MoneyShortner from "@/utils/MoneyShortner"
 import styles from "./profile.module.css"
 import Image from "next/image";
+import PatientFiles from "@/components/FilesList/FilesList"
+import HealthStatus from "@/components/HealthStatus/HealthStatus"
+            
 // ===================================================
 //            Rendering helpers
 // ===================================================
@@ -38,7 +41,7 @@ const PermsList = ({permissions})=>{
     {/* Perms List */}
     <strong className={styles.perms_header}>Permissions</strong>
           <div className={styles.perms_wrapper}>
-            {permissions[0] !== "None" ? permissions.map((perm) => (
+            {permissions && permissions[0] !== "None" ? permissions.map((perm) => (
               <span key={perm} className="perm">{perm}</span>
             )) : "None"}
           </div>
@@ -180,20 +183,18 @@ const PatientProfile = ({ user_data, permissions }) => {
         <li><strong>Insurance ID:</strong> {user_data.insurance_id}</li>
         <li><strong>Last Visit:</strong> {user_data.last_visit_date}</li>
         <li className={styles.role_box}><strong>Role: </strong>Patient <Image src={pickRoleIcon("Patient")} width={"30"} height={"30"} alt="patient role icon" /></li>
-        <li className={styles.perms_box}>
-          <strong className={styles.perms_header}>Permissions</strong>
-          <div className={styles.perms_wrapper}>
-            {permissions[0] !== "None" ? permissions.map((perm) => (
-              <span key={perm} className="perm">{perm}</span>
-            )) : "None"}
-          </div>
-        </li>
         <li className={`${styles["buttons-wrapper"]}`}>
           <Link href={"/private_routes/mailer?subject=Edit Data Request"} className={`grey-button`}>Edit Request</Link>
           <Link href={"/private_routes/mailer?subject=Account Deletion Request"} className={`red-button`}>Delete Account</Link>
         </li>
       </ul>
     </div>
+    <PatientFiles
+                files={[]}
+                onDownloadFile={handleDownloadFile}
+                onDownloadAll={handleDownloadAll}
+              />
+    <HealthStatus />
     </>
   );
 };

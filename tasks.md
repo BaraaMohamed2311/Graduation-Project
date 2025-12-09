@@ -81,4 +81,8 @@ Replace THese lines :
 4) When user is registered at EMS or hospital they must be inserted to users and there specific table
 
 
+=========================================
+Remove unnecessary props from searchoptions like filteredResults
+
+
 

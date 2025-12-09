@@ -1,12 +1,14 @@
-import {  global_perms, global_roles , global_title,global_specialty} from "@/global_data"
+import {  global_consultation_types,
+          global_consultation_status} from "@/global_data"
 
-let selectsElementsData = [
+
+let select_options = [
     {   
 
         key:"Status",
         label:"Status",
         name:"consultation_status",
-        options:,
+        options:global_consultation_status,
         
     },
     {   
@@ -14,7 +16,7 @@ let selectsElementsData = [
         key:"Consultation Type",
         label:"Consultation Type",
         name:"consultation_type",
-        options:,
+        options:global_consultation_types,
         
     },
     {   
@@ -30,4 +32,4 @@ let selectsElementsData = [
 ]
  
 
-export   {selectsElementsData}
+export   {select_options}

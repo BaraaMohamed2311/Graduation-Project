@@ -1,0 +1,41 @@
+/* Container for the upload button */
+.file-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* spacing between button and optional info */
+  align-items: flex-start;
+  margin-top: 16px;
+  font-family: "Inter", sans-serif;
+}
+
+/* Upload Button */
+.add-file-button {
+  background: #e8f5ff;
+  color: #0077cc;
+  border: 1px solid #bcdfff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-file-button:hover {
+  background: #d7edff;
+  border-color: #a7d8ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2);
+}
+
+/* Hidden file input */
+.file-input {
+  display: none;
+}
+
+/* Optional: Selected file info */
+.selected-file {
+  font-size: 13px;
+  color: #2b4d66;
+  font-weight: 500;
+}

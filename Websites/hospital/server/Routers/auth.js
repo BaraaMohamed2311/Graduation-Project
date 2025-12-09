@@ -38,7 +38,7 @@ const stringifyFields = require("../Utils/stringifyFields.js");
             }
             
             // If employee, make sure he is hospital employee
-            const isHospitalUser = userIsEmployee?  HospitalUsersMethods.isHospitalUser(await User.getUserTitle(user_email)) : false;
+            const isHospitalUser = userIsEmployee?  HospitalUsersMethods.isHospitalUser(await User.getUserTitleByEmail(user_email)) : false;
  
                 // If he's employee but not as hospital staff then he has to register as patient first
                     if(!isHospitalUser && userIsEmployee){
@@ -56,7 +56,7 @@ const stringifyFields = require("../Utils/stringifyFields.js");
             // sets value to Patient as default value for 
             const result =await User.getUserIDAndTable(user_email);
             const user_id = result.user_id;
-            const user_title =await User.getUserTitle(user_email);
+            const user_title =await User.getUserTitleByEmail(user_email);
             const isHospitalEmployee = HospitalUsersMethods.isHospitalUser(user_title)
             user = await HospitalUsersMethods.MapUserToGETSpecificDataFunction(user_id, user_title);
 
@@ -208,7 +208,7 @@ const stringifyFields = require("../Utils/stringifyFields.js");
             }
             
             
-            const user_title =await User.getUserTitle(user_email);
+            const user_title =await User.getUserTitleByEmail(user_email);
             // --3. Update User's Data at the correct table
             // make sure to remove fields that cannot be changed by user 
             let isUpdated = null;

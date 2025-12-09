@@ -2,7 +2,7 @@
 import userNotification from "./userNotification";
 import statusNotification from "./statusNotification"
 
-export default function updateEmpFetch(url , token , body, actionsString , setCached_Employees , currPage , router){
+export default function updateUserFetch(url , token , body, actionsString , setCached_Employees , currPage , router){
     
 
     fetch(`${process.env.APIKEY}/${url}?perms_requested=${actionsString}`,{
@@ -35,13 +35,11 @@ export default function updateEmpFetch(url , token , body, actionsString , setCa
                     })
                     
                 })**/
-                
-                data.messages.forEach((messageObj)=> userNotification(messageObj.success ?"success" : "error", messageObj.message));
-           
+            
                 
             }
             
-          
+          data.messages.forEach((messageObj)=> userNotification(messageObj.success ?"success" : "error", messageObj.message));
         
     })
     .catch((err)=>{

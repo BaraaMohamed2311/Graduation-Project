@@ -5,22 +5,96 @@ import { useEffect , useState , useMemo} from "react";
 import { global_mapped_specialities } from "@/global_data";
 
 
+// ================================
+//    Checks Option before rendering
+// ================================
 
 function DynamicSelect({ selectOption, userDisplayed, references, onChange, styles }) {
     console.log("selectOption",selectOption)
-    if (!selectOption) return null;
+
+    console.log("userDisplayed:", userDisplayed ,selectOption?.name ); // Add this
+    if (!selectOption || !references || !references.selectBoxsRef) return null;
 
     return (
         <Select
             styles={styles}
             defaultValue={userDisplayed && userDisplayed[selectOption.name]}
             select_options={selectOption}
-            user_displayed={userDisplayed}
             reference={references.selectBoxsRef}
             onChange={onChange}
         />
     );
 }
+// ================================
+//    Employee's Specific Select Elements
+// ================================
+function EmployeeSelectFields({ select_options, user_displayed, references, styles }) {
+    const [selectedTitleValue, setSelectedTitleValue] = useState(
+        user_displayed?.emp_title ?? ""
+    );
+
+     // Memoize specialty options for selected title 
+    const specialitiesForTitle  = useMemo(() => {
+        return global_mapped_specialities[selectedTitleValue] && select_options.select_title_options ? ({
+            label: "specialty",
+            options: global_mapped_specialities[selectedTitleValue] || [],
+            name: "specialty",
+        }) : null;
+    }, [selectedTitleValue]);
+
+    return (
+        <>
+            {/* Title select */}
+            <DynamicSelect
+                selectOption={select_options?.select_title_options}
+                userDisplayed={user_displayed}
+                references={references}
+                onChange={(e) => setSelectedTitleValue(e.target.value)}
+                styles={styles}
+            />
+
+            {/* Specialty select (auto-filtered) */}
+            {specialitiesForTitle && (
+                <DynamicSelect
+                    selectOption={specialitiesForTitle}
+                    userDisplayed={user_displayed}
+                    references={references}
+                    styles={styles}
+                />
+            )}
+
+            {/* Role select */}
+            <DynamicSelect
+                selectOption={select_options?.select_role_options}
+                userDisplayed={user_displayed}
+                references={references}
+                styles={styles}
+            />
+        </>
+    );
+}
+// ================================
+//    Generic selct options rendering
+// ================================
+function RenderOtherSelects({ select_options, exclude = [], user_displayed, references, styles }) {
+
+    Object.entries(select_options)
+        .filter(([key]) => !exclude.includes(key))
+        .map(([key, selectOption]) =>console.log("RenderOtherSelects",key, selectOption))
+    return Object.entries(select_options)
+        .filter(([key]) => !exclude.includes(key))
+        .map(([key, selectOption]) =>
+            
+            <DynamicSelect
+                key={key}
+                selectOption={selectOption}
+                userDisplayed={user_displayed}
+                references={references}
+                styles={styles}
+            />
+        );
+}
+
 
 export default function UpdateUserFormFields({
     references,
@@ -30,44 +104,23 @@ export default function UpdateUserFormFields({
     setIsEditing,
     formBtnState,
     user_displayed,
-    user_data,
     styles,
 }) {
-    const [selectedTitleValue, setSelectedTitleValue] = useState(user_displayed?.emp_title ?? "");
-    // If there is not title selectOptions and global specialities then return null
-    // Memoize specialty options for selected title 
-    const specialitiesForTitle  = useMemo(() => {
-        return global_mapped_specialities[selectedTitleValue] && select_options.select_title_options ? ({
-            label: "specialty",
-            options: global_mapped_specialities[selectedTitleValue] || [],
-            name: "specialty",
-        }) : null;
-    }, [selectedTitleValue]);
-
-    console.log("select_options select_options" , specialitiesForTitle )
-
     return (
         <>
-            {/* Employee-specific selects */}
-            <DynamicSelect
-                selectOption={select_options?.select_title_options}
-                userDisplayed={user_displayed}
-                references={references}
-                onChange={(e) => setSelectedTitleValue(e.target.value)}
-                styles={styles}
-            />
-
-            <DynamicSelect
-                selectOption={specialitiesForTitle }
-                userDisplayed={user_displayed}
+            {/* Employee-related grouped selects */}
+            <EmployeeSelectFields
+                select_options={select_options}
+                user_displayed={user_displayed}
                 references={references}
                 styles={styles}
             />
 
-            {/* Common selects */}
-            <DynamicSelect
-                selectOption={select_options?.select_role_options}
-                userDisplayed={user_displayed}
+            {/* Render all remaining selects dynamically */}
+            <RenderOtherSelects
+                select_options={select_options}
+                exclude={["select_title_options", "select_role_options"]}  // keep OCP
+                user_displayed={user_displayed}
                 references={references}
                 styles={styles}
             />
@@ -76,7 +129,7 @@ export default function UpdateUserFormFields({
             {check_box && (
                 <Inputs
                     inputs_info={check_box}
-                    type={"checkbox"}
+                    type="checkbox"
                     defaultValues={user_displayed}
                     references={references.checkBoxsRef}
                 />
@@ -96,6 +149,7 @@ export default function UpdateUserFormFields({
         </>
     );
 }
+
 
 
 function LoginFormFields({
