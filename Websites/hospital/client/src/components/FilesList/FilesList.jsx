@@ -6,13 +6,15 @@ import FileUploadButton from "@/components/FileUploadButton/FileUploadButton";
 import statusNotification from "@/utils/statusNotification";
 import userNotification from "@/utils/userNotification";
 import Pagination_Btns from "../Pagination_Btns/Pagination_Btns";
+import {convertUTCToLocal} from "@/utils/Date/dateHelpers"
 
 export default function PatientFiles({onUploadFile,onDeleteFile , urls,files_meta , setFilesMeta }) {
-  const [currtPage, setCurrPage] = useState(1);
+  const [currPage, setCurrPage] = useState(1);
   const filesPerPage = 5;
   const { user_data } = useUserDataContext();
-  
   let [numOfPages , setNumOfPages] = useState(1);
+  let [progress ,setProgress] = useState(0);
+  let [isUploading ,setIsUploading] = useState(false);
 
 
 
@@ -21,7 +23,7 @@ export default function PatientFiles({onUploadFile,onDeleteFile , urls,files_met
   //    Initial meta data fetching
   // ================================
   useEffect(()=>{
-    fetch(`${process.env.APIKEY}/${urls.initial_url}?pagination=${currtPage}&size=${filesPerPage}`, {
+    fetch(`${process.env.APIKEY}/${urls.initial_url}?pagination=${currPage}&size=${filesPerPage}`, {
       mode: "cors",
       headers: {
         Authorization: `BEARER ${user_data.token}`,
@@ -44,7 +46,7 @@ export default function PatientFiles({onUploadFile,onDeleteFile , urls,files_met
       userNotification("error","Error Fetching Files")
     }
     )
-  },[])
+  },[currPage])
 
   // ================================
   //      Download All
@@ -126,9 +128,9 @@ export default function PatientFiles({onUploadFile,onDeleteFile , urls,files_met
                   className={styles["file-item"]}
                   onClick={() => onDownloadFile(entry)} // send full metadata back to parent
                 >
-                    <span className={styles["file-name"]}>{fileName}</span>
+                    <span className={styles["file-name"]}>{fileName.length > 10 ? fileName.slice(0,11) +"...." : "N/A"}</span>
                     <span className={styles["file-type"]}>{fileType}</span>
-                    <span className={styles["file-date"]}>{createdAt}</span>
+                    <span className={styles["file-date"]}>{convertUTCToLocal(createdAt)?.split(" ")[0] }</span>
                  <button
                   className={styles["file-delete-btn"]}
                   onClick={(e) => onDeleteFile(e, entry)}
@@ -146,15 +148,21 @@ export default function PatientFiles({onUploadFile,onDeleteFile , urls,files_met
           File Buttons
       ============================ */}
       <div className={styles["file-actions"]}>
-        <FileUploadButton onFileSelect={onUploadFile} />
+        <FileUploadButton onFileSelect={onUploadFile} setProgress={setProgress} setIsUploading={setIsUploading}/>
 
       </div>
+      {/* ============================
+          progress bar
+      ============================ */}
+      {isUploading && <progress value={progress} max="100"></progress>}
 
       {/* ============================
           Pagination
       ============================ */}
+      <div className={styles.table_btn_wrapper}>
+        <Pagination_Btns handlePagination={handlePagination} currPage={currPage} numOfPages={numOfPages}/>
+      </div>
       
-      <Pagination_Btns handlePagination={handlePagination} currPage={currtPage} numOfPages={numOfPages}/>
     </div>
   );
 }

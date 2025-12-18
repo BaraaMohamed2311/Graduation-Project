@@ -7,33 +7,36 @@ export default function UpdateUserForm({
   isEditing,
   setIsEditing,
   user_displayed,
-  currPage,
-  user_data,
-  inputs_info=[],
-  select_options={},
-  check_box={},
-  // New props
-  references, // Contains all refs: inputsBoxsRef, checkBoxsRef, selectBoxsRef
-  update_handler,
-    modifier_data
+    currPage,
+    user_data,
+    // New props
+    references, // Contains all refs: inputsBoxsRef, checkBoxsRef, selectBoxsRef
+    update_handler,
+    modifier_data,
+    fieldDefinitions,
+    isUpdatingSelf=false
  
 
 }) {
   
     let [formBtnState, setFormBtnState] = useState("Update");
     let [isLoadingBtn , setIsLoadingBtn ] = useState(false);
-    let inputsBoxsRef = references.inputsBoxsRef;
-    let checkBoxsRef = references.checkBoxsRef;
-    let selectBoxsRef = references.selectBoxsRef;
+    let {inputsBoxsRef , checkBoxsRef , selectBoxsRef} = references;
+        const { select_role_options, ...otherOptions } = fieldDefinitions.select_def || {};
+    const { perms_check_box, ...otherCheckBoxes } = fieldDefinitions.check_box || {};
+
+    // if updating other user we have to check that modifier is authorized 
+    if(!isUpdatingSelf){
+        const is_authorized_to_update_roles = modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Employee Role");
+        const is_authorized_to_update_perms = modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Employee Perms");
 
 
+        const authorized_select_def = is_authorized_to_update_roles ? fieldDefinitions.select_def : otherOptions;
+        const  authorized_check_box = is_authorized_to_update_perms ? fieldDefinitions.check_box  : otherCheckBoxes;
+        fieldDefinitions = {select_def : authorized_select_def ,  check_box : authorized_check_box , inputs_info : fieldDefinitions.inputs_info}
+    }
     
-    const is_authorized_to_update_roles = modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Employee Role");
-    const is_authorized_to_update_perms = modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Employee Perms");
-    const { select_role_options, ...otherOptions } = select_options;
-    const { perms_check_box, ...otherCheckBoxes } = check_box;
-
-    console.log("inputs_info",inputs_info,"select_options",select_options,"check_box",check_box)
+    console.log("authorized fieldDefinitions",fieldDefinitions)
 
     return (
         <div className={styles["update-emp-page"]}>
@@ -44,13 +47,7 @@ export default function UpdateUserForm({
                     form_handler = {(e)=>update_handler(e ,url , modifier_data.token )}
                     // add employee_displayed to form to show prev values of inputs
                     user_displayed = {user_displayed} 
-                    // removes Role selection if no permission
-                    select_options={  is_authorized_to_update_roles ? select_options : otherOptions} 
-                    /*removes check box of perms for user who\s not allowed to edit others perms */
-                    check_box={  is_authorized_to_update_perms ? check_box : otherCheckBoxes } 
-
-
-                    inputs_info = {inputs_info}
+                    fieldDefinitions={fieldDefinitions}
                     formBtnState = {formBtnState}  
                     isLoginPage={false} 
                     isEditing={isEditing}  

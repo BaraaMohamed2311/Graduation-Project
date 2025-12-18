@@ -325,13 +325,15 @@ class NurseMethods {
                 ON u.user_type = 'employee' AND u.user_id = e.emp_id
 
             SET
-                ${updating_string},
-                u.latest_update = NOW()
+                ${updating_string}
 
             WHERE n.nurse_id = ${nurse_id};
         `
-
-        const result = await sqlTransaction([query])
+        const version_query = `UPDATE table_version
+                            SET current_version = current_version + 1
+                            WHERE table_name = 'hospital_employees';
+                            `
+        const result = await sqlTransaction([query,version_query])
 
         return result[0]?.affectedRows > 0;
 

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { getAllFromStore } from "@/utils/indexDB/getCacheMethods";
 import { clearStore } from "@/utils/indexDB/deleteCacheMethods";
-import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
+import { putIndexDB } from "@/utils/indexDB/updateCacheMethods";
 
 export const usePatientsCache = () => {
   const [cached_patients, setCached_Patients] = useState([]);
@@ -63,13 +63,28 @@ export const usePatientsCache = () => {
   const savePatientsToStore = async (patients) => {
     try {
       if (Array.isArray(patients) && patients.length > 0) {
-        await appendToIndexDB("patients", patients);
+        await putIndexDB("patients", patients);
       } else {
         await clearStore("patients");
       }
     } catch (err) {
       console.error("Failed to save patients to IndexedDB:", err);
       throw err;
+    }
+  };
+
+  // Check if a specific page needs sync
+  const checkPageSync = async ( max_version) => {
+
+    try {
+      const response = await fetch(`${process.env.APIKEY}/sync/patients?max_version=${max_version}`);
+      const data = await response.json();
+      console.log(data.needsSync);
+
+      return {needsSync : data.needsSync , latest_version:data.latest_version}; 
+    } catch (err) {
+      console.error("Failed to check page sync:", err);
+      return {needsSync : true , latest_version:0}; 
     }
   };
 
@@ -80,6 +95,7 @@ export const usePatientsCache = () => {
     setFetched_Patient_Pages,
     savePatientsToStore,
     isIndexedDBLoaded, 
-    setIsIndexedDBLoaded
+    setIsIndexedDBLoaded,
+    checkPageSync
   };
 };

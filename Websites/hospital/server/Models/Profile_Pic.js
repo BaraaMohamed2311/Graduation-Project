@@ -16,7 +16,7 @@ const Profile_PIC_Schema = new mongoose.Schema({
     
     
       
-        user_email: {type:String, required:true},
+        user_id: {type:String, required:true},
         user_pic: PIC_Schema 
       
     

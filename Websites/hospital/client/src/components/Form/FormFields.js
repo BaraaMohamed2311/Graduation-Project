@@ -28,14 +28,14 @@ function DynamicSelect({ selectOption, userDisplayed, references, onChange, styl
 // ================================
 //    Employee's Specific Select Elements
 // ================================
-function EmployeeSelectFields({ select_options, user_displayed, references, styles }) {
+function EmployeeSelectFields({ select_def, user_displayed, references, styles }) {
     const [selectedTitleValue, setSelectedTitleValue] = useState(
         user_displayed?.emp_title ?? ""
     );
 
      // Memoize specialty options for selected title 
     const specialitiesForTitle  = useMemo(() => {
-        return global_mapped_specialities[selectedTitleValue] && select_options.select_title_options ? ({
+        return global_mapped_specialities[selectedTitleValue] && select_def?.select_title_options ? ({
             label: "specialty",
             options: global_mapped_specialities[selectedTitleValue] || [],
             name: "specialty",
@@ -46,7 +46,7 @@ function EmployeeSelectFields({ select_options, user_displayed, references, styl
         <>
             {/* Title select */}
             <DynamicSelect
-                selectOption={select_options?.select_title_options}
+                selectOption={select_def?.select_title_options}
                 userDisplayed={user_displayed}
                 references={references}
                 onChange={(e) => setSelectedTitleValue(e.target.value)}
@@ -65,7 +65,7 @@ function EmployeeSelectFields({ select_options, user_displayed, references, styl
 
             {/* Role select */}
             <DynamicSelect
-                selectOption={select_options?.select_role_options}
+                selectOption={select_def?.select_role_options}
                 userDisplayed={user_displayed}
                 references={references}
                 styles={styles}
@@ -76,12 +76,13 @@ function EmployeeSelectFields({ select_options, user_displayed, references, styl
 // ================================
 //    Generic selct options rendering
 // ================================
-function RenderOtherSelects({ select_options, exclude = [], user_displayed, references, styles }) {
+function RenderOtherSelects({ select_def, exclude = [], user_displayed, references, styles }) {
 
-    Object.entries(select_options)
+    Object.entries(select_def || {})
         .filter(([key]) => !exclude.includes(key))
-        .map(([key, selectOption]) =>console.log("RenderOtherSelects",key, selectOption))
-    return Object.entries(select_options)
+        .map(([key, selectOption]) =>console.log("RenderOtherSelects",key, selectOption));
+
+    return  Object.entries(select_def || {})
         .filter(([key]) => !exclude.includes(key))
         .map(([key, selectOption]) =>
             
@@ -98,19 +99,20 @@ function RenderOtherSelects({ select_options, exclude = [], user_displayed, refe
 
 export default function UpdateUserFormFields({
     references,
-    check_box,
-    select_options,
     isEditing,
     setIsEditing,
     formBtnState,
     user_displayed,
     styles,
+    fieldDefinitions,
 }) {
+    const {select_def , check_box}= fieldDefinitions;
+
     return (
         <>
             {/* Employee-related grouped selects */}
             <EmployeeSelectFields
-                select_options={select_options}
+                select_def={select_def}
                 user_displayed={user_displayed}
                 references={references}
                 styles={styles}
@@ -118,7 +120,7 @@ export default function UpdateUserFormFields({
 
             {/* Render all remaining selects dynamically */}
             <RenderOtherSelects
-                select_options={select_options}
+                select_def={select_def}
                 exclude={["select_title_options", "select_role_options"]}  // keep OCP
                 user_displayed={user_displayed}
                 references={references}
@@ -126,14 +128,14 @@ export default function UpdateUserFormFields({
             />
 
             {/* Check Box Permissions */}
-            {check_box && (
+            {check_box && Object.keys(check_box).map(key=>(
                 <Inputs
-                    inputs_info={check_box}
-                    type="checkbox"
+                    inputs_info={check_box[key]}
                     defaultValues={user_displayed}
                     references={references.checkBoxsRef}
+                    formKind={"check_inputs_wrapper"}
                 />
-            )}
+            ))}
 
             {/* Cancel Edit Button */}
             {isEditing && (

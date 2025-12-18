@@ -146,7 +146,8 @@ const global_store_names = [
   "mypatients",
   "employees",
   "booking-doctors",
-  "booking-surgeons"
+  "booking-surgeons",
+  "user_images"
 ];
 
 const globally_mapped_booking_stores = {

@@ -9,31 +9,36 @@ import {FormFieldsMap} from "./FormFields.js";
 
 export default function Form({
     references, form_handler , formBtnState ,
-     inputs_info,check_box, select_options ,
     formKind , isEditing , setIsEditing ,
-     user_displayed , isLoadingBtn}) {
+     user_displayed , isLoadingBtn , fieldDefinitions}) {
 
     let {user_data} = useUserDataContext();
      const Fields = FormFieldsMap[formKind] || (() => null);
-
+     
+    const shared_inputs_meta = fieldDefinitions?.inputs_info
+    console.log("fieldDefinitions",fieldDefinitions)
     return (
         <form className={formKind === "update_form" ? styles.sided_form :""} method="post" onSubmit={form_handler}>
             
-            {/* for any page display input fields with corresponding label and type */}
-            <Inputs  styles={styles } type={"labled_input"} formKind={formKind} inputs_info={inputs_info} defaultValues={user_displayed} references = {references.inputsBoxsRef}/>
+            <Inputs  
+            styles={styles } 
+            label_type={"labeled_input"} 
+            formKind={formKind} 
+            inputs_info={shared_inputs_meta} 
+            defaultValues={user_displayed} 
+            references = {references.inputsBoxsRef}/>
 
             {/* Form-kind-specific fields */}
             <Fields
-            
-                check_box={check_box}
+        
                 references={references}
-                select_options={select_options}
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
                 formBtnState={formBtnState}
                 user_displayed={user_displayed}
                 user_data={user_data}
                 styles={styles}
+                fieldDefinitions={fieldDefinitions}
             />
 
 

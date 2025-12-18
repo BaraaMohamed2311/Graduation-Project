@@ -5,7 +5,7 @@ let inputs_info= [
     { key:"user_name",label:"Name", name: "user_name", type: "text" },
 ]
 
-let selectsElementsData = [
+let select_def = [
     {   
 
         key:"By Title",
@@ -41,4 +41,4 @@ let selectsElementsData = [
 ]
  
 
-export  {selectsElementsData , inputs_info}
+export  {select_def , inputs_info}

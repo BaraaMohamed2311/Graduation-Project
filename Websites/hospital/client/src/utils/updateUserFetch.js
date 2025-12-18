@@ -1,8 +1,8 @@
 "use client"
 import userNotification from "./userNotification";
 import statusNotification from "./statusNotification"
-
-export default function updateUserFetch(url , token , body, actionsString , setCached_Employees , currPage , router){
+import {updateRecordByProp} from "@/utils/indexDB/updateCacheMethods"
+export default function updateUserFetch(url , token , body, actionsString , setCached_Employees , currPage , router ,storeName){
     
 
     fetch(`${process.env.APIKEY}/${url}?perms_requested=${actionsString}`,{
@@ -20,22 +20,8 @@ export default function updateUserFetch(url , token , body, actionsString , setC
     .then(async (data)=>{
         console.log("data after updating employee")
             if(data && data.success){
-                /**await  setCached_Employees(prev => {
-                    // prevent direct modify
-                    let newArray = Array.from(prev);
-
-                    return newArray.map((employee)=>{
-                        // if onl updated employee return body response
-                        if(data.body.emp_id !== employee.emp_id ){
-                            return employee;
-                        }
-                        else{
-                            return data.body;
-                        }
-                    })
-                    
-                })**/
-            
+                
+                // updateRecordByProp(storeName,"user_id",body.user_id ,)
                 
             }
             

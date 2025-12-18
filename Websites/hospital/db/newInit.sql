@@ -9,10 +9,14 @@
 	-- user_password varchar(255) NOT NULL,
     -- user_type ENUM('patient', 'employee') NOT NULL,
     -- created_at TIMESTAMP DEFAULT NOW(),
-    -- latest_update TIMESTAMP DEFAULT NOW() ON UPDATE NOW()
+
     
 -- );
 
+CREATE TABLE table_version (
+    table_name VARCHAR(100) PRIMARY KEY,
+    current_version BIGINT NOT NULL
+);
 
 -- ==========================================
 -- Employees_Hospital (Bridge Table to store all employees_hospital ids in one place)
@@ -278,6 +282,11 @@ CREATE TABLE rooms (
 ---====================================================================================
 
 
+INSERT INTO table_version(table_name, current_version) VALUES
+('employees', 1),
+('patients', 1),
+('booking', 1),
+('hospital_employees', 1);
 
 
 

@@ -30,7 +30,11 @@ function PatientDetailsPage() {
 
   // Efficiently find the patient from cache
   const mypatient = cached_my_patients?.find(mp => mp.user_id === parseInt(user_id));
-
+  const modifierObj = mypatient ? {
+      other_user_email: mypatient.user_email,
+      modifier_email: user_data.user_email,
+      modifier_id: user_data.user_id,
+    } : {};
 
 
     // Load User Image
@@ -146,14 +150,10 @@ function PatientDetailsPage() {
 
   // ================================
   //      Upload
-  function onUploadFile(file) {
-    const other_req_data = {
-      other_user_email: mypatient.user_email,
-      modifier_email: user_data.user_email,
-      modifier_id: user_data.user_id,
-    };
-
-    uploadPatientFile(`files/other/patient?my=true`, file, other_req_data, user_data.token);
+  function onUploadFile(files , setProgress, setIsUploading) {
+    
+    setIsUploading(true)
+    uploadPatientFile(`files/other/patient?my=true`, files, modifierObj, user_data.token , setProgress);
   }
   // ================================
   //      Delete
@@ -218,7 +218,7 @@ function PatientDetailsPage() {
       
       {isEditing && is_authorized_to_modify_my_patents_data && 
         <UpdateUserForm
-            url={`list/update-other/mypatient`}
+            url={`list/other/mypatient`}
             isEditing={isEditing}
             setIsEditing={setIsEditing}
             user_displayed={mypatient}
@@ -230,6 +230,7 @@ function PatientDetailsPage() {
             inputs_info={inputs_info}
             select_options={select_options}
             update_handler={update_handler}
+            fieldDefinitions={{select_options,inputs_info}}
           />
       }
         <div className={styles["patient-container"]}>
@@ -238,7 +239,7 @@ function PatientDetailsPage() {
             <div className={styles["patient-img-wrapper"]}>
               <Image
                 priority={false}
-                src={blobURL}
+                src={blobURL || "/avatar.jpg"}
                 className={styles["patient-picture"]}
                 width="192"
                 height="192"
@@ -277,7 +278,9 @@ function PatientDetailsPage() {
           />
 
           <HealthStatus  
-          user_id={mypatient.user_id}/>
+          user_id={mypatient.user_id}
+          modifierObj={modifierObj}
+          />
 
           {/* --- Actions --- */}
           <div className={styles["patient-details"]}>

@@ -266,11 +266,11 @@ class SurgeonMethods {
         const query = `SELECT 
                         -- from users 
                         u.user_id,
-                        u.user_email
-                        u.user_password
+                        u.user_email,
+                        u.user_password,
                         u.user_name,
 
-                        --from employees
+                        -- from employees
 
                         e.emp_salary,
                         e.emp_abscence,
@@ -279,7 +279,7 @@ class SurgeonMethods {
                         e.emp_title,
                         e.emp_specialty,
 
-                        --from surgeons
+                        -- from surgeons
                         s.surgeon_id,
                         s.hosp_emp_id,
                         s.initial_consultation_price,
@@ -322,7 +322,7 @@ class SurgeonMethods {
                     s.initial_consultation_price,
                     s.followup_consultation_price,
                     s.surgery_price,
-                    s.years_of_exp
+                    s.years_of_exp,
                     u.user_email;
                     `;
         const result = await executeMySqlQuery(query);
@@ -338,68 +338,27 @@ class SurgeonMethods {
     // ============================
     static async updateSurgeonFullCore(surgeon_id, updating_string){
         const query = `
-        UPDATE surgeon s
+        UPDATE surgeons s
             JOIN employees e 
                 ON s.hosp_emp_id = e.emp_id
             JOIN users u 
                 ON u.user_type = 'employee' AND u.user_id = e.emp_id
 
             SET
-                ${updating_string},
-                u.latest_update = NOW()
+                ${updating_string}
 
             WHERE s.surgeon_id = ${surgeon_id};
         `
-
-        const result = await sqlTransaction([query])
+        const version_query = `UPDATE table_version
+                            SET current_version = current_version + 1
+                            WHERE table_name = 'hospital_employees';
+                            `
+        const result = await sqlTransaction([query,version_query])
 
         return result[0]?.affectedRows > 0;
 
     }
-    static async updateSurgeonSpecificData(user_id, data) {
-        try{
-            // ===1. Filter data to only include fields relevant to nurses table
-                const surgeons_table_fields = Tables.surgeons;
-                const MapOfData = new Map(Object.entries(data));
-                let fieldsToUpdate = {};
-                for (const field of surgeons_table_fields) {
-                    if( MapOfData.has(field)){
-                        fieldsToUpdate[field] = MapOfData.get(field);
-                    }
-                }
-                // ===2.  Construct dynamic fields string for SQL
-                const fields = stringifyFields( "joined",Object.entries(fieldsToUpdate))
-            const query = `
-                UPDATE surgeons
-                SET 
-                    ${fields}
-                WHERE hosp_emp_id = ${user_id};
-            `;
-            await executeMySqlQuery(query);
-            return true;
-        }
-        catch(err){
-            console.error("Error updating surgeon data:", err);
-            return false;
-        }
-                
-        }
-
-        static #mapToAction ={
-            "Surgeon core": SurgeonMethods.updateSurgeonSpecificData,
-        }
-        static async MapToUpdateSurgeonData(user_id, data, actions ) {
-            const results = [];
-            for( const action of actions){
-                const fn = SurgeonMethods.#mapToAction[action];
-                if (!fn) continue; // skip if no function for this action
-                const result = await fn.call(this, user_id, data);
-                results.push({ action, result });
-            }
-
-                return results; // return array of results for each action
-        }
-
+    
         
 
 

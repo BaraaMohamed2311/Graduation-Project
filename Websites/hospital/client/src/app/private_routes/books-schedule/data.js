@@ -2,7 +2,7 @@ import {  global_consultation_types,
           global_consultation_status} from "@/global_data"
 
 
-let select_options = [
+let select_def = [
     {   
 
         key:"Status",
@@ -32,4 +32,4 @@ let select_options = [
 ]
  
 
-export   {select_options}
+export   {select_def}

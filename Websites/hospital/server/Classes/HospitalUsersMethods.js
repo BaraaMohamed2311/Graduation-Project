@@ -182,7 +182,8 @@ class HospitalUsersMethods   {
                 s.years_of_exp,
                 n.floor_number,
                 hr.role_name
-            ${perms_CONDITION}
+                ${perms_CONDITION}
+                ORDER BY u.user_id -- Must be ordered to match sync query
             limit ${limit} offset ${offset}
         `
             

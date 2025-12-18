@@ -7,6 +7,7 @@ const inputsWrapperClassMap = {
   "sided_inputs": styles.sided_inputs_wrapper,
   "col_inputs": styles.colm_inputs_wrapper,
   "row_inputs": styles.row_inputs_wrapper,
+  "check_inputs_wrapper" : styles.check_inputs_wrapper,
   "default": styles.colm_inputs_wrapper
 };
 // -------------------- Labelling Component Map --------------------
@@ -29,17 +30,18 @@ const InputMaps = {
 function LabeledInput({inputs_info  , formKind , defaultValues , references } ){
 
     const wrapperClass = inputsWrapperClassMap[formKind] || inputsWrapperClassMap.default;
-
+console.log("triggered LabeledInput")
   return (
     <div className={wrapperClass}>
-      {inputs_info?.map((input) => (
-        <LabeledWrapper
-          key={input.name}
-          input={input}
-          references={references}
-          defaultValues={defaultValues}
-        />
-      ))}
+      {inputs_info && inputs_info.length > 0 && inputs_info.map((input) => {
+        const InputComponent = InputMaps[input.type] || InputMaps.default;
+        return (
+          <div key={input.name} className={styles.txt_field}>
+            <InputComponent input={input} references={references} defaultValues={defaultValues} />
+            <label>{input.label}</label>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -47,7 +49,7 @@ function LabeledInput({inputs_info  , formKind , defaultValues , references } ){
 function NormalInput({inputs_info  , formKind , defaultValues , references } ){
 
     const wrapperClass = inputsWrapperClassMap[formKind] || inputsWrapperClassMap.default;
-
+console.log("triggered")
   return (
     <div className={wrapperClass}>
       {inputs_info && inputs_info.length > 0 && inputs_info.map((input) => {
@@ -107,7 +109,7 @@ function CheckBoxInput({input , references , defaultValues  }){
     
     console.log("permsSet ",permsSet)
     return (
-        <>
+        <div className={styles.check_input_wrapper}>
             {/* if employee_displayed exists then check if he had that perm by set of perms he has*/}
             <input 
                 required={input.isRequired || false} 
@@ -115,7 +117,8 @@ function CheckBoxInput({input , references , defaultValues  }){
                 references.current[input.name]= el} 
                 type={input.type} 
                 defaultChecked={permsSet? permsSet.has(input.name):false } />
-        </>
+                <label>{input.label}</label>
+        </div >
      
     )
 }

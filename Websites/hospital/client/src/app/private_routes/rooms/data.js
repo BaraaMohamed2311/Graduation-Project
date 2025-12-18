@@ -2,7 +2,7 @@ import {   global_floors,global_rooms} from "@/global_data"
 
 
 
-let selectsElementsData = [
+let select_def = [
     {   
 
         key:"By Floor",
@@ -32,4 +32,4 @@ let selectsElementsData = [
 ]
  
 
-export   {selectsElementsData}
+export   {select_def}

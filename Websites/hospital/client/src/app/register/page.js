@@ -72,9 +72,11 @@ export default function RegisterPage() {
           <Form 
           form_handler={register_handler} 
           formBtnState = {formBtnState} 
-          inputs_info = { inputs_info} 
           references={{inputsBoxsRef}} 
-          formKind={"register_form"}/>
+          formKind={"register_form"}
+          fieldDefinitions={{inputs_info}}
+          />
+          
         </div>
       </div>
     </>

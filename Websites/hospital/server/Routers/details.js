@@ -4,13 +4,12 @@
 const router = require("express").Router();
 const jwtVerify = require("../middlewares/jwtVerify.js");
 const PatientMethods = require("../Utils/methods/PatientMethods.js");
-const deletePatient = require("../Utils/ControlUsers/deletePatient.js");
 const JoinFiltering = require("../Utils/JoinFiltering.js");
 const PatientFile = require("../Models/Patient_file.js");
 const PatientHealthStatus = require("../Models/Patient_health_status.js");
 const User = require("../Classes/User.js");
 const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
-
+const mailer = require("../Utils/mailer")
 // =================================
 //  Images routes are at files.js
 // =================================
@@ -20,7 +19,7 @@ const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
 // =================================
 //  Get One Patient Data MySQL
 // =================================
-router.get("/employee/:id",async (req,res)=>{
+router.get("/employee/:id",jwtVerify,async (req,res)=>{
     try{
         const {  id : user_id } = req.params;
 
@@ -55,7 +54,7 @@ router.get("/employee/:id",async (req,res)=>{
 // =================================
 //  Get One Patient Data MySQL
 // =================================
-router.get("/patient/:id",async (req,res)=>{
+router.get("/patient/:id",jwtVerify,async (req,res)=>{
     try{
         const {  id :user_id  } = req.params;
 
@@ -86,7 +85,7 @@ router.get("/patient/:id",async (req,res)=>{
 // =================================
 //  Get One Patient Data MySQL
 // =================================
-router.get("/patient",async (req,res)=>{
+router.get("/patient",jwtVerify,async (req,res)=>{
     try{
         const {user_email, user_phone} = req.query;
 
@@ -119,16 +118,16 @@ router.get("/patient",async (req,res)=>{
 // =================================
 //  Get Patient Data  MongoDB
 // =================================
-router.get("/patient-health-status/:patientId",async (req,res)=>{
+router.get("/patient/health-status/:patientId",jwtVerify,async (req,res)=>{
     try{
         const {patientId} = req.params
 
         const record = await PatientHealthStatus.findOne({ user_id: patientId });
-
+        console.log("patientId healthstatus",patientId)
         if (!record) {
             return res.status(404).json({ success: false, message: "Patient not found" });
         }
-
+        console.log("record",record)
         res.json({ success: true, body: record });
     
         
@@ -143,7 +142,7 @@ router.get("/patient-health-status/:patientId",async (req,res)=>{
     }
 })
 
-router.get("/patient-files/:patientId",async (req,res)=>{
+router.get("/patient-files/:patientId",jwtVerify,async (req,res)=>{
      try {
         const { patientId } = req.params;
 
@@ -173,60 +172,48 @@ router.get("/patient-files/:patientId",async (req,res)=>{
 // =================================
 //  Delete Patient 
 // =================================
-router.delete("/delete-patient", async (req, res) => {
+router.delete("/patient",jwtVerify, async (req, res) => {
     try {
-        const { modifier_email, modifier_id, modifier_name, patient_email, patient_name } = req.body;
+        const { user_id, patient_name } = req.body;
         
 
         // all these fields required to delete & send email
-        if(!modifier_email || !modifier_id || !patient_email || !emp_email  ) return res.status(400).json({success:false,message:"Bad Request"});
+        if(!user_id  ) return res.status(400).json({success:false,message:"Bad Request"});
         
         
-        let ModifierpermsSet = await User.getSetUserperms(modifier_id);
-        let isFulfilled = false;
-        // ===1. Check if modifier have perm to delete users
-        if (ModifierpermsSet.isPermExist("Delete Patient")) {
 
-            // ===2. Get Modifier Role & Other User ID
-            const ModifierRole = await User.getUserRole(modifier_id);
-            const otherUserGET_ID = await User.getUserIDAndTable(patient_email);
+            const userType = await User.getUserTypeById(user_id);
+            const userIsPatient = userType === "patient";
+
+                // User is not patient
+                if (!userIsPatient) {
+                    return res.json({ success: false, message: "Cann't delete a non-patient acctount" });
+                } 
             
-            // ===3. Check that other user is not self & is a patient
-            if(otherUserGET_ID.user_id === null || otherUserGET_ID.table !== "patients" ) return res.status(404).json({success:false,message:"Patient Not Found"});
-            else if(otherUserGET_ID.user_id === modifier_id) return res.status(400).json({success:false,message:"You Cannot Delete Yourself"});
-
-
-            // ===4. Execute Deletion 
-            if(otherUserGET_ID.user_id && otherUserGET_ID.table === "patients") {
-                isFulfilled =await deletePatient(ModifierRole, otherUserRole,patient_id);
-                
-            }
-
-        }
-        else{
-            return res.json({success:false , message:"Not Allowed To Delete Patients"})
-        }
-        
-        // ===5. Send Email
-        if (isFulfilled) {
-            const isSent = await mailer(modifier_email, emp_email, "You Got Deleted", `
-                Dear ${patient_name},
+            const isDeleted = await PatientMethods.cascadeDeletePatientData(user_id);
+            const user_email = await User.getUserEmailByID(user_id)
+            const text = `Dear User,
 
                 Your hospital patient's account was deleted ${new Date()}.
                 If you believe this was a mistake or have any questions, please contact us.
 
-                Sincerely,
-                ${modifier_name}
-            `);
+                Sincerely,`
+            const isSent = await mailer("hospital@support" ,user_email, "Account Was Deleted" , text);
 
-            if (isSent)
-                return res.json({ success: true, message: "Patient Deleted & Email Sent" });
-            else
-                return res.status(500).json({ success: false, message: "Patient Deleted But Email Not Sent" });
+            if(isDeleted){
+                res.status(200).json({
+                    success:true,
+                    message:"Account was Deleted | Email was sent Successfully"
+                });
+            }
+            else{
+                res.status(500).json({
+                    success:false,
+                    message:"Failed to delete account"
+                });
+            }
 
-        } else {
-            return res.status(500).json({ success: false, message: "Patient Wasn't Deleted" });
-        }
+        
     } catch (err) {
         consoleLog(`Error Delete Patient Data ${err}`, "error");
         res.json({

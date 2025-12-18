@@ -1,6 +1,6 @@
 import { global_title ,global_bookable_hospital_title} from "@/global_data"
 
-let selectsElementsData = [
+let select_def = [
     {   
 
         key:"Title",
@@ -38,4 +38,4 @@ let selectsElementsData = [
 ]
  
 
-export   {selectsElementsData}
+export   {select_def}

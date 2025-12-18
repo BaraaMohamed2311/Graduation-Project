@@ -1,113 +1,102 @@
-.table-search-options{
+/* Main wrapper */
+.table-search-options {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 4rem;
-    height: fit-content;
-    gap: 0.5rem;
-    width: 100%;
+    gap: 14px;
+    padding: 1rem;
+    border-radius: 12px;
+    flex-wrap: wrap;
 }
 
-.table-search-options input{
-    flex: 2;
-    padding: 0.6rem 1rem;
-    height: 2.5rem;
+/* Inputs & selects */
+.table-search-options input,
+.table-search-options select {
+    height: 42px;
+    padding: 8px 14px;
+    border: 1px solid #d8e2eb;
+    border-radius: 10px;
     outline: none;
-    border: 1px solid var(--sec-dark);
-    border-radius: 4px;
+    background: #fff;
+    transition: 0.2s;
+    font-size: 1rem;
 }
 
-.select-wrapper{
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+.table-search-options input:focus,
+.table-search-options select:focus {
+    border-color: #9bbad1;
+    background: #f7faff;
 }
 
-.filter {
-    background-color: var(--main-hovers);
-    color: white;
-    border-radius: 0.2rem;
-    border: 1px solid transparent;
-    padding: 0.6rem 1rem;
-    height: 2.5rem;
-}
-
-.table-search-options .select-div{
-    position: relative;
-}
-
-.table-search-options .select-div .select-label{
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform: translateY(-200%);
-}
-
-
-
-/* select stylying */
-
+/* Select wrapper */
 .select-wrapper {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    gap: 4px;
 }
 
 .select-wrapper label {
-    font-size: 1rem;
-    color: #333;
-
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2d4f6c;
 }
 
-.select-wrapper select {
-    padding: 0.6rem 1rem;
-    height: 2.5rem;
-    font-size: 1rem;
-    color: #333;
-    background-color: #fff;
-    border: 1px solid var(--sec-dark);
-    border-radius: 4px;
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1rem;
+/* Buttons — SAME STYLE AS PAGINATION */
+.filter {
+    background: #ffffff;
+    border: 1px solid #d8e2eb;
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: 500;
+    color: #2d4f6c;
+    height: 42px;
 }
 
-.select-wrapper select:focus {
-    border-color: var(--main-hovers);
-    outline: none;
-    box-shadow: 0 0 5px rgba(102, 175, 233, 0.5);
+.filter:hover {
+    background: #f0f4f9;
 }
 
-.select-wrapper select option {
-    padding: 0.5rem;
-    font-size: 1rem;
+/* Clear filter has red tint */
+.clear-filter {
+    border-color: #ffb3b3;
+    color: #b80000;
 }
 
+.clear-filter:hover {
+    background: #ffe5e5;
+}
 
+/* Confirm button under list */
+.select_btn {
+    margin: 1.5rem auto;
+    display: block;
+    background: #ffffff;
+    border: 1px solid #d8e2eb;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: 600;
+    color: #2d4f6c;
+}
 
+.select_btn:hover {
+    background: #f0f4f9;
+}
 
-
-@media (max-width:1200px) {
-    
-    .table-search-options{
-        display: flex;
+/* Responsive */
+@media (max-width: 1200px) {
+    .table-search-options {
         flex-direction: column;
-        align-items: center;
         width: 100%;
     }
 
-
-    .table-search-options .select-wrapper  ,.table-search-options .select-wrapper select {
+    .table-search-options input,
+    .table-search-options select,
+    .filter,
+    .clear-filter {
         width: 100%;
     }
-    .table-search-options input{
-        flex: 1;
-        width: 100%;
-    }
-
-    .filter {
-        width: 100%;
-        
-    }
-
 }

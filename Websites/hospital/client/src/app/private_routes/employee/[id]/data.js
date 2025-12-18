@@ -29,22 +29,6 @@ let inputs_info = [
     
 ];
 
-let select_title_options ={
- key:"emp_title",
-    label:"Select Job Title",
-    name:"emp_title",
-    options:global_title,
-
-}
-
-let select_specialty_options ={
- key:"emp_specialty",
-    label:"Select Job specialty",
-    name:"emp_specialty",
-    options:global_specialty,
-
-}
-
 
 let select_role_options ={
      key:"role_name",
@@ -137,6 +121,6 @@ let check_box = {
 
 ]};
 
-let select_options = {select_title_options, select_specialty_options  , select_role_options }
+let select_def = {select_role_options }
 
-export  {inputs_info , select_options  , check_box}
+export  {inputs_info , select_def  , check_box}

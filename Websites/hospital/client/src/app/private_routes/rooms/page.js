@@ -4,7 +4,7 @@ import { Suspense , lazy ,useState , useRef, useEffect} from "react";
 import LoaderForComponents from "@/components/LoaderForComponents/LoaderForComponents";
 import SearchOptions from "@/components/SearchOptions/SearchOptions";
 import styles from "./list.module.css"
-import {selectsElementsData} from "./data";
+import {select_def} from "./data";
 import userNotification from "@/utils/userNotification";
 import statusNotification from "@/utils/statusNotification";
 import RoomCard from "@/components/RoomCard/RoomCard";
@@ -25,7 +25,7 @@ function EmployeesListPage() {
   // Refrences
 
   function handleClearFilterOption(){
-    selectsElementsData.forEach((el) => {
+    select_def.forEach((el) => {
       
     if (selectBoxsRef.current[el.name]) {
       
@@ -221,7 +221,7 @@ function handleShowAllEmptyRooms() {
           currPage={currPage} 
           sizeOfPage={sizeOfPage} 
           setIsFiltered= {setIsFiltered} 
-          selectsElementsData={selectsElementsData}
+          fieldDefinitions={{select_def}}
           />
       <Suspense fallback={<LoaderForComponents  styling={styles.loader_for_components_wrapper}/>}>
       <div className={styles["wrapper"]}>

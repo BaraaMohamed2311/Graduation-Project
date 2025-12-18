@@ -1,9 +1,11 @@
+import {global_store_names} from "@/global_data"
+
 // Database name and version
 const DB_NAME = "hospital";
 const DB_VERSION = 1;
 
 // Object store names
-const STORES = ["mypatients", "patients", "employees","booking-doctors","booking-surgeons"];
+const STORES = global_store_names;
 
 // ============================
 //  OPEN or CREATE DATABASE
@@ -20,11 +22,11 @@ export function openIndxDB() {
       STORES.forEach((storeName) => {
         if (!db.objectStoreNames.contains(storeName)) {
           // Each store holds an array of objects, so we use a keyPath for unique IDs
-          db.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
+          db.createObjectStore(storeName, { keyPath: "user_id" });
         }
       });
 
-
+      
     };
 
     request.onsuccess = function (event) {

@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import styles from "./FileUploadButton.module.css"
-function FileUploadButton({ onFileSelect }) {
+function FileUploadButton({ onFileSelect, setProgress, setIsUploading}) {
   const fileInputRef = useRef(null);
 
   // Trigger click on hidden input
@@ -10,8 +10,8 @@ function FileUploadButton({ onFileSelect }) {
 
   // Handle selected file
   const handleFileChange = (e) => {
-    const file = e.target.files[0]; // single file
-    if (file) onFileSelect(file);
+    const files = e.target.files; // multiple files
+    if (files.length > 0) onFileSelect(files, setProgress, setIsUploading);
   };
 
   return (

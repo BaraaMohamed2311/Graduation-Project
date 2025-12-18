@@ -1,7 +1,7 @@
 // hooks/useBookingListCache.js
 import { useState, useEffect } from "react";
 import { getAllFromStore } from "@/utils/indexDB/getCacheMethods";
-import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
+import { putIndexDB } from "@/utils/indexDB/updateCacheMethods";
 import { clearStore } from "@/utils/indexDB/deleteCacheMethods";
 import { globally_mapped_booking_stores } from "@/global_data";
 // If you update this you have to update the IndexedDB stores names in openIndxDB.js to create them first
@@ -38,7 +38,7 @@ export const useBookingListCache = () => {
       }
 
       if (Array.isArray(bookingList) && bookingList.length > 0) {
-        await appendToIndexDB(storeName, bookingList);
+        await putIndexDB(storeName, bookingList);
       } else {
         await clearStore(storeName);
       }
@@ -136,6 +136,21 @@ useEffect(() => {
   }
 }, [fetched_booking_pages]);
 
+ // Check if a specific page needs sync
+  const checkPageSync = async (limit, offset, max_version , target) => {
+
+    try {
+      const response = await fetch(`${process.env.APIKEY}/sync/${target}?max_version=${max_version}`);
+      const data = await response.json();
+      console.log(data.needsSync);
+
+      return {needsSync : data.needsSync , latest_version:data.latest_version}; 
+    } catch (err) {
+      console.error("Failed to check page sync:", err);
+      return {needsSync : true , latest_version:0}; 
+    }
+  };
+
   return {
     cached_booking_list,
     setCached_Booking_List,
@@ -143,7 +158,8 @@ useEffect(() => {
     setFetched_Booking_Pages,
     saveSpecificToStore,
     isIndexedDBLoaded, 
-    setIsIndexedDBLoaded
+    setIsIndexedDBLoaded,
+    checkPageSync
   };
 };
 

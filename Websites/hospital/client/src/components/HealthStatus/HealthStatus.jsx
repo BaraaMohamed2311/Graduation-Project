@@ -1,11 +1,11 @@
 
 import styles from "./HealthStatus.module.css";
 import { useUserDataContext } from "@/contexts/user_data";
-import { useState , useEffect } from "react";
+import { useState , useEffect ,useRef} from "react";
 import userNotification from "@/utils/userNotification";
 import statusNotification from "@/utils/statusNotification";
 
-export default function HealthState({user_id}) {
+export default function HealthState({user_id , modifierObj}) {
     const [healthStatus, setHealthStatus] = useState(null);
   const {
     patient_allergic = [],
@@ -20,7 +20,16 @@ const [formData, setFormData] = useState({
   patient_chronic_illnes: [],
   patient_health_devices: []
 });
+// Use Reference to make sure to send new data in body of request in handleSaveNewHealthStatus
+const formDataRef = useRef(formData);
 
+useEffect(() => {
+  formDataRef.current = formData;
+}, [formData]);
+
+
+
+// Initialize form data with user's healthStatus
 useEffect(() => {
   if (healthStatus) {
     setFormData({
@@ -32,21 +41,27 @@ useEffect(() => {
 }, [healthStatus]);
 
 
+
     // Fetching Health Status
       useEffect(()=>{
-        fetch(`${process.env.APIKEY}/details/patient-health-status/${user_id}`, {
+
+        fetch(`${process.env.APIKEY}/details/patient/health-status/${user_id}`, {
           mode: "cors",
           headers: {
             Authorization: `BEARER ${user_data.token}`,
             "Content-Type": "application/json",
-          }})
+          },
+          
+        })
           .then(res=>{
             statusNotification(res.status);
             return res.json()
           })
           .then(data=>{
+
             if(data?.success){
               setHealthStatus(data.body)
+              
             }
             userNotification(data?.success ? "success" :"error" , data.message)
           })
@@ -56,7 +71,34 @@ useEffect(() => {
           }
           )
       },[])
-      console.log("healthStatus",healthStatus)
+      
+
+      function handleSaveNewHealthStatus(){
+        setEditMode(false)
+        fetch(`${process.env.APIKEY}/list/other/patient/health-status?user_id=${user_data.user_id}&perms_requested=Modify Health Status`, {
+              method:"PUT",
+              mode: "cors",
+              headers: {
+                Authorization: `BEARER ${user_data.token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({...formDataRef.current,...modifierObj})
+            })
+              .then((res) => {
+                statusNotification(res.status);
+                return res.json();
+              })
+              .then((data) => {
+                if (data?.success) {
+          
+
+                
+                } else if (data && !data.success) {
+                  userNotification("error", data.message);
+                }
+              });
+      }
+
   return (
     <div className={styles.container}>
       {editMode && (
@@ -69,9 +111,11 @@ useEffect(() => {
         placeholder="Add allergy"
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.target.value.trim()) {
+            console.log("Entered value",e.target.value.trim())
+            const newValue = e.target.value.trim(); // save value before clearing
             setFormData(prev => ({
               ...prev,
-              patient_allergic: [...prev.patient_allergic, e.target.value.trim()]
+              patient_allergic: [...prev.patient_allergic, newValue]
             }));
             e.target.value = "";
           }
@@ -103,9 +147,10 @@ useEffect(() => {
         placeholder="Add chronic illness"
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.target.value.trim()) {
+            const newValue = e.target.value.trim(); // save value before clearing
             setFormData(prev => ({
               ...prev,
-              patient_chronic_illnes: [...prev.patient_chronic_illnes, e.target.value.trim()]
+              patient_chronic_illnes: [...prev.patient_chronic_illnes,newValue]
             }));
             e.target.value = "";
           }
@@ -155,7 +200,7 @@ useEffect(() => {
     <div className={styles.editActions}>
       <button
         className="green-button"
-        onClick={ () => {}}
+        onClick={ handleSaveNewHealthStatus}
       >
         Save
       </button>

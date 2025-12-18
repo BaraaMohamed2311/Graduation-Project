@@ -94,11 +94,11 @@ export default function LoginPage() {
           <h1>EMS - Login</h1>
           <Form form_handler={login_handler}
                 formBtnState = {formBtnState} 
-                inputs_info = { inputs_info} 
                 formKind={"login_form"}
                 setIsLoadingBtn={setIsLoadingBtn}
                 isLoadingBtn={isLoadingBtn}
                 references ={{inputsBoxsRef:inputsBoxsRef}}
+                fieldDefinitions={{inputs_info}}
                 />
         </div>
       </div>

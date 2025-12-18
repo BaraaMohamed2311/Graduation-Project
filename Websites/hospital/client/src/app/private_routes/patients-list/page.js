@@ -13,6 +13,7 @@ import {usePatientsCache} from "@/hooks/usePatientsCache"
 import BasicTable from '@/components/BasicTable/BasicTable';
 import { useRouter } from "next/navigation";
 import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
+import { getLastSync, setLastSync } from "@/utils/get_set_lastSync";
 
 
 function PatientsListPage() {
@@ -23,15 +24,28 @@ function PatientsListPage() {
   let [filteredResults , setFilteredResults] = useState([]); // as array not Map cuz we will not cache "pageNum":[{},{},...] like we did with cachedContext
   let [currPage , setCurrPage ] = useState(1);
   let [numOfPages , setNumOfPages] = useState(1);
+  let [needsSync , setNeedsSync] = useState(false);
   const [filterTrigger, setFilterTrigger] = useState(0);
   const {user_data} = useUserDataContext();
-  let {cached_patients , setCached_Patients , fetched_patient_pages, setFetched_Patient_Pages , savePatientsToStore,isIndexedDBLoaded} = usePatientsCache();
+  let {cached_patients , setCached_Patients , fetched_patient_pages, setFetched_Patient_Pages , savePatientsToStore,isIndexedDBLoaded , checkPageSync} = usePatientsCache();
    // Refrences
   const inputsBoxsRef= useRef({});
   const selectBoxsRef= useRef({});
   const router = useRouter()
   const sizeOfPage = 12;
 
+// ===========================================
+//         Sync Pages
+// ===========================================
+useEffect(() => {
+  (async () => {
+    const max_version = getLastSync("patients");
+    const needsSyncObj = await checkPageSync(max_version)
+    setNeedsSync(needsSyncObj?.needsSync);
+    if(max_version <  needsSyncObj.latest_version)
+    setLastSync("employees",needsSyncObj.latest_version);
+  })();
+}, [currPage]);
 
 // ===========================================
 //         Fetch Pages
@@ -40,8 +54,8 @@ useEffect(() => {
   console.log("isFiltered",isFiltered)
   if (isFiltered) return;
   if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
-
-  if (!fetched_patient_pages.has(currPage)) {
+    console.log("!fetched_patient_pages.has(currPage) || needsSync",fetched_patient_pages.has(currPage) , needsSync)
+  if (!fetched_patient_pages.has(currPage) || needsSync) {
     console.log("page not fetched")
     fetch(`${process.env.APIKEY}/list/patients?user_id=${user_data.user_id}&pagination=${currPage}&size=${sizeOfPage}`, {
       mode: "cors",
@@ -58,14 +72,21 @@ useEffect(() => {
         if (data?.success) {
           console.log("success")
           setNumOfPages(data.numOfPages || 1);
-          setCached_Patients((prev) => [...prev, ...data.body]);
+          setCached_Patients((prev) => {
+            const map = new Map(prev.map((emp) => [emp.user_id, emp])); 
+              data.body.forEach((emp) => {
+                map.set(emp.user_id, emp); // replaces existing or inserts new
+              });
+              return Array.from(map.values());
+          });
           setFetched_Patient_Pages(prev => {
           const updated = new Set(prev);
           updated.add(currPage);
           return updated;
         });
         // save to indexedDB
-        savePatientsToStore(data.body)
+        savePatientsToStore(data.body);
+        
         
         } else if (data && !data.success) {
           userNotification("error", data.message);
@@ -74,7 +95,7 @@ useEffect(() => {
   } 
 
   
-}, [currPage,isIndexedDBLoaded]);
+}, [currPage,isIndexedDBLoaded , needsSync]);
 
 
 
@@ -197,6 +218,7 @@ useEffect(() => {
           setFilteredResults={setFilteredResults} 
           selectsElementsData={selectsElementsData}
           inputs_info={inputs_info}
+          fieldDefinitions={{selectsElementsData,inputs_info}}
           />
       <Suspense fallback={<LoaderForComponents  styling={styles.loader_for_components_wrapper}/>}>
         <BasicTable 

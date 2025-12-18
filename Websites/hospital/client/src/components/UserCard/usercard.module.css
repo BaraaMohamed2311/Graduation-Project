@@ -239,3 +239,8 @@
   background: #f8f9fa;
   border-radius: 8px;
 }
+
+.noUser{
+  color: white;
+  font-size: 1.2rem;
+}

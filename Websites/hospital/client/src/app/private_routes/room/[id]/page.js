@@ -169,6 +169,7 @@ useEffect(()=>{
         setSelectedUser={setSelectedUser}
         references={{inputsBoxsRef}}
         inputs_info={inputs_info}
+        fieldDefinitions={{inputs_info}}
       />}
       </div>
       

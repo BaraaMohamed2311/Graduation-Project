@@ -8,8 +8,9 @@ import { useEmployeesCache } from "@/hooks/useEmployeesCache";
 import private_routes from "../../page";
 import { useUserDataContext } from "@/contexts/user_data";
 import UpdateUserForm from "@/components/UpdateUserForm/UpdateUserForm";
-import {inputs_info , select_options  , check_box} from "./data"
+import {inputs_info , select_def  , check_box} from "./data"
 import updateUserFetch from "@/utils/updateUserFetch"
+
  function EmployeeDetailsPage() {
   const [isEditing, setIsEditing] = useState(false);
   let [blobURL , setBlobURL] = useState("/avatar.jpg");
@@ -86,9 +87,9 @@ import updateUserFetch from "@/utils/updateUserFetch"
         // === 2. Check If any SelectBox is empty ===
 
         if ( 
-            (selectBoxsRef.current[select_options.select_title_options.name] && !selectBoxsRef.current[select_options.select_title_options.name].value) ||
-            (selectBoxsRef.current[select_options.select_specialty_options.name] && !selectBoxsRef.current[select_options.select_specialty_options.name].value) ||
-            (selectBoxsRef.current[select_options.select_role_options.name] && !selectBoxsRef.current[select_options.select_role_options.name].value) 
+            (selectBoxsRef.current[select_def.select_title_options.name] && !selectBoxsRef.current[select_def.select_title_options.name].value) ||
+            (selectBoxsRef.current[select_def.select_specialty_options.name] && !selectBoxsRef.current[select_def.select_specialty_options.name].value) ||
+            (selectBoxsRef.current[select_def.select_role_options.name] && !selectBoxsRef.current[select_def.select_role_options.name].value) 
           ){
             userNotification("error", "Input fields cannot be empty");
             return
@@ -98,17 +99,17 @@ import updateUserFetch from "@/utils/updateUserFetch"
 
 
           // we check at first that input element is rendered using current of reference
-          if (selectBoxsRef.current[select_options.select_title_options.name] && (selectBoxsRef.current[select_options.select_title_options.name].value !== employee[select_options.select_title_options.name])) {
-            updatedEmployeeData[select_options.select_title_options.name] = selectBoxsRef.current[select_options.select_title_options.name].value;
+          if (selectBoxsRef.current[select_def.select_title_options.name] && (selectBoxsRef.current[select_def.select_title_options.name].value !== employee[select_def.select_title_options.name])) {
+            updatedEmployeeData[select_def.select_title_options.name] = selectBoxsRef.current[select_def.select_title_options.name].value;
             if (!actions.includes("Modify Employee Data")) actions.push("Modify Employee Data"); 
           }
 
           // === 4. Check for changes in specialty ===
 
           // we check at first that input element is rendered using current of reference
-          console.log("debugging",selectBoxsRef.current, selectBoxsRef.current[select_options.select_specialty_options.name],employee[select_options.select_specialty_options.name])
-          if (selectBoxsRef.current[select_options.select_specialty_options.name] && (selectBoxsRef.current[select_options.select_specialty_options.name].value !== employee[select_options.select_specialty_options.name])) {
-            updatedEmployeeData[select_options.select_specialty_options.name] = selectBoxsRef.current[select_options.select_specialty_options.name].value;
+          console.log("debugging",selectBoxsRef.current, selectBoxsRef.current[select_def.select_specialty_options.name],employee[select_def.select_specialty_options.name])
+          if (selectBoxsRef.current[select_def.select_specialty_options.name] && (selectBoxsRef.current[select_def.select_specialty_options.name].value !== employee[select_def.select_specialty_options.name])) {
+            updatedEmployeeData[select_def.select_specialty_options.name] = selectBoxsRef.current[select_def.select_specialty_options.name].value;
             if (!actions.includes("Modify Employee Data")) actions.push("Modify Employee Data"); 
           }
 
@@ -118,8 +119,8 @@ import updateUserFetch from "@/utils/updateUserFetch"
         
 
           // we check at first that input element is rendered using current of reference
-          if (selectBoxsRef.current[select_options.select_role_options.name] && (selectBoxsRef.current[select_options.select_role_options.name].value !== employee[select_options.select_role_options.name])) {
-            updatedEmployeeData.other_user_new_role= selectBoxsRef.current[select_options.select_role_options.name].value;
+          if (selectBoxsRef.current[select_def.select_role_options.name] && (selectBoxsRef.current[select_def.select_role_options.name].value !== employee[select_def.select_role_options.name])) {
+            updatedEmployeeData.other_user_new_role= selectBoxsRef.current[select_def.select_role_options.name].value;
             if (!actions.includes("Modify Employee Role")) actions.push("Modify Employee Role"); // Add "MR" if not already added
           }
         
@@ -187,7 +188,7 @@ console.log("employee", employee);
     <main className={styles["employee-main"]}>
       {isEditing &&
          <UpdateUserForm
-            url={`list/update-other/employee`}
+            url={`list/other/employee`}
             isEditing={isEditing}
             setIsEditing={setIsEditing}
             user_displayed={employee}
@@ -196,10 +197,8 @@ console.log("employee", employee);
             modifier_data={user_data}
             // Pass the references and functions as props
             references={references}
-            inputs_info={inputs_info}
-            select_options={select_options}
-            check_box={check_box}
             update_handler={update_handler}
+            fieldDefinitions={{select_def,inputs_info,check_box}}
           />
       }
         <div className={styles["employee-container"]}>
@@ -208,7 +207,7 @@ console.log("employee", employee);
             <div className={styles["employee-img-wrapper"]}>
               <Image
                 priority={false}
-                src={blobURL}
+                src={blobURL || "/avatar.jpg"}
                 className={styles["employee-picture"]}
                 width="192"
                 height="192"
@@ -270,21 +269,6 @@ console.log("employee", employee);
             <div className={styles["buttons-wrapper"]}>
               <button onClick={() => setIsEditing(prev => !prev)} className="grey-button">
                 Edit Employee
-              </button>
-              <button
-                onClick={() =>
-                  handleDeletion("list/delete-employee", user_data.token, {
-                    user_id: employee.user_id,
-                    emp_name: employee.emp_name, // FIXME: Check if emp_name is correct
-                    user_email: employee.user_email,
-                    modifier_email: user_data.user_email,
-                    modifier_id: user_data.user_id,
-                    modifier_name: user_data.emp_name, // FIXME: Check if emp_name is correct
-                  })
-                }
-                className="red-button"
-              >
-                Delete Employee
               </button>
             </div>
           </div>

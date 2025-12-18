@@ -9,7 +9,7 @@ const  ModifyOtherUserRole  = require("../Utils/ControlUsers/ModifyOtherUserRole
 const  ModifyOtherUserPerms = require("../Utils/ControlUsers/ModifyOtherUserPerms.js");
 const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
 const ConsultationMethods = require("../Utils/methods/ConsultationMethods.js");
-const deletePatient = require("../Utils/ControlUsers/deletePatient.js");
+
 const RemoveFixedFields = require("../Utils/RemoveFixedFields.js");
 const Tables = require("../Tables/data.js");
 const DoctorMethods = require("../Utils/methods/DoctorMethods.js");
@@ -30,7 +30,7 @@ const buildJoinedFilters = require("../Utils/buildJoinedFilters.js")
 //  Get  Availability Details
 // =================================
 
-router.get("/get-availability",async (req,res)=>{
+router.get("/get-availability",jwtVerify,async (req,res)=>{
 
     try {
     const { hosp_emp_id } = req.query;
@@ -71,7 +71,7 @@ router.get("/get-availability",async (req,res)=>{
 //  Get  Specific Appointment
 // =================================
 
-router.get("/get-consultation/:user_id/:consultation_id",async (req,res)=>{
+router.get("/get-consultation/:user_id/:consultation_id",jwtVerify,async (req,res)=>{
 
     try {
     const {user_id, consultation_id } = req.params;
@@ -143,7 +143,7 @@ router.get("/get-consultation/:user_id/:consultation_id",async (req,res)=>{
 // =================================
 //  Get  All Appointment
 // =================================
-router.get("/get-all-consultations",async (req,res)=>{
+router.get("/get-all-consultations",jwtVerify,async (req,res)=>{
     try {
     const { user_id ,  user_email , pagination , size , ...rest} = req.query;
 
@@ -224,7 +224,7 @@ router.get("/get-all-consultations",async (req,res)=>{
 // =================================
 //    Schedule an Appointment
 // =================================
-router.post("/book-consultation",async (req,res)=>{
+router.post("/book-consultation",jwtVerify,async (req,res)=>{
     try{
        
         const {
@@ -372,7 +372,7 @@ router.post("/book-consultation",async (req,res)=>{
 // =================================
 //  Update status of Appointment
 // =================================
-router.put("/update-consultation-status",async (req,res)=>{
+router.put("/update-consultation-status",jwtVerify,async (req,res)=>{
         try {
         const { consultation_id, new_status } = req.body;
 
@@ -436,7 +436,7 @@ router.put("/update-consultation-status",async (req,res)=>{
 // =================================
 //  Update an patient id of Appointment
 // =================================
-router.put("/update-consultation-patient",async (req,res)=>{
+router.put("/update-consultation-patient",jwtVerify,async (req,res)=>{
         try {
         const { consultation_id, patient_id } = req.body;
 
@@ -496,7 +496,7 @@ router.put("/update-consultation-patient",async (req,res)=>{
 // =================================
 //  Reschedule Appointment
 // =================================
-router.put("/reschedule-appointment",async (req,res)=>{
+router.put("/reschedule-appointment",jwtVerify,async (req,res)=>{
         try {
         const { hosp_emp_id,patient_id,consultation_id, new_consultation_date , new_start_time,new_end_time } = req.body;
 
@@ -539,7 +539,7 @@ router.put("/reschedule-appointment",async (req,res)=>{
 
         // ===3. Check shift availability if vaild get availability details
         // === Get day of week from date
-        const dayOfWeek  = new Date(consultation_date);
+        const dayOfWeek  = new Date(new_consultation_date);
         const dayOfWeekIndex = dayOfWeek.getDay(); // 0 (Sun) to 6 (Sat)
         const availability = await ConsultationMethods.getAvailabilityDay(hosp_emp_id,dayOfWeekIndex); // Not used in this context
         console.log("Availability for the day:", availability);
@@ -586,7 +586,7 @@ router.put("/reschedule-appointment",async (req,res)=>{
 // =================================
 //  Update Appointment Details
 // =================================
-router.delete("/delete-appointment",async (req,res)=>{
+router.delete("/delete-appointment",jwtVerify,async (req,res)=>{
         try {
         const { consultation_id ,user_id} = req.query;
 

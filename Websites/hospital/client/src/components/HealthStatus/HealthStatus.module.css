@@ -122,3 +122,142 @@
   color: #6c7f93;
   margin-top: 8px;
 }
+
+/* Main form wrapper */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Section headings */
+.editForm h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #2d4f6c;
+}
+
+/* Text inputs */
+.editForm input[type="text"],
+.editForm input[type="number"] {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d8e2eb;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.editForm input[type="text"]:focus,
+.editForm input[type="number"]:focus {
+  border-color: #2d4f6c;
+  box-shadow: 0 0 0 2px rgba(45,79,108,0.1);
+}
+
+/* Chips container */
+.chipContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Regular chip */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.6rem;
+  background-color: #e0f0ff;
+  color: #2d4f6c;
+  border-radius: 0.6rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chip:hover {
+  background-color: #cce4ff;
+}
+
+/* Warning chip (for chronic illness) */
+.chipWarning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.6rem;
+  background-color: #ffe0e0;
+  color: #c0392b;
+  border-radius: 0.6rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chipWarning:hover {
+  background-color: #ffbaba;
+}
+
+/* Device card */
+.deviceCard {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.5rem;
+  background: #f9f9f9;
+  border: 1px solid #d8e2eb;
+  margin-bottom: 0.5rem;
+}
+
+.deviceCard input {
+  width: 5rem;
+  text-align: right;
+}
+
+/* Action buttons */
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.green-button {
+  background-color: #2d4f6c;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.green-button:hover {
+  background-color: #1f3b50;
+}
+
+.grey-button {
+  background-color: #d8e2eb;
+  color: #2d4f6c;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.grey-button:hover {
+  background-color: #c0cfdc;
+}

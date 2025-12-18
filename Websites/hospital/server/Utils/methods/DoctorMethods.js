@@ -397,8 +397,9 @@ class DoctorMethods {
             if(filtering_string){
                 query += " AND " + filtering_string
             }
+
             if(limit> 0 &&  offset > -1){
-                query += "LIMIT ? OFFSET ?"
+                query += " LIMIT ? OFFSET ? "
             }
             const result = await executeMySqlQuery(query,[staff_id,limit, offset]);
             
@@ -433,13 +434,17 @@ class DoctorMethods {
                 ON u.user_type = 'employee' AND u.user_id = e.emp_id
 
             SET
-                ${updating_string},
-                u.latest_update = NOW()
+                ${updating_string}
 
             WHERE d.doctor_id = ${doctor_id};
         `
+
+        const version_query = `UPDATE table_version
+                            SET current_version = current_version + 1
+                            WHERE table_name = 'hospital_employees';
+                            `
         
-        const result = await sqlTransaction([query])
+        const result = await sqlTransaction([query,version_query])
 
         return result[0]?.affectedRows > 0;
 
@@ -461,11 +466,15 @@ class DoctorMethods {
                 // ===2.  Construct dynamic fields string for SQL
                 const fields = stringifyFields( "joined",Object.entries(fieldsToUpdate))
 
-                    const query = `UPDATE staff_patient SET ${fields} 
-                                    WHERE staff_id = ? AND patient_id = ? AND relation_type = 'Doctor';`;
-                    params.push(doctor_id, patient_id);
+                    const query = `UPDATE staff_patient SET ${fields}
+                                    WHERE staff_id = ${doctor_id} AND patient_id = ${patient_id} AND relation_type = 'Doctor';`;
+                    const version_query = `UPDATE table_version
+                            SET current_version = current_version + 1
+                            WHERE table_name = 'patients';
+                            `
 
-                    await executeMySqlQuery(query, params);
+
+                    await sqlTransaction([query, version_query]);
                     return true
             }
             catch(err){

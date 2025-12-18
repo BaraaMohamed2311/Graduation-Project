@@ -10,8 +10,7 @@ CREATE TABLE users (
 	  user_password varchar(255) NOT NULL,
     user_type ENUM('patient', 'employee') NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    latest_update TIMESTAMP DEFAULT NOW() ON UPDATE NOW()
-    
+
 );
 
 

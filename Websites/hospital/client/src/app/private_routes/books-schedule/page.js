@@ -9,7 +9,7 @@ import userNotification from "@/utils/userNotification";
 import SearchOptions from "@/components/SearchOptions/SearchOptions";
 import Pagination_Btns from "@/components/Pagination_Btns/Pagination_Btns";
 import { useRouter } from "next/navigation";
-import {select_options} from "./data"
+import {select_def} from "./data"
 import stringifyFields from "@/utils/stringifyFields";
 
 function BooksSchedulePage() {
@@ -150,7 +150,6 @@ function handlePagination(e){
     <main className={`${styles["list"]} wrapper`}>
       <h1>Your Appointments</h1>
       <SearchOptions 
-        selectsElementsData={select_options}
         references={{selectBoxsRef}}
         isFiltered={isFiltered}
         clearBtn = {handleClearFilterOption} 
@@ -158,6 +157,7 @@ function handlePagination(e){
         setCurrPage={setCurrPage} 
         currPage={currPage} 
         sizeOfPage={sizeOfPage}
+        fieldDefinitions={{select_def}}
       />
       <div className={styles["consultation_cards_wrapper"]}>
         {(!consultations || consultations.length == 0) && <p>No Consultations Scheduled</p> }

@@ -17,6 +17,7 @@ import updateUserFetch from "@/utils/updateUserFetch";
 import HealthStatus from "@/components/HealthStatus/HealthStatus";
 import statusNotification from "@/utils/statusNotification";
 import uploadPatientFile from "@/utils/uploadPatientFile";
+import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
 function PatientDetailsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [files_meta , setFilesMeta] = useState([]);
@@ -26,9 +27,17 @@ function PatientDetailsPage() {
   const { user_data } = useUserDataContext();
   const router = useRouter();
   const inputsBoxsRef = useRef({})
-  const selectBoxsRef = useRef({})
+  const selectBoxsRef = useRef({});
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
   // Efficiently find the patient from cache
   const patient = cached_patients?.find(p => p.user_id === parseInt(user_id));
+  const modifierObj = patient ? {
+          other_user_email: patient.user_email,
+          modifier_email: user_data.user_email,
+          modifier_id: user_data.user_id,
+        } : {};
 
   // Load User Image
   useEffect(() => {
@@ -147,14 +156,10 @@ function PatientDetailsPage() {
     
       // ================================
       //      Upload
-      function onUploadFile(file) {
-        const other_req_data = {
-          other_user_email: patient.user_email,
-          modifier_email: user_data.user_email,
-          modifier_id: user_data.user_id,
-        };
-    
-        uploadPatientFile(`files/other/patient?my=true`, file, other_req_data, user_data.token);
+      function onUploadFile(files, setProgress, setIsUploading) {
+        
+        setIsUploading(true)
+        uploadPatientFile(`files/other/patient?my=true`, files, modifierObj, user_data.token,setProgress);
       }
       // ================================
       //      Delete
@@ -216,6 +221,37 @@ function PatientDetailsPage() {
   const can_modify_unrelated_patient = user_data?.emp_perms?.has('Modify Other Patient');
   
 
+
+                    async function confirmDeleteAccount() {
+                        setIsDeletingAccount(true);
+
+                        try {
+                          const res = await fetch(
+                            `${process.env.APIKEY}/users/${user_data.user_id}`,
+                            {
+                              method: "DELETE",
+                              headers: {
+                                Authorization: `Bearer ${user_data.token}`,
+                              },
+                            }
+                          );
+
+                          const data = await res.json();
+
+                          if (!data.success) {
+                            setIsDeletingAccount(false);
+                            return userNotification("error", data.message);
+                          }
+
+                          userNotification("success", "Account deleted successfully");
+                          router.replace("/login");
+                        } catch (err) {
+                          console.error(err);
+                          userNotification("error", "Error deleting account");
+                          setIsDeletingAccount(false);
+                        }
+                      }
+
   
 console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patient )
   return (
@@ -223,7 +259,7 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
       
           {isEditing  && can_modify_unrelated_patient &&  
               <UpdateUserForm
-                  url={`list/update-other/patient`}
+                  url={`list/other/patient`}
                   isEditing={isEditing}
                   setIsEditing={setIsEditing}
                   user_displayed={patient}
@@ -235,6 +271,7 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
                   inputs_info={inputs_info}
                   select_options={select_options}
                   update_handler={update_handler}
+                  fieldDefinitions={{select_options,inputs_info}}
                 />
             }
         <div className={styles["patient-container"]}>
@@ -243,7 +280,7 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
             <div className={styles["patient-img-wrapper"]}>
               <Image
                 priority={false}
-                src={blobURL}
+                src={blobURL || "/avatar.jpg"}
                 className={styles["patient-picture"]}
                 width="192"
                 height="192"
@@ -280,7 +317,10 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
             files_meta ={files_meta}
             setFilesMeta ={setFilesMeta}
           />
-          <HealthStatus user_id={patient.user_id}/>
+          <HealthStatus 
+          user_id={patient.user_id}
+          modifierObj={modifierObj}
+          />
 
           {/* --- Actions --- */}
           <div className={styles["patient-details"]}>
@@ -294,22 +334,25 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
                 </button>
 
                 
-
                 <button
-                  onClick={(e) =>
-                    handleDeletion("list/delete-patient", user_data.token, {
-                      user_id: patient.user_id,
-                      patient_name: patient.patient_name,
-                      user_email: patient.user_email,
-                      modifier_email: user_data.user_email,
-                      modifier_id: user_data.user_id,
-                      modifier_name: user_data.user_name,
-                    })
-                  }
                   className="red-button"
+                  onClick={() => setShowDeleteModal(true)}
                 >
-                  Delete Patient
+                  Delete Account
                 </button>
+
+                <ConfirmModal
+                  open={showDeleteModal}
+                  title="Delete Account"
+                  message="This action will permanently delete your account and all associated data. This cannot be undone."
+                  confirmText="Yes, delete"
+                  cancelText="Cancel"
+                  danger
+                  isLoading={isDeletingAccount}
+                  onConfirm={confirmDeleteAccount}
+                  onCancel={() => setShowDeleteModal(false)}
+                />
+
               </li>
             </ul>
           </div>

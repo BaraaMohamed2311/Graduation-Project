@@ -67,6 +67,7 @@
     gap: 0.3rem;
     font-weight: 600;
     align-items: center;
+    flex-wrap: nowrap;
 }
 
 .check_input_wrapper input {

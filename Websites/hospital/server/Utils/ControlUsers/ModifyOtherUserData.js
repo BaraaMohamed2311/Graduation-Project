@@ -21,8 +21,9 @@ async function ModifyOtherUserData(other_user_id, other_user_Role,other_user_tit
         }
 
 
-
+        
         const updating_string = buildJoinedUpdate(newOtherUserData);
+        console.log("newOtherUserData",newOtherUserData,updating_string)
         console.log("updating_string",updating_string)
         if(modifierRole === "SuperAdmin"){
             const succeeded = await SuperAdmin.EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updating_string )

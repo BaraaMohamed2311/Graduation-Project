@@ -5,32 +5,45 @@ import { useRouter } from "next/navigation";
 import LoaderForComponents from "@/components/LoaderForComponents/LoaderForComponents";
 import SearchOptions from "@/components/SearchOptions/SearchOptions";
 import styles from "./list.module.css"
-import {selectsElementsData , inputs_info} from "./data";
+import {select_def , inputs_info} from "./data";
 import userNotification from "@/utils/userNotification";
 import stringifyFields from "@/utils/stringifyFields";
 import statusNotification from "@/utils/statusNotification";
 import { useUserDataContext } from "@/contexts/user_data";
 import BasicTable from '@/components/BasicTable/BasicTable';
 import { useEmployeesCache } from "@/hooks/useEmployeesCache";
-
+import { getLastSync, setLastSync } from "@/utils/get_set_lastSync";
 
 function EmployeesListPage() {
   
   const sizeOfPage = 12;
   const {user_data} = useUserDataContext()
-  const {cached_employees,setCached_Employees,fetched_employee_pages,setFetched_Employee_Pages,saveEmployeesToStore,isIndexedDBLoaded} = useEmployeesCache()
+  const {cached_employees,setCached_Employees,fetched_employee_pages,setFetched_Employee_Pages,saveEmployeesToStore,isIndexedDBLoaded , checkPageSync} = useEmployeesCache()
   let [isFiltered , setIsFiltered]  = useState(false);
   let [filteredResults , setFilteredResults] = useState([]); // as array not Map cuz we will not cache "pageNum":[{},{},...] like we did with cachedContext
   let [currPage , setCurrPage ] = useState(1);
   let [numOfPages , setNumOfPages] = useState(1);
-
+  let [needsSync , setNeedsSync] = useState(false);
 
 
 
   // Refrences
   const inputsBoxsRef= useRef({});
   const selectBoxsRef= useRef({});
-  const router = useRouter()
+  const router = useRouter();
+
+  // ===========================================
+//         Sync Pages
+// ===========================================
+useEffect(() => {
+  (async () => {
+    const max_version = getLastSync("employees")
+    const needsSyncObj = await checkPageSync(max_version)
+    setNeedsSync(needsSyncObj?.needsSync);
+    if(max_version <  needsSyncObj.latest_version)
+    setLastSync("employees",needsSyncObj.latest_version);
+  })();
+}, [currPage]);
 
 
   // ===========================================
@@ -41,7 +54,7 @@ function EmployeesListPage() {
     if (isFiltered) return;
     if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
   
-    if (!fetched_employee_pages.has(currPage)) {
+    if (!fetched_employee_pages.has(currPage) || needsSync) {
       console.log("page not fetched")
       fetch(`${process.env.APIKEY}/list/employees?user_id=${user_data.user_id}&pagination=${currPage}&size=${sizeOfPage}`, {
         mode: "cors",
@@ -58,7 +71,13 @@ function EmployeesListPage() {
           if (data?.success) {
             console.log("success")
             setNumOfPages(data.numOfPages || 1);
-            setCached_Employees((prev) => [...prev, ...data.body]);
+            setCached_Employees((prev) => {
+              const map = new Map(prev.map((emp) => [emp.user_id, emp])); 
+              data.body.forEach((emp) => {
+                map.set(emp.user_id, emp); // replaces existing or inserts new
+              });
+              return Array.from(map.values());
+            });
             setFetched_Employee_Pages(prev => {
             const updated = new Set(prev);
             updated.add(currPage);
@@ -74,7 +93,7 @@ function EmployeesListPage() {
     } 
   
     
-  }, [currPage,isIndexedDBLoaded]);
+  }, [currPage,isIndexedDBLoaded,needsSync]);
 
   // ===========================================
 //        Table Buttons
@@ -180,8 +199,7 @@ function handleFilterOption(e , cause){
           sizeOfPage={sizeOfPage} 
           setIsFiltered= {setIsFiltered} 
           setFilteredResults={setFilteredResults} 
-          selectsElementsData={selectsElementsData}
-          inputs_info={inputs_info}
+          fieldDefinitions={{select_def,inputs_info}}
           />
       <Suspense fallback={<LoaderForComponents  styling={styles.loader_for_components_wrapper}/>}>
          <BasicTable 

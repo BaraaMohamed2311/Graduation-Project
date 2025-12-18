@@ -4,7 +4,7 @@ import styles from "./bookinglistpage.module.css";
 import private_routes from "../page";
 import SearchOptions from "@/components/SearchOptions/SearchOptions";
 import BookingCard from "@/components/BookingCard/BookingCard";
-import { selectsElementsData} from "./data"
+import { select_def} from "./data"
 import { useRef ,useState,useEffect} from "react";
 import { useUserDataContext } from "@/contexts/user_data";
 import { useBookingListCache } from "@/hooks/useBookingListCache";
@@ -12,6 +12,7 @@ import userNotification from "@/utils/userNotification";
 import stringifyFields from "@/utils/stringifyFields";
 import statusNotification from "@/utils/statusNotification";
 import Pagination_Btns from "@/components/Pagination_Btns/Pagination_Btns";
+import {getLastSync , setLastSync} from "@/utils/get_set_lastSync"
 
 function BookingListPage() {
 
@@ -26,15 +27,26 @@ function BookingListPage() {
   const [activeBookingType, setActiveBookingType] = useState("doctors");
 
   const [filterTrigger, setFilterTrigger] = useState(0);
+    const [needsSync, setNeedsSync] = useState(false);
   const {user_data} = useUserDataContext();
-  const {cached_booking_list, setCached_Booking_List,fetched_booking_pages, setFetched_Booking_Pages,saveSpecificToStore,isIndexedDBLoaded} = useBookingListCache();
+  const {cached_booking_list, setCached_Booking_List,fetched_booking_pages, setFetched_Booking_Pages,saveSpecificToStore,isIndexedDBLoaded, checkPageSync} = useBookingListCache();
    // Refrences
   const inputsBoxsRef= useRef({});
   const selectBoxsRef= useRef({});
   const router = useRouter()
   const sizeOfPage = 12;
 
-
+  // ===========================================
+//         Sync Pages
+// ===========================================
+useEffect(() => {
+  (async () => {
+    const since = getLastSync(`booking-${selectedBookingType}`)
+    const needsSyncObj = await checkPageSync(since)
+    setNeedsSync(needsSyncObj?.needsSync);
+    setLastSync(`booking-${selectedBookingType}`,needsSyncObj.latest_version);
+  })();
+}, [currPage]);
 // ===========================================
 //         Fetch
 // ===========================================
@@ -65,8 +77,11 @@ useEffect(() => {
     if (years_of_exp) filterEntries["orderBy_years_of_exp"] = years_of_exp;
   }
 
-  // Skip fetch if not filtering and page was fetched
-  if (fetched_booking_pages[endpoint]?.has(currPage) && !isFiltered) return;
+  const pageFetched = fetched_booking_pages[endpoint]?.has(currPage);
+const shouldSkipFetch = pageFetched && !isFiltered && !needsSync;
+
+if (shouldSkipFetch) return;
+
 
   const queryString = stringifyFields("anded", Object.entries(filterEntries));
 
@@ -96,7 +111,7 @@ useEffect(() => {
     })
     .catch(() => userNotification("error", "Network error"));
 
-}, [currPage, isFiltered, selectedBookingType, isIndexedDBLoaded, filterTrigger]);
+}, [currPage, isFiltered, selectedBookingType, isIndexedDBLoaded, filterTrigger,needsSync]);
 
 
 
@@ -182,7 +197,7 @@ function handleFilterOption(e){
 
 
     return (
-        <div>
+        <main className={`${styles["list"]} wrapper`}>
             <SearchOptions 
                 target={"users"}
                 isFiltered={isFiltered}
@@ -193,8 +208,7 @@ function handleFilterOption(e){
                 currPage={currPage} 
                 sizeOfPage={sizeOfPage} 
                 setFilteredResults={setFilteredResults} 
-                selectsElementsData={selectsElementsData}
-
+                fieldDefinitions={{select_def}}
           />
             <div className={styles["booking-card-wrapper"]}>
               {cached_booking_list && Object.keys(cached_booking_list).length > 0 && cached_booking_list[selectedBookingType]  && cached_booking_list[selectedBookingType].slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((booking , index)=>{
@@ -203,6 +217,7 @@ function handleFilterOption(e){
                 userType={selectedBookingType} 
                 bookingData={booking} 
                 handleBookBtn={handleBookBtn}
+                userToken={user_data.token}
                 />
             })}
             </div>
@@ -211,7 +226,7 @@ function handleFilterOption(e){
             <div className={styles.table_btn_wrapper}>
               <Pagination_Btns handlePagination={handlePagination} currPage={currPage} numOfPages={numOfPages} />
             </div>
-        </div>
+        </main>
     )
 }
 

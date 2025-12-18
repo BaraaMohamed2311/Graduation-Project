@@ -1,7 +1,7 @@
 // hooks/useEmployeesCache.js
 import { useState, useEffect } from "react";
 import { getAllFromStore } from "@/utils/indexDB/getCacheMethods";
-import { appendToIndexDB } from "@/utils/indexDB/appendToIndexDB";
+import { putIndexDB } from "@/utils/indexDB/updateCacheMethods";
 import { clearStore } from "@/utils/indexDB/deleteCacheMethods";
 
 export const useEmployeesCache = () => {
@@ -63,13 +63,28 @@ export const useEmployeesCache = () => {
   const saveEmployeesToStore = async (employees) => {
     try {
       if (Array.isArray(employees) && employees.length > 0) {
-        await appendToIndexDB("employees", employees);
+        await putIndexDB("employees", employees);
       } else {
         await clearStore("employees");
       }
     } catch (err) {
       console.error("Failed to save employees to IndexedDB:", err);
       throw err;
+    }
+  };
+
+   // Check if a specific page needs sync
+  const checkPageSync = async ( max_version) => {
+
+    try {
+      const response = await fetch(`${process.env.APIKEY}/sync/employees?max_version=${max_version}`);
+      const data = await response.json();
+      console.log(data.needsSync);
+
+      return {needsSync : data.needsSync , latest_version:data.latest_version}; 
+    } catch (err) {
+      console.error("Failed to check page sync:", err);
+      return {needsSync : true, latest_version:0}; 
     }
   };
 
@@ -80,6 +95,7 @@ export const useEmployeesCache = () => {
     setFetched_Employee_Pages,
     saveEmployeesToStore,
     isIndexedDBLoaded,
-    setIsIndexedDBLoaded
+    setIsIndexedDBLoaded,
+    checkPageSync
   };
 };

@@ -52,7 +52,7 @@ const profileStorage = new GridFsStorage({
     if (ProfileImagemimetypes.has(file.mimetype)) {
       return {
         bucketName: "uploads",
-        filename: `${Date.now()}_${file.originalname}`,
+        filename: `${file.originalname}_${Date.now()}`,
       };
     } else {
       return null;
@@ -68,7 +68,7 @@ const patientStorage = new GridFsStorage({
     if (patientFileTypes.has(file.mimetype)) {
       return {
         bucketName: "patient_uploads",
-        filename: `${Date.now()}_${file.originalname}`,
+        filename: `${file.originalname}_${Date.now()}`,
       };
     } else {
       return null;
@@ -82,12 +82,12 @@ const uploadPatientFile = multer({ storage: patientStorage });
 //                Get User Image
 // ==============================================
 
-router.get("/prof-img", async (req, res) => {
+router.get("/profile",jwtVerify, async (req, res) => {
   try {
     if (gfs_bucket) {
       // ===5.1 Find user record
       const user = await Profile_Pic_Module.findOne({
-        user_email: req.query["user_email"],
+        user_id: req.query["user_id"],
       });
 
       // ===5.2 Handle case if no image found
@@ -136,7 +136,7 @@ router.get("/prof-img", async (req, res) => {
 // ==============================================
 //                Get Patient Files
 // ==============================================
-router.get("/patient/:user_id", async (req, res) => {
+router.get("/patient/:user_id",jwtVerify, async (req, res) => {
   try {
     const { user_id } = req.params;
     const {pagination , size} = req.query;
@@ -171,7 +171,7 @@ router.get("/patient/:user_id", async (req, res) => {
         message: "No files found for this user"
       });
     }
-    console.log("patientFiles",patientFiles)
+
 
     return res.status(200).json({
       success: true,
@@ -192,7 +192,7 @@ router.get("/patient/:user_id", async (req, res) => {
 // ==============================================
 //                Download Patient File
 // ==============================================
-router.get("/patient/:file_id/download", async (req, res) => {
+router.get("/patient/:file_id/download",jwtVerify, async (req, res) => {
   try {
     const { file_id } = req.params;
 
@@ -232,7 +232,7 @@ router.get("/patient/:file_id/download", async (req, res) => {
 //                Upload Patient Files
 // ==============================================
 router.post(
-  "/patient/:user_id",
+  "/patient/:user_id",jwtVerify,
   uploadPatientFile.array("patient_file", 10),  // multiple files
   async (req, res) => {
     const { user_id } = req.params;
@@ -308,7 +308,7 @@ router.post(
 //                Update other patient's file 
 // ==============================================
 
-router.post("/other/patient", uploadPatientFile.array("patient_file", 10),async function(req , res){
+router.post("/other/patient",jwtVerify, uploadPatientFile.array("patient_file", 10),async function(req , res){
         try {   
                 // ===1. Get Data From Body & Query of actions to be made
                     let { modifier_id , modifier_email,  other_user_email} = req.body;
@@ -421,16 +421,16 @@ router.post("/other/patient", uploadPatientFile.array("patient_file", 10),async 
 
 // ===1. Ensure user exists if not create it -> delete old image -> upload new -> update Mongo record
 router.put(
-  "/update-prof-img",
+  "/profile",jwtVerify,
   async (req, res, next) => {
     await deleteFromBucket(gfs_bucket, req, res, next);
   },
   uploadProfileImg.single("user_img"),
   async (req, res) => {
     try {
-      console.log("query",req.query)
+
       if (gfs_bucket) {
-        const maxSizeInBytes =  10 * 1024 * 1024; // ===2. Limit image size to 10 MB
+        const maxSizeInBytes =  20 * 1024 * 1024; // 20MB
 
         if (req.file.size > maxSizeInBytes)
           return res.status(400).json({
@@ -440,7 +440,7 @@ router.put(
 
         // ===3. Update user record with new image info
         await Profile_Pic_Module.findOneAndUpdate(
-          { user_email: req.query["user_email"] },
+          { user_id: req.query["user_id"] },
           { user_pic: { file_name: req.file.filename, ImgId: req.file.id } },
           { upsert: true, new: true }
         );
@@ -478,7 +478,7 @@ router.put(
 //                Delete User Image
 // ==============================================
 
-router.delete("/patient/:file_id/delete", async (req, res) => {
+router.delete("/patient/:file_id/delete",jwtVerify, async (req, res) => {
   const session = await mongoose.startSession();
   // Opened transaction so both deleting meta-data and file itself must succeed
   session.startTransaction();
@@ -536,7 +536,7 @@ router.delete("/patient/:file_id/delete", async (req, res) => {
 
 // =================================================
 //  
-router.delete("/other/patient/:file_id/delete", async (req, res) => {
+router.delete("/other/patient/:file_id/delete",jwtVerify, async (req, res) => {
 
   let { modifier_id , modifier_email,  other_user_email} = req.body;
   let {my} = req.query // so no need to have separate api routes for patients and my patient in this case

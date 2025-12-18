@@ -9,7 +9,7 @@ const JoinFiltering = require("../Utils/JoinFiltering.js")
 // ============================
 
 // Get all rooms
-router.get("/", async function (req, res) {
+router.get("/",jwtVerify, async function (req, res) {
     try {
         const {pagination, size,...restFilters} = req.query
 
@@ -62,7 +62,7 @@ router.get("/", async function (req, res) {
     }
 });
 
-router.get("/room/:roomId", async function (req, res) {
+router.get("/room/:roomId",jwtVerify, async function (req, res) {
     try {
         const { roomId } = req.params;
         const { patientId } = req.query;
@@ -79,7 +79,7 @@ router.get("/room/:roomId", async function (req, res) {
 });
 
 
-router.get("/room/room_number/:roomNum", async function (req, res) {
+router.get("/room/room_number/:roomNum",jwtVerify, async function (req, res) {
     try {
         const { roomNum } = req.params;
         const {pagination, size,status} = req.query
@@ -94,7 +94,7 @@ router.get("/room/room_number/:roomNum", async function (req, res) {
 });
 
 // Get empty rooms
-router.get("/empty", async function (req, res) {
+router.get("/empty",jwtVerify, async function (req, res) {
     try {
         const {pagination, size} = req.query
 
@@ -119,7 +119,7 @@ router.get("/empty", async function (req, res) {
 });
 
 // Get occupied rooms
-router.get("/occupied", async function (req, res) {
+router.get("/occupied",jwtVerify, async function (req, res) {
     try {
         const {pagination, size} = req.query
 
@@ -142,7 +142,7 @@ router.get("/occupied", async function (req, res) {
 });
 
 // Get rooms by floor
-router.get("/floor/floor_number/:floorNum", async function (req, res) {
+router.get("/floor/floor_number/:floorNum",jwtVerify, async function (req, res) {
     try {
         const { floorNum } = req.params;
         const {pagination, size,status} = req.query
@@ -155,7 +155,7 @@ router.get("/floor/floor_number/:floorNum", async function (req, res) {
 });
 
 // Get room by patient
-router.get("/patient/:patientId", async function (req, res) {
+router.get("/patient/:patientId",jwtVerify, async function (req, res) {
     try {
         const { patientId } = req.params;
         if (!patientId )  return res.status(400).json({success:false,message:"Bad Request"});
@@ -167,7 +167,7 @@ router.get("/patient/:patientId", async function (req, res) {
 });
 
 // Get patient details in a room
-router.get("/patient/:patientId/details", async function (req, res) {
+router.get("/patient/:patientId/details",jwtVerify, async function (req, res) {
     try {
         const { patientId } = req.params;
         const patient = await RoomsMethods.getPatientInRoom(patientId);
@@ -182,7 +182,7 @@ router.get("/patient/:patientId/details", async function (req, res) {
 // ============================
 
 // assign patient to room
-router.put("/:roomId/assign", async function (req, res) {
+router.put("/:roomId/assign",jwtVerify, async function (req, res) {
     try {
         const { roomId } = req.params;
         const { patient_id, floor_id, room_number } = req.body; // fields to update sent in request body
@@ -240,7 +240,7 @@ router.put("/:roomId/assign", async function (req, res) {
     }
 });
 
-router.put("/:roomId/empty", async function (req, res) {
+router.put("/:roomId/empty",jwtVerify, async function (req, res) {
     try {
         const { roomId } = req.params;
 
@@ -259,7 +259,7 @@ router.put("/:roomId/empty", async function (req, res) {
 });
 
 // health state
-router.post("/:floor_number/:room_number", async function (req, res) {
+router.post("/:floor_number/:room_number",jwtVerify, async function (req, res) {
     try {
         // ===1. Extract request data
 

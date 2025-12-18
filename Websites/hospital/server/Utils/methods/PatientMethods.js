@@ -101,11 +101,15 @@ class PatientMethods {
                         p.patient_gender,
                         p.emergency_contact  
                     FROM patients p 
-                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id`;
+                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
+                    `;
 
         if (filtering_string) { 
                 query += " WHERE " + filtering_string;
             }
+        // Then ORDER BY To match sync function
+        query += " ORDER BY p.patient_id ";
+
         if(limit >0 &&  offset > -1) {
             query += ` LIMIT ${limit} OFFSET ${offset} `
         }
@@ -163,7 +167,7 @@ class PatientMethods {
                     e.emp_specialty,
                     e.emp_title,
                     u.user_email
-                    ${orderByClause}
+                ${orderByClause}
                     ${ limit ? `LIMIT ${limit}`:""}
                     ${ offset ? `OFFSET ${offset}`:""}
             `;
@@ -223,7 +227,8 @@ class PatientMethods {
                     e.emp_title,
                     e.emp_specialty,
                     u.user_email
-                    ${orderByClause}
+                ${orderByClause}
+                
                     ${ limit ? `LIMIT ${limit}` :""}
                     ${ offset ? `OFFSET ${offset}` :""}
             `;
@@ -287,8 +292,11 @@ class PatientMethods {
 
             WHERE p.patient_id = ${patient_id};
         `
-        
-        const result = await sqlTransaction([query])
+        const version_query = `UPDATE table_version
+                            SET current_version = current_version + 1
+                            WHERE table_name = 'patients';
+                            `
+        const result = await sqlTransaction([query,version_query])
 
         return result[0]?.affectedRows > 0;
 
@@ -300,39 +308,20 @@ class PatientMethods {
     //              Delete User (Only Patient; Any other user must use EMS website to delete) 
     // ============================
 
-static async deletePatientCoreData(patient_id) {
-        try {
+static async cascadeDeletePatientData(user_id) {
 
             // ===1. Delete Patient Record (IMPORTANT: This will also delete related records via foreign key constraints, since we used CASCADE on delete)
             const query = `
-                DELETE FROM patients WHERE patient_id = ${patient_id}
+                DELETE FROM users WHERE user_id = ${user_id}
             `;
-            await executeMySqlQuery(query);
+            const result = await executeMySqlQuery(query);
 
-            return true;
-        } 
-        catch (error) {
-            console.error("Error updating patient data:", error);
-            return false;
-        }
+            return result?.affectedRows > 0;
+        
+
     }
 
 
-
-    static #mapDeleteToAction ={
-            "Patient core": PatientMethods.deletePatientCoreData,
-        }
-        static async MapToDeletePatientData(patient_id, data, actions ) {
-            const results = [];
-            for( const action of actions){
-                const fn = PatientMethods.#mapDeleteToAction[action];
-                if (!fn) continue; // skip if no function for this action
-                const result = await fn.call(this, patient_id, data);
-                results.push({ action, result });
-            }
-
-            return results; // return array of results for each action
-        }
 
         
     // ============================

@@ -9,7 +9,7 @@ const MailApis = require("../Routers/mail.js");
 const RoomsApis = require("../Routers/rooms.js");
 const BookingApis = require("../Routers/booking.js");
 const DetailsApis = require("../Routers/details.js");
-
+const SyncApis = require("../Routers/sync.js")
 
 function appUses(express ,app){
 
@@ -48,6 +48,7 @@ function appUses(express ,app){
     app.use("/api/rooms",RoomsApis)
     app.use("/api/booking",BookingApis)
     app.use("/api/details",DetailsApis)
+    app.use("/api/sync",SyncApis)
 
 
 }
