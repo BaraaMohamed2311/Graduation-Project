@@ -8,7 +8,6 @@ export default function UpdateUserForm({
   setIsEditing,
   user_displayed,
     currPage,
-    user_data,
     // New props
     references, // Contains all refs: inputsBoxsRef, checkBoxsRef, selectBoxsRef
     update_handler,
@@ -44,7 +43,7 @@ export default function UpdateUserForm({
                 {/* we have to check user modifier perms to check which inputs are displayed for editable fields  */}
                 <Form 
                     references ={{ inputsBoxsRef, checkBoxsRef ,selectBoxsRef}} 
-                    form_handler = {(e)=>update_handler(e ,url , modifier_data.token )}
+                    form_handler = {(e)=>update_handler(e ,url )}
                     // add employee_displayed to form to show prev values of inputs
                     user_displayed = {user_displayed} 
                     fieldDefinitions={fieldDefinitions}

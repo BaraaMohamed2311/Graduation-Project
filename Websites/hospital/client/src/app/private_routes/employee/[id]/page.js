@@ -185,7 +185,7 @@ console.log("employee", employee);
    const SpecificContentFields = MapToEmployeeDetails[employee.emp_title] || (<></>)
 
   return (
-    <main className={styles["employee-main"]}>
+    <main className={styles["page-main"]}>
       {isEditing &&
          <UpdateUserForm
             url={`list/other/employee`}
@@ -201,22 +201,22 @@ console.log("employee", employee);
             fieldDefinitions={{select_def,inputs_info,check_box}}
           />
       }
-        <div className={styles["employee-container"]}>
+        <div className={"page-container"}>
           {/* --- Header --- */}
-          <div className={styles["employee-header"]}>
-            <div className={styles["employee-img-wrapper"]}>
+          <div className={"main-content"}>
+            <div className={"avatar-wrapper"}>
               <Image
                 priority={false}
                 src={blobURL || "/avatar.jpg"}
-                className={styles["employee-picture"]}
+                className={"avatar"}
                 width="192"
                 height="192"
                 alt="User Profile Image"
               />
             </div>
 
-            <div className={styles["employee-info"]}>
-              <h1 className={styles["employee-name"]}>{employee.user_name}</h1>
+            <div className={"user-info"}>
+              <h1 className={"user-name"} id="user_name">{employee.user_name}</h1>
               <p className={styles["employee-position"]}>
                 {`${employee.emp_title} | ${employee.emp_specialty}`}
               </p>
@@ -227,7 +227,7 @@ console.log("employee", employee);
           </div>
 
           {/* --- Role-specific details --- */}
-          <div className={styles["employee-details"]}>
+          <div className={"user-details"}>
             <ul className={styles["role-details"]}>
               <SpecificContentFields  user={employee}/>
               <li><strong>Absence:</strong> {employee.emp_abscence || 'N/A'}</li>

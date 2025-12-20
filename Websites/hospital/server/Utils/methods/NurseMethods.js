@@ -335,7 +335,7 @@ class NurseMethods {
                             `
         const result = await sqlTransaction([query,version_query])
 
-        return result[0]?.affectedRows > 0;
+        return result;
 
     }
 

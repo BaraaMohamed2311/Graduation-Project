@@ -9,17 +9,9 @@ const useUserDataContext = () => useContext(user_data_context);
 function UserDataProvider({ children }) {
 
     const initial_values =  {
-            emp_id: null,
-            emp_name: null,
-            emp_email: null,
-            emp_title: null,
-            emp_specialty: null,
-            emp_salary: null,
-            emp_bonus: null,
-            emp_abscence: null,
-            emp_rate: null,
-            emp_perms:[], // so do not get error when Array.from we define as [] instead of null
-            role_name:null,
+            user_id: null,
+            user_name: null,
+            user_email: null,
             token: null
         };
         

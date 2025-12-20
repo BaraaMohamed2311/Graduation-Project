@@ -60,9 +60,9 @@ let gender_select = {
 }
 
 
-let select_options ={
+let select_def ={
     gender_select
 }
 
 
-export  {inputs_info ,select_options}
+export  {inputs_info ,select_def}

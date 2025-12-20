@@ -38,12 +38,12 @@ function ProfilePage() {
 
   
   return (
-    <main className={styles["profile-main"]} >
-      <div className={styles["profile-container"]}>
-        <div className={styles["profile-header"]}>
-            <div className={styles["profile-img-wrapper"]}>
+    <main className={"page-main"} >
+      <div className={"page-container"}>
+        <div className={"main-content"}>
+            <div className={"avatar-wrapper"}>
               <input onChange={handleImginput}  className={styles["profile-input"]} name="emp_img" accept="image/*" type="file" />
-              <Image priority={true}  src={blobURL} className={styles["profile-picture"]} width="192" height="192" alt="User Profile Image" />
+              <Image priority={true}  src={blobURL} className={"avatar"} width="192" height="192" alt="User Profile Image" />
             </div>
             
           <ProfileComponent user_data={user_data}  />

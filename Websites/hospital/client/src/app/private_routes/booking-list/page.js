@@ -213,7 +213,7 @@ function handleFilterOption(e){
             <div className={styles["booking-card-wrapper"]}>
               {cached_booking_list && Object.keys(cached_booking_list).length > 0 && cached_booking_list[selectedBookingType]  && cached_booking_list[selectedBookingType].slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((booking , index)=>{
                 return <BookingCard 
-                key={booking._id || index}
+                key={booking._id || booking.user_email}
                 userType={selectedBookingType} 
                 bookingData={booking} 
                 handleBookBtn={handleBookBtn}

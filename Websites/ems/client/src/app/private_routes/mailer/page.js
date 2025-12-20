@@ -21,7 +21,7 @@ export default function MailerPage() {
         fetch(`${process.env.APIKEY}/mail/mail-employee`,{
             method:"POST",
             body:JSON.stringify({
-                SendFrom: user_data.emp_email,
+                SendFrom: user_data.user_email,
                 SendTo: SendTo_REF.current.value,
                 subject:Subject_REF.current.value ,
                 text:TEXT_REF.current.value

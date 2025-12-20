@@ -28,8 +28,8 @@ export default function UpdateEmpForm({isEditing , setIsEditing , employee_displ
         const reqBody = {
                       modifier_id: user_data.emp_id,
                       
-                      emp_id: employee_displayed.emp_id,
-                      employee_emp_email:employee_displayed.emp_email,
+                      user_id: employee_displayed.user_id,
+                      user_email:employee_displayed.user_email,
                       ...updatedEmployeeData
                     }
 

@@ -32,7 +32,7 @@ export default function LoginPage() {
     if(EMAIL_REF.value === "" || PASSWORD_REF.value === "") return userNotification("error","Fields Cannot Be Empty")
 
       // remove sotored data if user wants to log with new account so if pre stored is not null & different clear localStorage
-        if(user_data.emp_email && EMAIL_REF.value !== user_data.emp_email){
+        if(user_data.user_email && EMAIL_REF.value !== user_data.user_email){
            localStorage.clear(); // deletes all including blob url image and user data
         }
 
@@ -47,7 +47,7 @@ export default function LoginPage() {
                 'Content-Type': 'application/json'
               },
               body:JSON.stringify({
-                  emp_email:EMAIL_REF.value,
+                  user_email:EMAIL_REF.value,
                   password:PASSWORD_REF.value
               })
             }

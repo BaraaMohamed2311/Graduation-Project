@@ -161,17 +161,26 @@ useEffect(()=>{
 
   return (
     <main className={`${styles["room-details-page"]} wrapper`}>
-      <div className={styles.selectUserModal}>
-        {isAssigningModalDisplayed && <SelectUser 
-        list_url={`/patient`}
-        handleConfirmBtn={()=> setIsConfirmed(true)}
-        selectedUser= {selectedUser}
-        setSelectedUser={setSelectedUser}
-        references={{inputsBoxsRef}}
-        inputs_info={inputs_info}
-        fieldDefinitions={{inputs_info}}
-      />}
-      </div>
+      {isAssigningModalDisplayed && (
+        <div className={styles.selectUserModal}>
+          <button
+            className={styles.closeButton} // optional, style as you like
+            onClick={() => setIsAssigningModalDisplayed(false)}
+          >
+            ✖
+          </button>
+          <SelectUser 
+            list_url={`/patient`}
+            handleConfirmBtn={() => setIsConfirmed(true)}
+            selectedUser={selectedUser}
+            setSelectedUser={setSelectedUser}
+            references={{ inputsBoxsRef }}
+            inputs_info={inputs_info}
+            fieldDefinitions={{ inputs_info }}
+          />
+        </div>
+      )}
+
       
       {/* === Section 1: Room info + graph === */}
       <section className={styles.section}>

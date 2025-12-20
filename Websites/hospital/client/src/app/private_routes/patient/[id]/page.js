@@ -12,7 +12,7 @@ import { useState ,useEffect, useRef} from "react";
 import userNotification from "@/utils/userNotification";
 import Image from "next/image";
 import PatientFiles from "@/components/FilesList/FilesList";
-import { inputs_info ,select_options} from "./data";
+import { inputs_info ,select_def} from "./data";
 import updateUserFetch from "@/utils/updateUserFetch";
 import HealthStatus from "@/components/HealthStatus/HealthStatus";
 import statusNotification from "@/utils/statusNotification";
@@ -125,14 +125,14 @@ function PatientDetailsPage() {
 
         // Check changes of gender which is related to "Modify Other Patient" permission
 
-        if ( (selectBoxsRef.current[select_options.gender_select.name] && !selectBoxsRef.current[select_options.gender_select.name].value) ){
+        if ( (selectBoxsRef.current[select_def.gender_select.name] && !selectBoxsRef.current[select_def.gender_select.name].value) ){
             userNotification("error", "Input fields cannot be empty");
             return
           }
           
           // we check at first that input element is rendered using current of reference
-          else if (selectBoxsRef.current[select_options.gender_select.name] && (selectBoxsRef.current[select_options.gender_select.name].value !== patient[select_options.gender_select.name])) {
-              updatedPatientData[select_options.gender_select.name] = selectBoxsRef.current[select_options.gender_select.name].value;
+          else if (selectBoxsRef.current[select_def.gender_select.name] && (selectBoxsRef.current[select_def.gender_select.name].value !== patient[select_def.gender_select.name])) {
+              updatedPatientData[select_def.gender_select.name] = selectBoxsRef.current[select_def.gender_select.name].value;
             if (!actions.includes("Modify Other Patient")) actions.push("Modify Other Patient"); // Add "MD" if not already added
           }
 
@@ -255,7 +255,7 @@ function PatientDetailsPage() {
   
 console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patient )
   return (
-    <main className={styles["patient-main"]}>
+    <main className={styles["page-main"]}>
       
           {isEditing  && can_modify_unrelated_patient &&  
               <UpdateUserForm
@@ -268,28 +268,26 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
                   modifier_data={user_data}
                   // Pass the references and functions as props
                   references={{inputsBoxsRef,selectBoxsRef}}
-                  inputs_info={inputs_info}
-                  select_options={select_options}
                   update_handler={update_handler}
-                  fieldDefinitions={{select_options,inputs_info}}
+                  fieldDefinitions={{select_def,inputs_info}}
                 />
             }
-        <div className={styles["patient-container"]}>
+        <div className={"page-container"}>
           {/* --- Header Section --- */}
-          <div className={styles["patient-header"]}>
-            <div className={styles["patient-img-wrapper"]}>
+          <div className={"main-content"}>
+            <div className={"avatar-wrapper"}>
               <Image
                 priority={false}
                 src={blobURL || "/avatar.jpg"}
-                className={styles["patient-picture"]}
+                className={"avatar"}
                 width="192"
                 height="192"
                 alt="Patient Profile Image"
               />
             </div>
 
-            <div className={styles["patient-info"]}>
-              <h1 className={styles["patient-name"]}>{patient.patient_name}</h1>
+            <div className={"user-info"}>
+              <h1 className={"user-name"} id="user_name">{patient.user_name}</h1>
               <p><strong>Email:</strong> {patient.user_email || "Not Provided"}</p>
               <p><strong>Phone:</strong> {patient.patient_phone || "Not Provided"}</p>
               <p><strong>Address:</strong> {patient.patient_address || "Not Specified"}</p>
@@ -323,7 +321,7 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
           />
 
           {/* --- Actions --- */}
-          <div className={styles["patient-details"]}>
+          <div className={"user-details"}>
             <ul className={styles["activity-list"]}>
               <li className={styles["buttons-wrapper"]}>
                 <button

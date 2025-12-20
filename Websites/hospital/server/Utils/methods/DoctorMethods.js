@@ -446,7 +446,7 @@ class DoctorMethods {
         
         const result = await sqlTransaction([query,version_query])
 
-        return result[0]?.affectedRows > 0;
+        return result;
 
     }
 
@@ -474,8 +474,8 @@ class DoctorMethods {
                             `
 
 
-                    await sqlTransaction([query, version_query]);
-                    return true
+                    return await sqlTransaction([query, version_query]);
+
             }
             catch(err){
                 console.error("Error updating doctor-patient data:", err);

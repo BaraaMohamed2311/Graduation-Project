@@ -13,7 +13,7 @@ import userNotification from "@/utils/userNotification";
 import updateUserFetch from "@/utils/updateUserFetch";
 import Image from "next/image";
 import PatientFiles from "@/components/FilesList/FilesList";
-import { inputs_info , select_options } from "./data";
+import { inputs_info , select_def } from "./data";
 import HealthStatus from "@/components/HealthStatus/HealthStatus";
 import uploadPatientFile from "@/utils/uploadPatientFile";
 function PatientDetailsPage() {
@@ -98,8 +98,6 @@ function PatientDetailsPage() {
   
           let actions = [];
           let updatedPatientData = {};
-
-  
       // ====================================================== Modify Data ======================================================
   
          // === 1. Check for changes in general input fields
@@ -121,14 +119,14 @@ function PatientDetailsPage() {
 
           // Check changes of gender which is related to "Modify Other Patient" permission
 
-        if ( (selectBoxsRef.current[select_options.gender_select.name] && !selectBoxsRef.current[select_options.gender_select.name].value) ){
+        if ( (selectBoxsRef.current[select_def.gender_select.name] && !selectBoxsRef.current[select_def.gender_select.name].value) ){
             userNotification("error", "Input fields cannot be empty");
             return
           }
           
           // we check at first that input element is rendered using current of reference
-          else if (selectBoxsRef.current[select_options.gender_select.name] && (selectBoxsRef.current[select_options.gender_select.name].value !== mypatient[select_options.gender_select.name])) {
-              updatedPatientData[select_options.gender_select.name] = selectBoxsRef.current[select_options.gender_select.name].value;
+          else if (selectBoxsRef.current[select_def.gender_select.name] && (selectBoxsRef.current[select_def.gender_select.name].value !== mypatient[select_def.gender_select.name])) {
+              updatedPatientData[select_def.gender_select.name] = selectBoxsRef.current[select_def.gender_select.name].value;
             if (!actions.includes("Modify Other Patient")) actions.push("Modify Other Patient"); // Add "MD" if not already added
           }
   
@@ -141,7 +139,6 @@ function PatientDetailsPage() {
             actionString,
             
           };
-  
       }
 
   // ================================================================
@@ -214,7 +211,7 @@ function PatientDetailsPage() {
   }
   const is_authorized_to_modify_my_patents_data = user_data?.emp_perms?.has('Modify My Patient');
   return (
-    <main className={styles["patient-main"]}>
+    <main className={styles["page-main"]}>
       
       {isEditing && is_authorized_to_modify_my_patents_data && 
         <UpdateUserForm
@@ -227,28 +224,26 @@ function PatientDetailsPage() {
             modifier_data={user_data}
             // Pass the references and functions as props
             references={{inputsBoxsRef,selectBoxsRef}}
-            inputs_info={inputs_info}
-            select_options={select_options}
             update_handler={update_handler}
-            fieldDefinitions={{select_options,inputs_info}}
+            fieldDefinitions={{select_def,inputs_info}}
           />
       }
-        <div className={styles["patient-container"]}>
+        <div className={"page-container"}>
           {/* --- Header Section --- */}
-          <div className={styles["patient-header"]}>
-            <div className={styles["patient-img-wrapper"]}>
+          <div className={"main-content"}>
+            <div className={"avatar-wrapper"}>
               <Image
                 priority={false}
                 src={blobURL || "/avatar.jpg"}
-                className={styles["patient-picture"]}
+                className={"avatar"}
                 width="192"
                 height="192"
                 alt="Patient Profile Image"
               />
             </div>
 
-            <div className={styles["patient-info"]}>
-              <h1 className={styles["patient-name"]}>{mypatient.patient_name}</h1>
+            <div className={"user-info"}>
+              <h1 className={"user-name"} id="user_name">{mypatient.user_name}</h1>
               <p><strong>Email:</strong> {mypatient.user_email || "Not Provided"}</p>
               <p><strong>Phone:</strong> {mypatient.patient_phone || "Not Provided"}</p>
               <p><strong>Address:</strong> {mypatient.patient_address || "Not Specified"}</p>
@@ -283,7 +278,7 @@ function PatientDetailsPage() {
           />
 
           {/* --- Actions --- */}
-          <div className={styles["patient-details"]}>
+          <div className={"user-details"}>
             <ul className={styles["activity-list"]}>
               <li className={styles["buttons-wrapper"]}>
                 <button

@@ -80,4 +80,21 @@
   padding: 5rem 1rem;
 }
 
+.closeButton {
+  top: 10px; /* distance from top of modal */
+  right: 10px; /* distance from right of modal */
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #333; /* change color if needed */
+  font-weight: bold;
+  align-self: flex-end;
+  margin-right: 1rem ;
+}
+
+.closeButton:hover {
+  color: #ff0000; /* optional hover effect */
+}
+
 

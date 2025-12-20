@@ -1,14 +1,14 @@
 
-.patient-main{
-    width: 100vw;
-    height: fit-content ;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    background-color: var(--sec-dark);
-  }
+.page-main {
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-xl);
+  background-color: var(--sec-dark);
+}
+
   
   .patient-container {
       background-color: var(--white);

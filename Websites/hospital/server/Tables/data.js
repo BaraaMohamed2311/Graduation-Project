@@ -200,6 +200,24 @@ const permissions = [
   'Modify Availability',
   'Access Other Patients'
 ];
-const setOfPerms = new Set(permissions)
+const setOfPerms = new Set(permissions);
 
-module.exports = {TableAliases , Tables ,setOfPerms };
+const approvalRequiredFields = {
+  patients: [],
+  employees: [],
+  doctors: ['initial_consultation_price', 'followup_consultation_price', 'years_of_exp'],
+  surgeons: ['initial_consultation_price', 'followup_consultation_price', 'surgery_price', 'years_of_exp'],
+  nurses: ['floor_number'],
+
+};
+
+const roleToEntityMap = {
+  patient: 'patients',
+  employee: 'employees',
+  doctor: 'doctors',
+  surgeon: 'surgeons',
+  nurse: 'nurses',
+};
+
+
+module.exports = {TableAliases , Tables ,setOfPerms ,approvalRequiredFields,roleToEntityMap};

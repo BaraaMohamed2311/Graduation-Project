@@ -26,7 +26,7 @@ export default function ForgetPasswordPage() {
             'Content-Type': 'application/json'
           },
           body:JSON.stringify({
-              emp_email:inputsBoxsRef.current["emp_email"].value,
+              user_email:inputsBoxsRef.current["user_email"].value,
           })
         }
       )
@@ -63,7 +63,7 @@ export default function ForgetPasswordPage() {
                         id:"forget_password",
                         label:"Type Your Email",
                         type:"email",
-                        name:"emp_email",
+                        name:"user_email",
                         isRequired:true
 
                     }]} 

@@ -24,7 +24,7 @@ const AvailabilityList = ({availability_schedule})=>{
                     availability_schedule.split("; ").map((schedule) => {
                       const [dayIndex, timeRange] = schedule.split(": ");
                       const [startTime, endTime] = timeRange.split("-");
-                      const days = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun"};
+                      const days = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 0: "Sun"};
                       
                       return (
                         <div key={dayIndex} className={styles.schedule_item}>
@@ -60,8 +60,8 @@ const DoctorProfile = ({ user_data, permissions }) => {
   const inputsBoxsRef = useRef({})
   return (
     <>
-      <div className={styles["profile-info"]}>
-        <h1 className={styles["profile-name"]}>{user_data.emp_name}</h1>
+      <div className={"user-info"}>
+        <h1 className={"user-name"} id="user_name">{user_data.user_name}</h1>
         <p className={styles["profile-position"]}>
           {`${user_data.emp_title} | ${user_data.emp_specialty}`}
         </p>
@@ -71,8 +71,9 @@ const DoctorProfile = ({ user_data, permissions }) => {
         <p><strong>Experience:</strong> {user_data.years_of_exp} years</p>
       </div>
 
-      <div className={styles["profile-details"]}>
-        <ul className={styles["activity-list"]}>
+    <div className="further-info-wrapper">
+      <div className={"details-card"}>
+        <ul className={"clean-list"}>
           <li><strong>Salary:</strong> {MoneyShortner(user_data.emp_salary)}</li>
           <li><strong>This Month Bonus:</strong> {MoneyShortner(user_data.emp_bonus)}</li>
           <li><strong>This Month Absence:</strong> {user_data.emp_abscence}</li>
@@ -95,13 +96,12 @@ const DoctorProfile = ({ user_data, permissions }) => {
       <ProfileEditManager
         role="doctor"
         userData={user_data}
-        userDisplayed={user_data}
-        update_handler={()=>{}}
         references={{ inputsBoxsRef }}
         selfEditableFields={selfEditableFields} 
         approvalRequiredFields={approvalRequiredFields}
         
       />
+      </div>
     </>
   );
 };
@@ -112,8 +112,8 @@ const SurgeonProfile = ({ user_data, permissions }) => {
   const inputsBoxsRef = useRef({})
   return (
     <>
-      <div className={styles["profile-info"]}>
-        <h1 className={styles["profile-name"]}>{user_data.emp_name}</h1>
+      <div className={"user-info"}>
+        <h1 className={"user-name"} id="user_name">{user_data.user_name}</h1>
         <p className={styles["profile-position"]}>
           {`${user_data.emp_title} | ${user_data.emp_specialty}`}
         </p>
@@ -123,36 +123,36 @@ const SurgeonProfile = ({ user_data, permissions }) => {
         <p><strong>Experience:</strong> {user_data.years_of_exp} years</p>
       </div>
 
-      <div className={styles["profile-details"]}>
-        <ul className={styles["activity-list"]}>
-          <li><strong>Salary:</strong> {MoneyShortner(user_data.emp_salary)}</li>
-          <li><strong>This Month Bonus:</strong> {MoneyShortner(user_data.emp_bonus)}</li>
-          <li><strong>This Month Absence:</strong> {user_data.emp_abscence}</li>
+    <div className="further-info-wrapper">
+      <div className={"details-card"}>
+          <ul className={"clean-list"}>
+            <li><strong>Salary:</strong> {MoneyShortner(user_data.emp_salary)}</li>
+            <li><strong>This Month Bonus:</strong> {MoneyShortner(user_data.emp_bonus)}</li>
+            <li><strong>This Month Absence:</strong> {user_data.emp_abscence}</li>
 
-          <li className={styles.role_box}>
-            <strong>Role:</strong> {user_data.role_name}
-            <Image src={pickRoleIcon(user_data.role_name)} width={30} height={30} alt="surgeon role" />
-          </li>
+            <li className={styles.role_box}>
+              <strong>Role:</strong> {user_data.role_name}
+              <Image src={pickRoleIcon(user_data.role_name)} width={30} height={30} alt="surgeon role" />
+            </li>
 
-          <li className={styles.availability_box}>
-            <AvailabilityList availability_schedule={user_data.availability_schedule} />
-          </li>
+            <li className={styles.availability_box}>
+              <AvailabilityList availability_schedule={user_data.availability_schedule} />
+            </li>
 
-          <li className={styles.perms_box}>
-            <PermsList permissions={permissions} />
-          </li>
-        </ul>
+            <li className={styles.perms_box}>
+              <PermsList permissions={permissions} />
+            </li>
+          </ul>
+        </div>
+
+        <ProfileEditManager
+          role="surgeon"
+          userData={user_data}
+          references={{ inputsBoxsRef }}
+          selfEditableFields={selfEditableFields} 
+          approvalRequiredFields={approvalRequiredFields}
+        />
       </div>
-
-      <ProfileEditManager
-        role="surgeon"
-        userData={user_data}
-        userDisplayed={user_data}
-        update_handler={()=>{}}
-        references={{ inputsBoxsRef }}
-        selfEditableFields={selfEditableFields} 
-        approvalRequiredFields={approvalRequiredFields}
-      />
     </>
   );
 };
@@ -163,8 +163,8 @@ const NurseProfile = ({ user_data, permissions }) => {
   const inputsBoxsRef = useRef({})
   return (
     <>
-      <div className={styles["profile-info"]}>
-        <h1 className={styles["profile-name"]}>{user_data.emp_name}</h1>
+      <div className={"user-info"}>
+        <h1 className={"user-name"} id="user_name">{user_data.user_name}</h1>
         <p className={styles["profile-position"]}>
           {`${user_data.emp_title} | ${user_data.emp_specialty}`}
         </p>
@@ -174,8 +174,9 @@ const NurseProfile = ({ user_data, permissions }) => {
         <p><strong>Experience:</strong> {user_data.years_of_exp} years</p>
       </div>
 
-      <div className={styles["profile-details"]}>
-        <ul className={styles["activity-list"]}>
+    <div className="further-info-wrapper">
+      <div className={"details-card"}>
+        <ul className={"clean-list"}>
           <li><strong>Salary:</strong> {MoneyShortner(user_data.emp_salary)}</li>
           <li><strong>This Month Bonus:</strong> {MoneyShortner(user_data.emp_bonus)}</li>
           <li><strong>This Month Absence:</strong> {user_data.emp_abscence}</li>
@@ -198,12 +199,11 @@ const NurseProfile = ({ user_data, permissions }) => {
       <ProfileEditManager
         role="nurse"
         userData={user_data}
-        userDisplayed={user_data}
-        update_handler={()=>{}}
         references={{ inputsBoxsRef }}
         selfEditableFields={selfEditableFields} 
         approvalRequiredFields={approvalRequiredFields}
       />
+    </div>
     </>
   );
 };
@@ -320,29 +320,31 @@ const PatientProfile = ({ user_data }) => {
     }
   }
 
+  
   return (
     <>
-      <div className={styles["profile-info"]}>
-        <h1 className={styles["profile-name"]}>{user_data.patient_name}</h1>
+    
+      <div className={"user-info"}>
+        <h1 className={"user-name"} id="user_name">{user_data.patient_name}</h1>
         <p className={styles["profile-position"]}>Patient</p>
         <p><strong>Email:</strong> {user_data.user_email}</p>
-        <p><strong>Phone:</strong> {user_data.phone_number}</p>
+        <p><strong>Phone:</strong> {user_data.patient_phone}</p>
+        <p><strong>Address:</strong> {user_data.patient_address}</p>
         <p><strong>Date of Birth:</strong> {user_data.date_of_birth}</p>
         <p><strong>Emergency Contact:</strong> {user_data.emergency_contact}</p>
       </div>
 
+    <div className="further-info-wrapper">
       <ProfileEditManager
         role="patient"
         userData={user_data}
-        userDisplayed={user_data}
-        update_handler={()=>{}}
         references={{ inputsBoxsRef }}
         selfEditableFields={selfEditableFields} 
         approvalRequiredFields={approvalRequiredFields}
       />
 
       <PatientFiles 
-          urls={{initial_url:`files/patient/${user_data.user_id}` ,download_one_url:files/patient}} 
+          urls={{initial_url:`files/patient/${user_data.user_id}` ,download_one_url:`files/patient`}} 
           files={[]} 
           onDeleteFile={onDeleteFile} 
           onUploadFile={onUploadFile} 
@@ -351,7 +353,7 @@ const PatientProfile = ({ user_data }) => {
           setFilesMeta ={setFilesMeta} 
         /> 
       <HealthStatus user_id={user_data.user_id} />
-
+    </div>
       <button className="red-button" onClick={() => setShowDeleteModal(true)}>
         Delete Account
       </button>

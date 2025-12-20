@@ -131,7 +131,7 @@ export default function BasicTable({currPage , setCurrPage , sizeOfPage , isFilt
               <tr key={employee.emp_id} className={styles.table_row}>
                 <th className={styles.table_col_1}>{employee.emp_id}</th>
                 <th className={styles.table_col_1}>{employee.emp_name}</th>
-                <th className={styles.table_col_2}>{employee.emp_email}</th>
+                <th className={styles.table_col_2}>{employee.user_email}</th>
                 <th className={styles.table_col_2}>{employee.emp_title}</th>
                 {!isSmallScreen && <>
                 <th className={styles.table_col_2}>{employee.emp_specialty}</th>
@@ -151,7 +151,7 @@ export default function BasicTable({currPage , setCurrPage , sizeOfPage , isFilt
                       <tr key={employee.emp_id} className={styles.table_row}>
                         <th className={styles.table_col_1}>{employee.emp_id}</th>
                         <th className={styles.table_col_1}>{employee.emp_name}</th>
-                        <th className={styles.table_col_2}>{employee.emp_email}</th>
+                        <th className={styles.table_col_2}>{employee.user_email}</th>
                         <th className={styles.table_col_2}>{employee.emp_title}</th>
                         {!isSmallScreen && <>
                           <th className={styles.table_col_2}>{employee.emp_specialty}</th>

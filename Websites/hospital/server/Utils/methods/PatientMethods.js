@@ -287,8 +287,8 @@ class PatientMethods {
                 ON u.user_type = 'patient' AND u.user_id = p.patient_id
 
             SET
-                ${updating_string},
-                u.latest_update = NOW()
+                ${updating_string}
+
 
             WHERE p.patient_id = ${patient_id};
         `
@@ -298,7 +298,7 @@ class PatientMethods {
                             `
         const result = await sqlTransaction([query,version_query])
 
-        return result[0]?.affectedRows > 0;
+        return result;
 
     }
     
