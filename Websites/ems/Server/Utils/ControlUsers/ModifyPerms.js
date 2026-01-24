@@ -1,5 +1,5 @@
 
-const SuperAdmin = require("../../Classes/SuperAdmin");
+const SuperAdmin = require("../../Classes/Roles/SuperAdmin");
 async function ModifyPerms(emp_id, userRole, modifierRole, newperms , oldUserpermsSet,failing_messages) {
 
         if(modifierRole === "SuperAdmin"){

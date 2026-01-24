@@ -5,7 +5,7 @@ const SyncMethods = require("../Utils/methods/SyncMethods.js");
 // =================================
 //  Get All Employees Data Sync
 // =================================
-router.get("/employees",jwtVerify, async (req, res) => {
+router.get("/employees", async (req, res) => {
     try {
         const {  max_version } = req.query;
 
@@ -24,7 +24,7 @@ router.get("/employees",jwtVerify, async (req, res) => {
 // =================================
 //  Get All Doctors Data Sync
 // =================================
-router.get("/doctors",jwtVerify, async (req, res) => {
+router.get("/doctors", async (req, res) => {
     try {
         const { max_version } = req.query;
 
@@ -43,7 +43,7 @@ router.get("/doctors",jwtVerify, async (req, res) => {
 // =================================
 //  Get All Surgeons Data Sync
 // =================================
-router.get("/surgeons",jwtVerify, async (req, res) => {
+router.get("/surgeons", async (req, res) => {
     try {
         const {  max_version } = req.query;
 
@@ -61,7 +61,7 @@ router.get("/surgeons",jwtVerify, async (req, res) => {
 // =================================
 //  Get All Patients Data Sync
 // =================================
-router.get("/patients",jwtVerify, async (req, res) => {
+router.get("/patients", async (req, res) => {
     try {
         const {  max_version } = req.query;
 
@@ -80,7 +80,7 @@ router.get("/patients",jwtVerify, async (req, res) => {
 // =================================
 //  Get My Patients Data Sync (for Doctors)
 // =================================
-router.get("/mypatients", jwtVerify, async (req, res) => {
+router.get("/mypatients", async (req, res) => {
     try {
 
         const {  max_version } = req.query;

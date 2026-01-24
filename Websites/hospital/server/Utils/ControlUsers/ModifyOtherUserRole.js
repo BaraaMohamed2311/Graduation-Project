@@ -1,4 +1,4 @@
-const SuperAdmin = require("../../Classes/SuperAdmin");
+const SuperAdmin = require("../../Classes/Roles/SuperAdmin");
 //===========================================================
 //              Help in Choosing Role Class to Execute Task
 //===========================================================

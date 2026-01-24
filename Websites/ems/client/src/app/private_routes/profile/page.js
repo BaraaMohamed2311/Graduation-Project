@@ -34,18 +34,18 @@ function ProfilePage() {
       // create fileReader to read image once recieved from res
       reader.addEventListener('load',()=> CacheImageLocalStorage(reader.result));
       // fetch image
-      getUserImage('/profile/prof-img', user_data.emp_email , reader ,setBlobURL ,user_data.token )
+      getUserImage('/profile/prof-img', user_data.user_email , reader ,setBlobURL ,user_data.token )
     }
 
     return ()=>{
       reader.removeEventListener('load', CacheImageLocalStorage)
     }
 
-} ,[user_data.emp_email,user_data.token])
+} ,[user_data.user_email,user_data.token])
 
 
   function handleImginput(e){
-    updateImg(e.target.files[0] , user_data.emp_email , setBlobURL , user_data.token)
+    updateImg(e.target.files[0] , user_data.user_email , setBlobURL , user_data.token)
   }
 
 
@@ -69,9 +69,9 @@ function ProfilePage() {
             </div>
 
           <div className={styles["profile-info"]}>
-              <h1 className={styles["profile-name"]}>{user_data.emp_name}</h1>
+              <h1 className={styles["profile-name"]}>{user_data.user_name}</h1>
               <p className={styles["profile-position"]}>{`${user_data.emp_title} | ${user_data.emp_specialty}` || "No Assigned Position"}</p>
-              <p><strong>Email:</strong> {user_data.emp_email}</p>
+              <p><strong>Email:</strong> {user_data.user_email}</p>
               <p><strong>Location:</strong> {user_data.emp_address || "Not Specified"}</p>
               <p><strong>Member Since:</strong> {user_data.emp_joined || "Not Specified"}</p>
             </div>

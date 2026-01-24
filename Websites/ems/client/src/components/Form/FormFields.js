@@ -1,73 +1,158 @@
 import Select from "../Select/Select";
 import Link from "next/link";
 import Inputs from "../Inputs/Inputs"
-import { useEffect , useState} from "react";
+import { useEffect , useState , useMemo} from "react";
 import { global_mapped_specialities } from "@/global_data";
 
-function RegisterFormFields({
-  select_options,
-  employee_displayed,
-  styles,
-  references,
-}){
-    /* Get Change of title's selected value */
-    const [selectedTitleValue, setSelectedTitleValue] = useState(employee_displayed?.emp_title ?? "");
 
-    /* Get Corresponding specialities for title */
-    const specialities_for_title =  global_mapped_specialities[selectedTitleValue];
+// ================================
+//    Checks Option before rendering
+// ================================
+
+function DynamicSelect({ selectOption, userDisplayed, references, onChange, styles }) {
+    console.log("selectOption",selectOption)
+
+    console.log("userDisplayed:", userDisplayed ,selectOption?.name ); // Add this
+    if (!selectOption || !references || !references.selectBoxsRef) return null;
+
+    return (
+        <Select
+            styles={styles}
+            defaultValue={userDisplayed && userDisplayed[selectOption.name]}
+            select_options={selectOption}
+            reference={references.selectBoxsRef}
+            onChange={onChange}
+        />
+    );
+}
+// ================================
+//    Employee's Specific Select Elements
+// ================================
+function EmployeeSelectFields({ select_def, user_displayed, references, styles }) {
+    const [selectedTitleValue, setSelectedTitleValue] = useState(
+        user_displayed?.emp_title ?? ""
+    );
+
+     // Memoize specialty options for selected title 
+    const specialitiesForTitle  = useMemo(() => {
+        return global_mapped_specialities[selectedTitleValue] && select_def?.select_title_options ? ({
+            label: "specialty",
+            options: global_mapped_specialities[selectedTitleValue] || [],
+            name: "specialty",
+        }) : null;
+    }, [selectedTitleValue]);
 
     return (
         <>
-        {/*display select for positions */}
-        <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_element_data.name] } select_options={select_options.select_title_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
-        <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_element_data.name] } select_options={{name:select_options.select_specialty_options.name,options:specialities_for_title}} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
+            {/* Title select */}
+            <DynamicSelect
+                selectOption={select_def?.select_title_options}
+                userDisplayed={user_displayed}
+                references={references}
+                onChange={(e) => setSelectedTitleValue(e.target.value)}
+                styles={styles}
+            />
+
+            {/* Specialty select (auto-filtered) */}
+            {specialitiesForTitle && (
+                <DynamicSelect
+                    selectOption={specialitiesForTitle}
+                    userDisplayed={user_displayed}
+                    references={references}
+                    styles={styles}
+                />
+            )}
+
+            {/* Role select */}
+            <DynamicSelect
+                selectOption={select_def?.select_role_options}
+                userDisplayed={user_displayed}
+                references={references}
+                styles={styles}
+            />
         </>
-    )
+    );
+}
+// ================================
+//    Generic selct options rendering
+// ================================
+function RenderOtherSelects({ select_def, exclude = [], user_displayed, references, styles }) {
+
+    Object.entries(select_def || {})
+        .filter(([key]) => !exclude.includes(key))
+        .map(([key, selectOption]) =>console.log("RenderOtherSelects",key, selectOption));
+
+    return  Object.entries(select_def || {})
+        .filter(([key]) => !exclude.includes(key))
+        .map(([key, selectOption]) =>
+            
+            <DynamicSelect
+                key={key}
+                selectOption={selectOption}
+                userDisplayed={user_displayed}
+                references={references}
+                styles={styles}
+            />
+        );
 }
 
-function UpdateUserFormFields({
+
+export default function UpdateUserFormFields({
     references,
-    check_box,
-    select_options,
     isEditing,
     setIsEditing,
     formBtnState,
-    employee_displayed,
-    user_data,
+    user_displayed,
     styles,
-}){
-    /* Get Change of title's selected value */
-    const [selectedTitleValue, setSelectedTitleValue] = useState(employee_displayed?.emp_title ?? "");
-
-    /* Get Corresponding specialities for title */
-    const specialities_for_title =  global_mapped_specialities[selectedTitleValue];
+    fieldDefinitions,
+}) {
+    const {select_def , check_box}= fieldDefinitions;
 
     return (
         <>
-        {/* display select for positions */}
-        <Select styles={styles}  defaultValue = {user_displayed && user_displayed[select_options.select_title_options.name] } select_options={select_options.select_title_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef} onChange={(e)=>setSelectedTitleValue(e.target.value)}/>
-        <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_options.select_specialty_options.name] } select_options={{name:select_options.select_specialty_options.name,options:specialities_for_title}} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
-        {/* display select for Role */}
-        <Select styles={styles} defaultValue = {user_displayed && user_displayed[select_options.select_role_options.name] } select_options={select_options.select_role_options} employee_displayed={employee_displayed} reference={references.selectBoxsRef}/>
-        {/* Update Role If you have permission*/}
-        {user_data.role_name === "SuperAdmin" && 
-                <div className={styles.perms_checkbox}>
-                    {<Inputs inputs_info={check_box} type={"checkbox"} employee_displayed={employee_displayed}  references = {references.checkBoxsRef}/>}
-                </div>
-            }
-        {/* cancel edit button */}
-        {isEditing && 
-            <button
-                onClick={()=>setIsEditing(false)}
-                className={styles.formButton}
-                disabled={formBtnState === "Submitting"}
-                type="button"
-            >
-                Cancel
-            </button>}
+            {/* Employee-related grouped selects */}
+            <EmployeeSelectFields
+                select_def={select_def}
+                user_displayed={user_displayed}
+                references={references}
+                styles={styles}
+            />
+
+            {/* Render all remaining selects dynamically */}
+            <RenderOtherSelects
+                select_def={select_def}
+                exclude={["select_title_options", "select_role_options"]}  // keep OCP
+                user_displayed={user_displayed}
+                references={references}
+                styles={styles}
+            />
+
+            {/* Check Box Permissions */}
+            {check_box && Object.keys(check_box).map(key=>(
+                <Inputs
+                    inputs_info={check_box[key]}
+                    defaultValues={user_displayed}
+                    references={references.checkBoxsRef}
+                    formKind={"check_inputs_wrapper"}
+                />
+            ))}
+
+            {/* Cancel Edit Button */}
+            {isEditing && (
+                <button
+                    onClick={() => setIsEditing(false)}
+                    className={styles.formButton}
+                    disabled={formBtnState === "Submitting"}
+                    type="button"
+                >
+                    Cancel
+                </button>
+            )}
         </>
-    )
+    );
 }
+
+
 
 function LoginFormFields({
   styles,
@@ -84,4 +169,10 @@ function LoginFormFields({
     )
 }
 
-export {LoginFormFields, UpdateUserFormFields, RegisterFormFields};
+
+const FormFieldsMap = {
+    update_form: UpdateUserFormFields,
+    login_form: LoginFormFields,
+};
+
+export {FormFieldsMap};

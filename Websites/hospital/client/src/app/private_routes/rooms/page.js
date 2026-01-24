@@ -25,12 +25,15 @@ function EmployeesListPage() {
   // Refrences
 
   function handleClearFilterOption(){
-    select_def.forEach((el) => {
-      
-    if (selectBoxsRef.current[el.name]) {
-      
-    }
-  });
+    const ROOMNUM_REF = selectBoxsRef.current["room_number"];
+  const FLOORNUM_REF = selectBoxsRef.current["floor_id"];
+  const STATUS_REF = selectBoxsRef.current["status"];
+
+    ROOMNUM_REF.value = "";
+    FLOORNUM_REF.value = "";
+    STATUS_REF.value = "";
+  }
+;
 
   setIsFiltered(false)
 
@@ -52,7 +55,7 @@ function EmployeesListPage() {
       userNotification("error",data.message)
     }
   })
-}
+
 
 
 

@@ -10,7 +10,7 @@ const mailer = require("../Utils/mailer.js")
 const  ModifyOtherUserData  = require("../Utils/ControlUsers/ModifyOtherUserData.js");
 const  ModifyOtherUserRole  = require("../Utils/ControlUsers/ModifyOtherUserRole.js");  
 const  ModifyOtherUserPerms = require("../Utils/ControlUsers/ModifyOtherUserPerms.js");
-const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
+const HospitalUsersMethods = require("../Classes/HospitalUsers/HospitalUsersMethods.js");
 const RemoveFixedFields = require("../Utils/RemoveFixedFields.js");
 const {Tables , setOfPerms} = require("../Tables/data.js");
 const DoctorMethods = require("../Utils/methods/DoctorMethods.js");
@@ -22,9 +22,9 @@ const JoinFiltering = require("../Utils/JoinFiltering.js")
 const cacheCountNodeCache = require("../Utils/cacheCountNodeCache.js")
 const SurgeonMethods = require("../Utils/methods/SurgeonMethods.js");
 const buildJoinedFilters = require("../Utils/buildJoinedFilters.js")
-const padBoth = require("../Utils/padsBoth.js")
+const padBoth = require("../Utils/padBoth.js")
 const createOrderByClause = require("../Utils/createOrderByClause.js");
-const perms = require("../Classes/perms.js");
+const perms = require("../Classes/Perms/perms.js");
 const buildJoinedUpdate = require("../Utils/buildJoinedUpdate.js");
 const Patient_health_status = require("../Models/Patient_health_status.js");
 
@@ -747,7 +747,7 @@ router.delete("/other/patient",jwtVerify, async (req, res) => {
         
         // ===5. Send Email
         if (isFulfilled) {
-            const isSent = await mailer(modifier_email, emp_email, "You Got Deleted", `
+            const isSent = await mailer(modifier_email, user_email, "You Got Deleted", `
                 Dear ${patient_name},
 
                 Your hospital patient's account was deleted ${new Date()}.

@@ -74,7 +74,7 @@ static async getUserEmailByID(user_id) {
         static async getUserEmailAndTable(user_id){
         if (user_id) {
             const query_employees = `
-                SELECT emp_email FROM employees WHERE emp_id = ? LIMIT 1
+                SELECT user_email FROM employees WHERE emp_id = ? LIMIT 1
             `;
             const query_patients = `
                 SELECT patient_email FROM patients WHERE patient_id = ? LIMIT 1
@@ -83,7 +83,7 @@ static async getUserEmailByID(user_id) {
             const result_from_patients = await executeMySqlQuery(query_patients,[user_id]);
 
             if(result_from_employees.length > 0){
-                return {user_email:result_from_employees[0]?.emp_email, table:"employees"}; 
+                return {user_email:result_from_employees[0]?.user_email, table:"employees"}; 
             }
             else if(result_from_patients.length > 0){
                 return {user_email:result_from_patients[0]?.patient_emmail, table:"patients"}; 

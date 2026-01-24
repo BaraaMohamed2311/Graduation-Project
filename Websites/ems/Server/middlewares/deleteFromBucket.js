@@ -5,7 +5,7 @@ async function deleteFromBucket(bucket ,req , res , next){
     if(bucket){
 
         // we search for employee to be image updated
-        let old_employee = await Employees_Img_module.findOne({emp_email:req.query["emp_email"]});
+        let old_employee = await Employees_Img_module.findOne({user_email:req.query["user_email"]});
         // if user hasn't had an image before go next and do not try to delete
 
         if(!old_employee.emp_pic.ImgId){

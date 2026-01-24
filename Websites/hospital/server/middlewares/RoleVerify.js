@@ -1,7 +1,7 @@
 
 function RoleVerify(req , res , next){
     try{
-            req.body.emp_email
+            req.body.user_email
             next();
         }
     catch(err){

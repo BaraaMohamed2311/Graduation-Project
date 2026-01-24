@@ -118,8 +118,8 @@ useEffect(()=>{console.log("fetched_my_patient_pages",fetched_my_patient_pages)}
 //        Clear Filters
 // ===========================================
   function handleClearFilterOption(){
-    const EMAIL_REF = inputsBoxsRef.current["Email"];
-    const ByPhoneREF = inputsBoxsRef.current["Phone"];
+    const EMAIL_REF = inputsBoxsRef.current["user_email"];
+    const ByPhoneREF = inputsBoxsRef.current["patient_phone"];
 
     setIsFiltered(false) // set to false to render cached employees with no filters
     setFilteredResults([]); //to remove all

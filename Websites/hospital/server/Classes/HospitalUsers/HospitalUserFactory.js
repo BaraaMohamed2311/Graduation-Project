@@ -1,0 +1,246 @@
+const DoctorMethods = require("../../Utils/methods/DoctorMethods");
+const NurseMethods = require("../../Utils/methods/NurseMethods");
+const SurgeonMethods = require("../../Utils/methods/SurgeonMethods");
+const PatientMethods = require("../../Utils/methods/PatientMethods");
+
+/**
+ * Factory class for mapping user titles to their respective method classes
+ * Centralizes all user-type-specific operations
+ */
+class HospitalUserFactory {
+    static #hospital_users = new Set(["doctor", "nurse", "surgeon", "patient"]);
+
+    // ========================================
+    // Method Class Mapping
+    // ========================================
+    static #methodClassMap = {
+        "Doctor": DoctorMethods,
+        "Surgeon": SurgeonMethods,
+        "Nurse": NurseMethods,
+        "Patient": PatientMethods,
+    };
+
+    // ========================================
+    // Specific Data Methods
+    // ========================================
+    static #specificDataMethods = {
+        "Doctor": DoctorMethods.getDoctorSpecificData,
+        "Surgeon": SurgeonMethods.getSurgeonSpecificData,
+        "Nurse": NurseMethods.getNurseSpecificData,
+        "Patient": PatientMethods.getPatientSpecificData,
+    };
+
+    // ========================================
+    // Full Data Methods
+    // ========================================
+    static #fullDataMethods = {
+        "Doctor": DoctorMethods.getDoctorFullData,
+        "Surgeon": SurgeonMethods.getSurgeonFullData,
+        "Nurse": NurseMethods.getNurseFullData,
+        "Patient": PatientMethods.getPatientFullData,
+    };
+
+    // ========================================
+    // All Full Data Methods (with pagination)
+    // ========================================
+    static #allFullDataMethods = {
+        "Doctor": DoctorMethods.getAllDoctorsFullData,
+        "Surgeon": SurgeonMethods.getAllSurgeonsFullData,
+        "Nurse": NurseMethods.getAllNursesFullData,
+        "Patient": PatientMethods.getAllPatientsSpecificData, // Patients use specific data
+    };
+
+    // ========================================
+    // Count Methods
+    // ========================================
+    static #countMethods = {
+        "Doctor": DoctorMethods.getAllDoctorsCOUNT,
+        "Surgeon": SurgeonMethods.getAllSurgeonsCOUNT,
+        "Nurse": NurseMethods.getAllNursesCOUNT,
+        "Patient": PatientMethods.getAllPatientsCOUNT,
+    };
+
+    // ========================================
+    // Update Methods (Partial)
+    // ========================================
+    static #updateMethods = {
+        "Doctor": DoctorMethods.MapToUpdateDoctorData,
+        "Surgeon": SurgeonMethods.MapToUpdateSurgeonData,
+        "Nurse": NurseMethods.MapToUpdateNurseData,
+        "Patient": PatientMethods.MapToUpdatePatientData,
+    };
+
+    // ========================================
+    // Update Methods (Full/Core)
+    // ========================================
+    static #fullUpdateMethods = {
+        "Doctor": DoctorMethods.updateDoctorFullCore,
+        "Surgeon": SurgeonMethods.updateSurgeonFullCore,
+        "Nurse": NurseMethods.updateNurseFullCore,
+        "Patient": PatientMethods.updatePatietnFullCore,
+    };
+
+    // ========================================
+    // Validation Methods
+    // ========================================
+    
+
+    static isHospitalUser(user_title) {
+        if (!user_title) return false;
+        return this.#hospital_users.has(user_title.toLowerCase());
+    }
+
+    static #validateUserTitle(user_title) {
+        if (!user_title) {
+            throw new Error("User title is required");
+        }
+        if (!this.#methodClassMap[user_title]) {
+            throw new Error(`Invalid user title: ${user_title}`);
+        }
+    }
+
+    // ========================================
+    // Get Method Class
+    // ========================================
+    
+
+    static getMethodClass(user_title) {
+        this.#validateUserTitle(user_title);
+        return this.#methodClassMap[user_title];
+    }
+
+    // ========================================
+    // Execute Methods by Title
+    // ========================================
+
+    /**
+ * Get specific data for a user
+ */
+static async getSpecificData(user_id, user_title) {
+    this.#validateUserTitle(user_title);
+    const method = this.#specificDataMethods[user_title];
+    if (!method || typeof method !== "function") return {}; // default empty object
+    try {
+        return (await method.call(this.#methodClassMap[user_title], user_id)) || {};
+    } catch (err) {
+        console.error(`Error in getSpecificData for ${user_title}:`, err);
+        return {};
+    }
+}
+
+    /**
+     * Get full data for a user
+     */
+    static async getFullData(user_id, user_title) {
+        this.#validateUserTitle(user_title);
+        const method = this.#fullDataMethods[user_title];
+        if (!method || typeof method !== "function") return {}; // default empty object
+        try {
+            return (await method.call(this.#methodClassMap[user_title], user_id)) || {};
+        } catch (err) {
+            console.error(`Error in getFullData for ${user_title}:`, err);
+            return {};
+        }
+    }
+
+    /**
+     * Get all users of a type (with pagination)
+     */
+    static async getAllFullData(user_title, limit = 10, offset = 0, whereClause = '', perms_CONDITION = '') {
+        this.#validateUserTitle(user_title);
+        const method = this.#allFullDataMethods[user_title];
+        if (!method || typeof method !== "function") return []; // default empty array
+        try {
+            return (await method.call(this.#methodClassMap[user_title], limit, offset, whereClause, perms_CONDITION)) || [];
+        } catch (err) {
+            console.error(`Error in getAllFullData for ${user_title}:`, err);
+            return [];
+        }
+    }
+
+    /**
+     * Get count of all users of a type
+     */
+    static async getCount(user_title, whereClause = '', perms_CONDITION = '') {
+        this.#validateUserTitle(user_title);
+        const method = this.#countMethods[user_title];
+        if (!method) return 0;
+        return await method.call(this.#methodClassMap[user_title], whereClause, perms_CONDITION);
+    }
+
+    /**
+     * Update user data (partial update)
+     */
+    static async updateData(user_id, user_title, data, actions) {
+        this.#validateUserTitle(user_title);
+        const method = this.#updateMethods[user_title];
+        if (!method) return false;
+        return await method.call(this.#methodClassMap[user_title], user_id, data, actions);
+    }
+
+    /**
+     * Update user data (full/core update)
+     */
+    static async updateFullCore(user_id, user_title, updating_string) {
+        this.#validateUserTitle(user_title);
+        const method = this.#fullUpdateMethods[user_title];
+        if (!method) return false;
+        return await method.call(this.#methodClassMap[user_title], user_id, updating_string);
+    }
+
+    // ========================================
+    // Specialized Methods
+    // ========================================
+
+    /**
+     * Get patients for a doctor
+     */
+    static async getDoctorPatients(staff_id, limit, offset, filtering_string = null) {
+        return await DoctorMethods.getDoctorRangedPatients(staff_id, limit, offset, filtering_string);
+    }
+
+    /**
+     * Get count of doctor's patients
+     */
+    static async getDoctorPatientsCount(staff_id) {
+        const result = await DoctorMethods.getDoctorAllPatientsCOUNT(staff_id);
+        return result?.count || 0;
+    }
+
+    /**
+     * Update doctor-patient relationship
+     */
+    static async updateDoctorPatient(doctor_id, patient_id, data) {
+        return await DoctorMethods.updateDoctorPatient(doctor_id, patient_id, data);
+    }
+
+    /**
+     * Replace doctor availability schedule
+     */
+    static async replaceDoctorAvailability(doctor_id, data) {
+        return await DoctorMethods.replaceDoctorAvailability(doctor_id, data);
+    }
+
+    /**
+     * Get listed doctors for patient view
+     */
+    static async getListedDoctorsForPatient(limit, offset, filtering_string, orderByClause) {
+        return await PatientMethods.getListedDoctorDataForPaitent(limit, offset, filtering_string, orderByClause);
+    }
+
+    /**
+     * Get listed surgeons for patient view
+     */
+    static async getListedSurgeonsForPatient(limit, offset, filtering_string, orderByClause) {
+        return await PatientMethods.getListedSurgeonDataForPaitent(limit, offset, filtering_string, orderByClause);
+    }
+
+    /**
+     * Delete patient and cascade related data
+     */
+    static async deletePatient(patient_id) {
+        return await PatientMethods.cascadeDeletePatientData(patient_id);
+    }
+}
+
+module.exports = HospitalUserFactory;

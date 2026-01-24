@@ -1,5 +1,5 @@
-const SuperAdmin = require("../../Classes/SuperAdmin");
-const Admin = require("../../Classes/Admin");
+const SuperAdmin = require("../../Classes/Roles/SuperAdmin");
+const Admin = require("../../Classes/Roles/Admin");
 const User = require("../../Classes/User");
 const buildJoinedUpdate = require("../buildJoinedUpdate")
 //===========================================================
@@ -9,11 +9,11 @@ async function ModifyOtherUserData(other_user_id, other_user_Role,other_user_tit
     // This function is used to modify data in the database
     // It will be implemented later
 
-    console.log("newOtherUserData.emp_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.emp_email",newOtherUserData.emp_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.emp_email)
+    console.log("newOtherUserData.user_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.user_email",newOtherUserData.user_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.user_email)
         // If email is updated make sure it's not in the system
-        if(newOtherUserData.emp_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.emp_email){
+        if(newOtherUserData.user_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.user_email){
             // if email is changed we check if it exists in db
-            const emailExists = await User.emailExists(newOtherUserData.emp_email);
+            const emailExists = await User.emailExists(newOtherUserData.user_email);
             console.log("emailExists", emailExists)
                 if(emailExists){
                     failing_messages.push({success:false , message: "That Email Already Exists"})

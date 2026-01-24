@@ -1,7 +1,7 @@
-const User = require("./User");
+const User = require("../User");
 const roles = require("./roles");
-const perms = require("./perms");
-const consoleLog = require("../Utils/consoleLog");
+const perms = require("../Perms/perms");
+const consoleLog = require("../../Utils/consoleLog");
 /*
 Admin should be able to do
 */

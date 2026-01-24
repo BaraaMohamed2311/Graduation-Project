@@ -1,5 +1,5 @@
-const SuperAdmin = require("../../Classes/SuperAdmin");
-const Admin = require("../../Classes/Admin");
+const SuperAdmin = require("../../Classes/Roles/SuperAdmin");
+const Admin = require("../../Classes/Roles/Admin");
 const User = require("../../Classes/User");
 //===========================================================
 //              Help in Choosing Role Class to Execute Task

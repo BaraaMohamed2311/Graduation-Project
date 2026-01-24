@@ -60,8 +60,8 @@ CREATE TABLE `employees` (
   `emp_title` varchar(30) DEFAULT NULL,
   `emp_specialty` varchar(30) DEFAULT NULL,
   PRIMARY KEY (`emp_id`),
-  UNIQUE KEY `emp_email` (`emp_email`),
-  UNIQUE KEY `emp_email_2` (`emp_email`)
+  UNIQUE KEY `user_email` (`user_email`),
+  UNIQUE KEY `user_email_2` (`user_email`)
   FOREIGN KEY (emp_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -130,14 +130,14 @@ DROP TABLE IF EXISTS `unregistered_employees`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `unregistered_employees` (
   `emp_id` int NOT NULL AUTO_INCREMENT,
-  `emp_name` varchar(40) DEFAULT NULL,
+  `user_name` varchar(40) DEFAULT NULL,
   `emp_title` varchar(30) DEFAULT NULL,
   `emp_specialty` varchar(30) DEFAULT NULL,
-  `emp_password` varchar(255) DEFAULT NULL,
-  `emp_email` varchar(50) DEFAULT NULL,
+  `user_password` varchar(255) DEFAULT NULL,
+  `user_email` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`emp_id`),
-  UNIQUE KEY `emp_email` (`emp_email`),
-  UNIQUE KEY `emp_email_2` (`emp_email`)
+  UNIQUE KEY `user_email` (`user_email`),
+  UNIQUE KEY `user_email_2` (`user_email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -147,7 +147,7 @@ CREATE TABLE `unregistered_employees` (
 
 INSERT INTO `employee_perms` VALUES (1,1200),(2,1200),(3,1200),(4,1200),(5,1200),(6,1200),(7,1200),(1,1199),(3,1199);
 
-INSERT INTO `unregistered_employees` (emp_id, emp_name, emp_title, emp_specialty, emp_email, emp_password) VALUES(1,'Ali Hamed','Scientist','Data','ali.hamed2464@gmail.com','$2b$12$XUxExC4fNH59oWlS69ddEOTXSiNhx5DuU7HFYnVhCoOxiY15j0YK2'),(2,'Mostafa Zaki','CEO','Management','mostafa.zaki3353@gmail.com','$2b$12$pLqeAPIdVH9g/WH2p89LfuOc.vtjSErXiYb8TPQKQ0do5XZQNl6ee'),(3,'Zein Yasser','Developer','Front-End','zein.yasser8384@gmail.com','$2b$12$xg6cHBT.woeF6SVUO5n.6Ob6TWwaDR2h80ydMPrWPdrPuzu4j40IW'),(4,'Mai Mahmoud','Nurse','Intensive Care Nursing','mai.mahmoud876@gmail.com','$2b$12$vIRxsbV.D6N6tGiGSdokBeiJw/tUGd3uQgiRg2/mldb6EKEhe5XAa'),(5,'Sara Hany','Surgeon','ENT Surgery','sara.hany7833@gmail.com','$2b$12$XQ.uN2uCitbuEXkyAPJbJ.puHvvfHAupka.wSTexwx/DN5kVGzOqK'),(6,'Youssef Masoud','Cloud Engineer','Cloud','youssef.masoud1354@gmail.com','$2b$12$OiBtxaMKBGIbfMD7DgEpvu2q3p.6wf/y/2KqAgFlGEIjn/YEDFVKi');
+INSERT INTO `unregistered_employees` (emp_id, user_name, emp_title, emp_specialty, user_email, user_password) VALUES(1,'Ali Hamed','Scientist','Data','ali.hamed2464@gmail.com','$2b$12$XUxExC4fNH59oWlS69ddEOTXSiNhx5DuU7HFYnVhCoOxiY15j0YK2'),(2,'Mostafa Zaki','CEO','Management','mostafa.zaki3353@gmail.com','$2b$12$pLqeAPIdVH9g/WH2p89LfuOc.vtjSErXiYb8TPQKQ0do5XZQNl6ee'),(3,'Zein Yasser','Developer','Front-End','zein.yasser8384@gmail.com','$2b$12$xg6cHBT.woeF6SVUO5n.6Ob6TWwaDR2h80ydMPrWPdrPuzu4j40IW'),(4,'Mai Mahmoud','Nurse','Intensive Care Nursing','mai.mahmoud876@gmail.com','$2b$12$vIRxsbV.D6N6tGiGSdokBeiJw/tUGd3uQgiRg2/mldb6EKEhe5XAa'),(5,'Sara Hany','Surgeon','ENT Surgery','sara.hany7833@gmail.com','$2b$12$XQ.uN2uCitbuEXkyAPJbJ.puHvvfHAupka.wSTexwx/DN5kVGzOqK'),(6,'Youssef Masoud','Cloud Engineer','Cloud','youssef.masoud1354@gmail.com','$2b$12$OiBtxaMKBGIbfMD7DgEpvu2q3p.6wf/y/2KqAgFlGEIjn/YEDFVKi');
 
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -165,7 +165,7 @@ INSERT INTO `unregistered_employees` (emp_id, emp_name, emp_title, emp_specialty
 INSERT INTO `roles` VALUES (1200,'baraamohamed2311@gmail.com','SuperAdmin'),(1199,'hany.aziz7480@gmail.com','Admin');
 
 
-INSERT INTO `employees` (emp_id, emp_name, emp_title, emp_specialty, emp_email, emp_password) VALUES
+INSERT INTO `employees` (emp_id, user_name, emp_title, emp_specialty, user_email, user_password) VALUES
 (1000,'Omar Abdallah','Scientist','Data','omar.abdallah2464@gmail.com','$2b$12$XUxExC4fNH59oWlS69ddEOTXSiNhx5DuU7HFYnVhCoOxiY15j0YK2'),
 (1001,'Ramy Amin','CEO','Management','ramy.amin3353@gmail.com','$2b$12$pLqeAPIdVH9g/WH2p89LfuOc.vtjSErXiYb8TPQKQ0do5XZQNl6ee'),
 (1002,'Ramy Amin','Developer','Front-End','ramy.amin8384@gmail.com','$2b$12$xg6cHBT.woeF6SVUO5n.6Ob6TWwaDR2h80ydMPrWPdrPuzu4j40IW'),

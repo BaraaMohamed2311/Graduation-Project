@@ -2,9 +2,9 @@ const router = require("express").Router();
 const NodeCache = require("node-cache");
 const jwtVerify = require("../middlewares/jwtVerify.js");
 const User = require("../Classes/User.js");
-const perms = require("../Classes/perms.js");
-const SuperAdmin = require("../Classes/SuperAdmin.js");
-const Admin = require("../Classes/Admin.js");
+const perms = require("../Classes/Perms/perms.js");
+const SuperAdmin = require("../Classes/Roles/SuperAdmin.js");
+const Admin = require("../Classes/Roles/Admin.js");
 const stringifyFields = require("../Utils/stringifyFields.js");
 const executeMySqlQuery = require("../Utils/executeMySqlQuery.js");
 const JoinFiltering = require("../Utils/JoinFiltering.js");
@@ -14,80 +14,36 @@ const  ModifyOtherUserData  = require("../Utils/ControlUsers/ModifyOtherUserData
 const  ModifyRole  = require("../Utils/ControlUsers/ModifyRole.js");  
 const  ModifyPerms = require("../Utils/ControlUsers/ModifyPerms.js");
 const sqlTransaction = require("../Utils/sqlTransaction.js");
-const getEmployeeInsertionQuery = require("../Utils/getEmployeeInsertionQuery.js");
-const myCache = new NodeCache({ stdTTL: 3600 }); // default TTL 1hr
+const cacheCountNodeCache = require("../Utils/cacheCountNodeCache.js");
+const padBoth = require("../Utils/padBoth.js");
+const buildJoinedFilters = require("../Utils/buildJoinedFilters.js");
+const CompanyUsersMethods = require("../Classes/CompanyUsers/CompanyUsersMethods.js");
+const hospitalJobs = require("../Tables/data.js").hospitalJobs;
+
 // GET Employees Data
 router.get("/employees",jwtVerify,async (req,res)=>{
     try{
-        const { pagination, size , emp_id, role_name, emp_perms, ...restFilters } = req.query;
+        const { pagination, size , user_id,isFiltered, role_name: filter_role_name, emp_perms: filter_emp_perm, ...restFilters } = req.query; 
         
         //Bad Request if modifier id or others doesn't exist
-        if(!pagination || !size || !emp_id ) return res.status(400).json({success:false,message:"Bad Request"});
+        if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
-        const Modifier_role = await User.getUserRole(emp_id);
-        const Modifier_perms = new perms(await User.getUserperms(emp_id));
+        const Modifier_role = await User.getUserRole(user_id);
+        const Modifier_perms = await User.getSetUserperms(user_id);
+        // perms have there separate filtiring conditing using "HAVING" not "WHERE"
+        const filtering_string = Object.keys(restFilters).length > 0 || filter_role_name ? padBoth(buildJoinedFilters({ role_name: filter_role_name,  ...restFilters}),1) :null;
 
-        if (Modifier_role === "Employee") return res.status(401).json({ success: false, message: "Employee Role cannot access The list" });
-        // Cache total number of employees
-        let totalNumOfEmployees = [{ count: 0 }];
-        if (myCache.has("totalNumOfEmployees")) {
-            totalNumOfEmployees = [{ count: myCache.get("totalNumOfEmployees") }];
-        }
-        else{
-            totalNumOfEmployees = await executeMySqlQuery(`SELECT COUNT(*) as count FROM employees`);
-            myCache.set("totalNumOfEmployees", totalNumOfEmployees[0].count); 
-        }
-
-        const numOfPages = Math.ceil(totalNumOfEmployees[0].count / size);
+        
+        if (Modifier_role === "NormalUser") return res.status(401).json({ success: false, message: "NormalUser Role cannot access The list" });
 
 
-    /** Define Joining TYPE  **/
-    // if we left joining no need to add on conditions as not all users are going to exist in employee and other tables
-    const roles_JOIN = !role_name || role_name === "Employee"  ? " LEFT JOIN roles r ON e.emp_id = r.emp_id " : " JOIN roles r ON e.emp_id = r.emp_id " ;
-    const perms_JOIN = emp_perms ? " JOIN employee_perms ep ON e.emp_id = ep.emp_id \n JOIN perms p  ON ep.perm_id = p.perm_id " : "  LEFT JOIN employee_perms ep ON e.emp_id = ep.emp_id \n LEFT JOIN perms p ON ep.perm_id = p.perm_id  ";
+        // get cached count 
+        const EmployeesCount = await cacheCountNodeCache("totalNumOfEmployees",CompanyUsersMethods.getAllCompanyEmployeesCOUNT,filtering_string)
+        const numOfPages = Math.max(1, Math.ceil( EmployeesCount / size));
 
-    /**  Filter Conditions **/
-    const Rest_CONDITION = restFilters ? JoinFiltering(Object.entries(restFilters),"e") : "" ;
-    const roles_CONDITION = !role_name || role_name === "Employee" ? "" : JoinFiltering(Object.entries({role_name:role_name}),"r") ;
-    // filtering gouped values on perms will be done using HAVING keyword & FIND_IN_SET which searches for string in string seperated by ", "
-    const perms_CONDITION = emp_perms ? `
-            HAVING 
-            FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT p.perm_name)) > 0 ` : "";
-
-    /**  Is Accessible Conditions **/
-    // default value of those columns would be '' if user doen't have their perms
-    // logically if user have permission to modify salary then he could see it but other props like roles, perms he can see it anyway even with no role to modify
-    const access_salary = (Modifier_perms.isPermExist("Modify Salary") || Modifier_perms.isPermExist("Display Salary")) ? " e.emp_salary, e.emp_bonus " : " '' AS emp_salary , '' AS emp_bonus "
-
-    // Build the final query
-    /* roles filtering exists any way no need to check*/
-    /* we group rows instead of repeating for each new perm */
-    const query = `
-      SELECT 
-        e.emp_id, 
-        e.emp_name, 
-        COALESCE(NULLIF(GROUP_CONCAT(DISTINCT p.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms, 
-        COALESCE(NULLIF(r.role_name, ''), 'Employee') AS role_name, 
-        e.emp_abscence, 
-        e.emp_rate, 
-        e.emp_title, 
-        e.emp_specialty, 
-        e.emp_email,
-        ${access_salary} 
-        FROM employees e 
-        ${roles_JOIN}
-        ${perms_JOIN}
-        ${roles_CONDITION || Rest_CONDITION ? " WHERE " : ""} 
-        ${Rest_CONDITION}
-        ${roles_CONDITION && Rest_CONDITION ? " AND " : ""}
-        ${roles_CONDITION}
-        GROUP BY 
-            e.emp_id, e.emp_name, r.role_name, e.emp_abscence, e.emp_rate, e.emp_title, e.emp_specialty , e.emp_email, e.emp_salary, e.emp_bonus
-        ${perms_CONDITION}
-        LIMIT ? OFFSET ?`;
-        // last to parameters are linilt & offset
-      const users = await executeMySqlQuery(query , [ parseInt(size) , parseInt((pagination - 1) * size )]);
+        const users = await CompanyUsersMethods.getAllCompanyEmployeesFullData(parseInt(size), parseInt((pagination - 1) * size ),filtering_string,filter_emp_perm);
+        
 
       if( users && users.length > 0){
         res.status(200).json({success : true , body:users, message:"Successfully Fetched Data",numOfPages: numOfPages})
@@ -113,12 +69,12 @@ router.get("/employees",jwtVerify,async (req,res)=>{
     router.put("/update-others",jwtVerify ,async function(req , res){
         try {   
                 // Let & not Const becase they get modified
-                    let { modifier_id , emp_id , employee_emp_email , role_name : newRole,  newperms ,   ...updatedEmployeeData} = req.body;
+                    let { modifier_id , user_id , employee_user_email , role_name : newRole,  newperms ,   ...updatedEmployeeData} = req.body;
                 // Actions
                     let {actions} = req.query;
                     actions = actions.split("-")
                 // Bad Request
-                if(!actions || !modifier_id || !emp_id ) 
+                if(!actions || !modifier_id || !user_id ) 
                     return res.status(400 ).json({success:false,message:"Bad Request"});
                 
 
@@ -126,7 +82,7 @@ router.get("/employees",jwtVerify,async (req,res)=>{
                     console.log("action ", actions )
                     // then modifier is different user 
                     const modifierRole = await User.getUserRole(modifier_id);
-                    const userRole = await User.getUserRole(emp_id );
+                    const userRole = await User.getUserRole(user_id );
 
                     // if modifier have same role or higher and permession he can update others
                     const  modifierperms = await User.getUserperms(modifier_id);
@@ -138,7 +94,7 @@ router.get("/employees",jwtVerify,async (req,res)=>{
                         if(modifierSetperms.isPermExist("Modify Data")){
                             // If  no "Modify Salary" perm we remove salary field to ensure not editing it
                             updatedEmployeeData = modifierSetperms.isPermExist("Modify Salary") ? updatedEmployeeData : delete updatedEmployeeData.emp_salary ;
-                            await ModifyOtherUserData(emp_id, userRole, modifierRole, updatedEmployeeData, employee_emp_email,failing_messages)
+                            await ModifyOtherUserData(user_id, userRole, modifierRole, updatedEmployeeData, employee_user_email,failing_messages)
                         }
                         else{ 
                             failing_messages.push({success:false , message: "Not Allowed To Modify User Data"})
@@ -149,7 +105,7 @@ router.get("/employees",jwtVerify,async (req,res)=>{
 /***************************************************************Role Update*********************************************/
                     if(actions.includes("Modify Role")){
                         if (modifierSetperms.isPermExist("Modify Role")){
-                            await ModifyRole(modifierRole, emp_id, userRole, newRole, employee_emp_email,failing_messages)
+                            await ModifyRole(modifierRole, user_id, userRole, newRole, employee_user_email,failing_messages)
                         }
                         else{
                             failing_messages.push({success:false , message: "Not Allowed To Modify User Role"})
@@ -158,9 +114,9 @@ router.get("/employees",jwtVerify,async (req,res)=>{
 /**************************************************************perms Update*********************************************/
                     if(actions.includes("Modify Perms")){
                         if (modifierSetperms.isPermExist("Modify Perms")){
-                            const oldUserperms = await executeMySqlQuery(`SELECT COALESCE((SELECT COALESCE(GROUP_CONCAT(DISTINCT p.perm_name SEPARATOR ', ') , 'None') FROM perms p JOIN employee_perms ep ON p.perm_id = ep.perm_id WHERE ep.emp_id =${emp_id}), 'None') AS perm_name;`,"Error Getting Old User perms");
+                            const oldUserperms = await executeMySqlQuery(`SELECT COALESCE((SELECT COALESCE(GROUP_CONCAT(DISTINCT p.perm_name SEPARATOR ', ') , 'None') FROM perms p JOIN employee_perms ep ON p.perm_id = ep.perm_id WHERE ep.user_id =${user_id}), 'None') AS perm_name;`,"Error Getting Old User perms");
                             const oldUserpermsSet=new Set( oldUserperms[0].perm_name.split(", ")) ;
-                            await ModifyPerms(emp_id, userRole, modifierRole, newperms,oldUserpermsSet,failing_messages)
+                            await ModifyPerms(user_id, userRole, modifierRole, newperms,oldUserpermsSet,failing_messages)
                         }
                         else{
                             failing_messages.push({success:false , message: "Not Allowed To Modify User Permissions"})
@@ -172,30 +128,30 @@ router.get("/employees",jwtVerify,async (req,res)=>{
                     const access_salary = (modifierSetperms.isPermExist("Modify Salary") || modifierSetperms.isPermExist("Display Salary")) ? " e.emp_salary, e.emp_bonus " : " '' AS emp_salary , '' AS emp_bonus "
                     // left join to include records even if user doesn't exist in roles table
                     const getUpdatedUserQuery = `SELECT 
-                                                        e.emp_id, 
-                                                        e.emp_name, 
+                                                        e.user_id, 
+                                                        e.user_name, 
                                                         COALESCE(NULLIF(GROUP_CONCAT(DISTINCT p.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms, 
                                                         COALESCE(NULLIF(r.role_name, ''), 'Employee') AS role_name, 
                                                         e.emp_abscence, 
                                                         e.emp_rate, 
                                                         e.emp_title, 
                                                         e.emp_specialty, 
-                                                        e.emp_email ,
+                                                        e.user_email ,
                                                         ${access_salary} 
                                                     FROM 
                                                         employees e 
                                                     LEFT JOIN  
-                                                        roles r ON e.emp_id = r.emp_id 
-                                                    LEFT JOIN employee_perms ep ON e.emp_id = ep.emp_id 
+                                                        roles r ON e.user_id = r.user_id 
+                                                    LEFT JOIN employee_perms ep ON e.user_id = ep.user_id 
                                                     LEFT JOIN perms p ON ep.perm_id = p.perm_id
                                                     WHERE 
-                                                        e.emp_id = ?
+                                                        e.user_id = ?
                                                         GROUP BY
-                                                        e.emp_id, e.emp_name, r.role_name, e.emp_abscence, e.emp_rate, e.emp_title, e.emp_specialty , e.emp_email, e.emp_salary, e.emp_bonus;`;
+                                                        e.user_id, e.user_name, r.role_name, e.emp_abscence, e.emp_rate, e.emp_title, e.emp_specialty , e.user_email, e.emp_salary, e.emp_bonus;`;
                         
             
             
-            const UpdateUser = await executeMySqlQuery(getUpdatedUserQuery , [emp_id]);
+            const UpdateUser = await executeMySqlQuery(getUpdatedUserQuery , [user_id]);
 
                     /***************************************************/
                     if(failing_messages.length > 0){
@@ -221,11 +177,11 @@ router.get("/employees",jwtVerify,async (req,res)=>{
 // Delete Employee Data
 router.delete("/delete-employee", jwtVerify, async (req, res) => {
     try {
-        const { modifier_email, modifier_id, modifier_name, emp_id, emp_name, emp_email } = req.body;
+        const { modifier_email, modifier_id, modifier_name, user_id, user_name, user_email } = req.body;
         
 
         // all these fields required to delete & send email
-        if(!modifier_email || !modifier_id || !emp_id || !emp_email  ) return res.status(400).json({success:false,message:"Bad Request"});
+        if(!modifier_email || !modifier_id || !user_id || !user_email  ) return res.status(400).json({success:false,message:"Bad Request"});
         
         
         let ModifierpermsSet = new perms(await User.getUserperms(modifier_id));
@@ -233,12 +189,12 @@ router.delete("/delete-employee", jwtVerify, async (req, res) => {
         
         if (ModifierpermsSet.isPermExist("Delete User")) {
             const ModifierRole = await User.getUserRole(modifier_id);
-            const otherUserRole = await User.getUserRole(emp_id);
+            const otherUserRole = await User.getUserRole(user_id);
 
             if (ModifierRole === "SuperAdmin") {
-                isAllFulfilled = await SuperAdmin.RemoveOtherUser(emp_id , otherUserRole);
+                isAllFulfilled = await SuperAdmin.RemoveOtherUser(user_id , otherUserRole);
             } else if (ModifierRole === "Admin") {
-                isAllFulfilled = await Admin.RemoveOtherUser(emp_id , otherUserRole);
+                isAllFulfilled = await Admin.RemoveOtherUser(user_id , otherUserRole);
             }
 
             
@@ -248,8 +204,8 @@ router.delete("/delete-employee", jwtVerify, async (req, res) => {
         }
         
         if (isAllFulfilled) {
-            const isSent = await mailer(modifier_email, emp_email, "You Got Accepted", `
-                Dear ${emp_name},
+            const isSent = await mailer(modifier_email, user_email, "You Got Accepted", `
+                Dear ${user_name},
 
                 We regret to inform you that, after careful consideration, we have made the decision to terminate your employment with our company, effective ${new Date()}.
 
@@ -290,7 +246,7 @@ router.delete("/delete-employee", jwtVerify, async (req, res) => {
 
 router.get("/registered-approve",jwtVerify,async (req,res)=>{
     try{    
-            const {modifier_id ,currPage , size , filtered_emp_email} = req.query;
+            const {modifier_id ,currPage , size , filtered_user_email} = req.query;
 
 
 
@@ -299,9 +255,9 @@ router.get("/registered-approve",jwtVerify,async (req,res)=>{
 
 
                 
-            const ModifierpermsSet = new perms(await User.getUserperms(modifier_id));
+            const ModifierpermsSet = await User.getSetUserperms(modifier_id);
 
-            if(!ModifierpermsSet.isPermExist("Accept Registered")){
+            if(!ModifierpermsSet.has("Accept Registered")){
                 return res.json({success:false , message:"You Have No Permission"})
             } 
             
@@ -310,9 +266,9 @@ router.get("/registered-approve",jwtVerify,async (req,res)=>{
             let query = `SELECT * FROM unregistered_employees`;
             const params = [];
 
-            if (filtered_emp_email) {
-                query += ` WHERE emp_email = ?`;
-                params.unshift(filtered_emp_email); // push filtered_emp_email at first element
+            if (filtered_user_email) {
+                query += ` WHERE user_email = ?`;
+                params.unshift(filtered_user_email); // push filtered_user_email at first element
             }
 
             query += ` LIMIT ? OFFSET ?`;
@@ -344,57 +300,63 @@ router.get("/registered-approve",jwtVerify,async (req,res)=>{
 /************************************************************************************************************************/
 router.post("/registered-approve/accept",jwtVerify,async (req,res)=>{
     try{    
-        const {modifier_id ,modifier_email ,  modifier_name , emp_name ,emp_email } = req.query;
+        const {modifier_id ,modifier_email ,  modifier_name  ,user_email , user_name , user_password , emp_title ,emp_specialty } = req.query;
 
 
         // Reqired to accept user and send email
-        if(!modifier_id || !modifier_email || !emp_email  ) return res.status(400 ).json({success:false,message:"Bad Request"});
+        if(!modifier_id || !modifier_email || !user_email  || !user_password || !emp_title || !emp_specialty) return res.status(400 ).json({success:false,message:"Bad Request"});
 
-        const ModifierpermsSet = new perms(await User.getUserperms(modifier_id));
+        const ModifierpermsSet = await User.getSetUserperms(modifier_id);
 
         
 
-        if(!ModifierpermsSet.isPermExist("Accept Registered")){
+        if(!ModifierpermsSet.has("Accept Registered")){
             return res.json({success:false , message:"You Have No Permission"})
         }
 
-        const LastIdInTable = await executeMySqlQuery("SELECT emp_id FROM employees ORDER BY emp_id DESC LIMIT 1");
-        const registered_user_id = LastIdInTable[0].emp_id + 1;
-        console.log("registered_user_id", registered_user_id)
-        const accepted_user = await executeMySqlQuery(`SELECT * FROM unregistered_employees WHERE emp_email = ?`,[emp_email]);
+        // get last user id to increment it by 1
+        // MAX() is more effiecient than ORDER BY DESC LIMIT 1
+        const LastIdInTable = await executeMySqlQuery("SELECT MAX(user_id) FROM users");
+        const registering_user_id = LastIdInTable[0].user_id + 1;
+        console.log("registering_user_id", registering_user_id)
+        const userExists = !!(await executeMySqlQuery(
+            `SELECT 1 FROM unregistered_employees WHERE user_email = ? LIMIT 1`,
+            [user_email]
+            ))?.[0];
+
+
+        // hash password before inserting
+        const hashed_password = await User.hashPassword(user_password);
         
-        // before getting keys and values of user we have to remove old id
-        delete accepted_user[0].emp_id;
-
-
-        // get seperate keys and values
-        const { columns_field , values_field} = stringifyFields("seperate",Object.entries(accepted_user[0]));
         
+        const queries = []
+        // INSERT TO USERS , EMPLOYEES , EMPLOYEES_HOSPITAL TABLES
+        // INSERT TO USERS TABLE
+        const intsertToUsers_query = `INSERT INTO users (user_id , user_email, user_name , user_password,user_type) VALUES (${registering_user_id},${user_email},${user_name},${hashed_password},'employee')`
+        queries.push(intsertToUsers_query);
+        // INSERT TO EMPLOYEES TABLE
+        const insertToEmployees_query = `INSERT INTO employees (emp_id ,emp_title,emp_specialty, emp_salary , emp_bonus , emp_abscence , emp_rate) VALUES (${registering_user_id},${emp_title},${emp_specialty},${registering_user_id}, 0 , 0 , 0 , 0)`
+        queries.push(insertToEmployees_query);
+        
+        // INSERT TO EMPLOYEES_HOSPITAL TABLE ONLY IF USER TITLE IS HOSPITAL JOB
+        const insertToHospitalEmps_query = `INSERT INTO employees_hospital (hosp_emp_id,emp_id,emp_title) VALUES (${registering_user_id},${registering_user_id},${emp_title});`;
+        if(hospitalJobs.has(emp_title)){
+            queries.push(insertToHospitalEmps_query);
+        }
+        // DELETE FROM REGISTERED TABLE
+        const deleteOnRegister_query =`DELETE FROM unregistered_employees WHERE user_email = "${user_email}"`
+        queries.push(deleteOnRegister_query);
 
 
-        // insert with default values and increment id by 1
-        const query1 = `INSERT INTO employees (emp_id , ${columns_field} , emp_salary , emp_bonus , emp_abscence , emp_rate) VALUES (${registered_user_id},${values_field} , 0 , 0 , 0 , 0)`
-        // insert to doctors or surgeons or nurses table with default values
-
-
-        // insert to employees_hospital table with default values
-        const insertion_other_tables_queries = getEmployeeInsertionQuery(registered_user_id, accepted_user[0].emp_title);
-
-        // delete from registered table after making sure he was added
-        const query3 =`DELETE FROM unregistered_employees WHERE emp_email = "${emp_email}"`
-
-
-        const addToTables =  await sqlTransaction([query1 , ...insertion_other_tables_queries , query3]);
+        const addToTables =  await sqlTransaction(queries);
         
 
         if(addToTables){
-            const isSent =await mailer(modifier_email ,emp_email, "You Got Accepted" , `
-                Dear ${emp_name},
+            const isSent =await mailer(modifier_email ,user_email, "You Got Accepted" , `
+                Dear ${user_name},
     
                 We are excited to inform you that you have been officially accepted as a part of the  team! We were impressed with your skills and qualifications, and we are confident you will make valuable contributions.
-    
                 Our HR team will reach out to you soon with further details regarding your onboarding process. Should you have any questions in the meantime, feel free to reach out.
-    
                 Once again, congratulations, and we look forward to welcoming you aboard!
     
                 Best regards,
@@ -425,26 +387,26 @@ router.post("/registered-approve/accept",jwtVerify,async (req,res)=>{
 /************************************************************************************************************************/
 router.delete("/registered-approve/decline",jwtVerify,async (req,res)=>{
     try{    
-        const {modifier_id , modifier_email , modifier_name , emp_email : declined_user_email , emp_name} = req.query;
+        const {modifier_id , modifier_email , modifier_name , user_email : declined_user_email , user_name} = req.query;
 
         
         // Reqired to decline user and send email
         if(!modifier_id || !modifier_email || !declined_user_email   ) return res.status(400).json({success:false,message:"Bad Request"});
         
         
-        const ModifierpermsSet = new perms(await User.getUserperms(modifier_id));
+        const ModifierpermsSet = await User.getSetUserperms(modifier_id);
 
-        if(!ModifierpermsSet.isPermExist("Accept Registered")){
+        if(!ModifierpermsSet.has("Accept Registered")){
             return res.json({success:false , message:"You Have No Permission"})
         }
 
         // delete from registered table after making sure he was added
-        const deleteFromRigesterTable = await executeMySqlQuery(`DELETE FROM unregistered_employees WHERE emp_email = ?`,[declined_user_email])
+        const deleteFromRigesterTable = await executeMySqlQuery(`DELETE FROM unregistered_employees WHERE user_email = ?`,[declined_user_email])
 
 
         if(deleteFromRigesterTable){
             const isSent =await mailer(modifier_email ,declined_user_email, "You Got Accepted" , `
-                Dear ${emp_name},
+                Dear ${user_name},
     
                 Thank you for taking the time to apply for the position at Our Company. After careful consideration, we regret to inform you that we will not be moving forward with your application at this time.
 

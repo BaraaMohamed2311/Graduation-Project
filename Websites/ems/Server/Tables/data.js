@@ -1,3 +1,5 @@
+
+
 const Tables = {
   // ==========================================
   // Core Users Table
@@ -33,37 +35,11 @@ const Tables = {
 
   unregistered_employees: [
     "emp_id",
-    "emp_name",
+    "user_name",
     "emp_title",
     "emp_specialty",
-    "emp_password",
-    "emp_email"
-  ],
-
-  // ==========================================
-  // Medical Staff Tables
-  // ==========================================
-  doctors: [
-    "doctor_id",
-    "hosp_emp_id",
-    "initial_consultation_price",
-    "followup_consultation_price",
-    "years_of_exp"
-  ],
-
-  surgeons: [
-    "surgeon_id",
-    "hosp_emp_id",
-    "initial_consultation_price",
-    "followup_consultation_price",
-    "surgery_price",
-    "years_of_exp"
-  ],
-
-  nurses: [
-    "nurse_id",
-    "hosp_emp_id",
-    "floor_number"
+    "user_password",
+    "user_email"
   ],
 
 
@@ -71,15 +47,14 @@ const Tables = {
   // ==========================================
   // Role & Permission Tables
   // ==========================================
-  roles: [
-    "emp_id",
-    "role_name"
-  ],
 
-  hospital_roles: [
+
+  roles: [
     "hosp_emp_id",
     "role_name"
   ],
+
+
 
   perms: [
     "perm_id",
@@ -89,33 +64,62 @@ const Tables = {
 
   employee_perms: [
     "perm_id",
-    "emp_id"
+    "hosp_emp_id"
   ],
 
-
-
+  // ==========================================
+  // Scheduling & Availability Tables
+  // ==========================================
+  availability: [
+    "availability_id",
+    "hosp_emp_id",
+    "day_of_week",
+    "start_time",
+    "end_time",
+    "created_at",
+    "updated_at"
+  ],
 
 };
+
 const TableAliases = {
   users: 'u',
-  employees_hospital: 'eh',
-  roles: 'r',
-  consultations: 'c',
+  employees: 'e',
   availability: 'a',
+  floors: 'f',
+  roles: 'r',
   perms: 'p',
   employee_perms: 'ep',
-  unregistered_employees: 'ue'
+};
+const permNames = [
+  "Modify Data",
+  "Modify Salary",
+  "Display Salary",
+  "Accept Registered",
+  "Modify Perms",
+  "Modify Role",
+  "Delete User"
+];
+
+const setOfPerms = new Set(permNames);
+
+const approvalRequiredFields = {
+  patients: [],
+  employees: [],
+  doctors: ['initial_consultation_price', 'followup_consultation_price', 'years_of_exp'],
+  surgeons: ['initial_consultation_price', 'followup_consultation_price', 'surgery_price', 'years_of_exp'],
+  nurses: ['floor_number'],
+
 };
 
-// Helper function to get table fields
-Tables.getFields = (tableName) => {
-  return Tables[tableName] || [];
+const roleToEntityMap = {
+  patient: 'patients',
+  employee: 'employees',
+  doctor: 'doctors',
+  surgeon: 'surgeons',
+  nurse: 'nurses',
 };
 
-// Helper function to check if table exists
-Tables.hasTable = (tableName) => {
-  return Tables.hasOwnProperty(tableName);
-};
+const hospitalJobs = new Set(["Doctor", "Nurse", "Surgeon"]);
 
-
-module.exports = Tables;
+module.exports = {TableAliases , Tables ,setOfPerms ,approvalRequiredFields,roleToEntityMap , hospitalJobs};

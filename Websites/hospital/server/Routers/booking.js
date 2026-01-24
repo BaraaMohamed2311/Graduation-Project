@@ -7,7 +7,7 @@ const mailer = require("../Utils/mailer.js")
 const  ModifyOtherUserData  = require("../Utils/ControlUsers/ModifyOtherUserData.js");
 const  ModifyOtherUserRole  = require("../Utils/ControlUsers/ModifyOtherUserRole.js");  
 const  ModifyOtherUserPerms = require("../Utils/ControlUsers/ModifyOtherUserPerms.js");
-const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
+const HospitalUsersMethods = require("../Classes/HospitalUsers/HospitalUsersMethods.js");
 const ConsultationMethods = require("../Utils/methods/ConsultationMethods.js");
 
 const RemoveFixedFields = require("../Utils/RemoveFixedFields.js");
@@ -23,7 +23,7 @@ const isDayInPast = require("../Utils/isDayInPast.js");
 const isTimeSlotInPast= require("../Utils/isTimeSlotInPast.js");
 const isSameDay = require("../Utils/isSameDay.js");
 const createOrderByClause = require("../Utils/createOrderByClause.js");
-const padBoth = require("../Utils/padsBoth.js");
+const padBoth = require("../Utils/padBoth.js");
 const buildJoinedFilters = require("../Utils/buildJoinedFilters.js")
 
 // =================================

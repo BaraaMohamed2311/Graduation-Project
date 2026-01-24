@@ -29,7 +29,7 @@ export default function ForgetPasswordPage() {
             'Content-Type': 'application/json'
           },
           body:JSON.stringify({
-              emp_password:inputsBoxsRef.current["emp_password1"].value,
+              user_password:inputsBoxsRef.current["emp_password1"].value,
           })
         }
       )

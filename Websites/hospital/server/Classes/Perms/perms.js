@@ -1,7 +1,7 @@
-const executeMySqlQuery = require("../Utils/executeMySqlQuery");
-const sqlTransaction = require("../Utils/sqlTransaction");
-const HospitalUsersMethods = require("../Classes/HospitalUsersMethods");
-const PatientMethods = require("../Utils/methods/PatientMethods");
+const executeMySqlQuery = require("../../Utils/executeMySqlQuery");
+const sqlTransaction = require("../../Utils/sqlTransaction");
+const HospitalUsersMethods = require("../HospitalUsers/HospitalUsersMethods");
+const PatientMethods = require("../../Utils/methods/PatientMethods");
 class perms {
 
     static async getAllpermsInTable(){

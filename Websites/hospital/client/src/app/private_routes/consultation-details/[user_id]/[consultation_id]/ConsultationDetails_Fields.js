@@ -56,7 +56,7 @@ const StaffProfile = ({ user_data, roleType }) => {
   return (
     <>
       <div className={styles.profileHeader}>
-        <h1 className={styles.profileHeader__name}>{user_data.emp_name}</h1>
+        <h1 className={styles.profileHeader__name}>{user_data.user_name}</h1>
         <p className={styles.profileHeader__title}>{title}</p>
         <p><strong>Email:</strong> {user_data.user_email}</p>
         {roleType !== "Nurse" && (

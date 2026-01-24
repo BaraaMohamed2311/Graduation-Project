@@ -1,6 +1,6 @@
-const User = require("./User");
+const User = require("../User");
 const roles = require("./roles");
-const perms = require("./perms");
+const perms = require("../Perms/perms");
 
 class SuperAdmin extends User {
     static priority = 100;

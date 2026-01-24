@@ -120,10 +120,10 @@ useEffect(() => {
 
     // reset select filters back to no filter
     EMAIL_REF.value = ""
-    ByTitleREF.selectedIndex = 0;
-    ByspecialtyREF.selectedIndex = 0;
-    ByRoleREF.selectedIndex = 0;
-    ByPermsREF.selectedIndex = 0;
+    ByTitleREF.value = ""
+    ByspecialtyREF.value = ""
+    ByRoleREF.value = ""
+    ByPermsREF.value = ""
 }
 // ===========================================
 //        Filter Data

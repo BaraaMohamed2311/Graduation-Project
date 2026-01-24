@@ -33,11 +33,11 @@ const Tables = {
 
   unregistered_employees: [
     "emp_id",
-    "emp_name",
+    "user_name",
     "emp_title",
     "emp_specialty",
-    "emp_password",
-    "emp_email"
+    "user_password",
+    "user_email"
   ],
 
   // ==========================================

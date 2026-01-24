@@ -3,7 +3,7 @@ show tables;
 
 
 CREATE INDEX idx_emp_title ON employees(emp_title);
-CREATE INDEX idx_emp_email ON employees(emp_email);
+CREATE INDEX idx_user_email ON employees(user_email);
 CREATE INDEX idx_pat_email ON patients(patient_email);
 
 
@@ -30,7 +30,7 @@ DROP TABLE IF EXISTS employees_hospital;
 CREATE TABLE employees_hospital (
     hosp_emp_id INT NOT NULL PRIMARY KEY , -- not unique by itself as users added could have same id but in different tables
     emp_id INT NOT NULL UNIQUE,
-    emp_title ENUM('Doctor', 'Surgeon', 'Nurse','Employee') NOT NULL,
+    emp_title VARCHAR(50) NOT NULL,
     FOREIGN KEY (emp_id) REFERENCES employees(emp_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -903,7 +903,7 @@ describe employees;
 describe  unregistered_employees;
 
 CREATE INDEX idx_emp_title ON employees(emp_title);
-CREATE INDEX idx_emp_email ON employees(emp_email);
+CREATE INDEX idx_user_email ON employees(user_email);
 CREATE INDEX idx_pat_email ON patients(patient_email);
 
 

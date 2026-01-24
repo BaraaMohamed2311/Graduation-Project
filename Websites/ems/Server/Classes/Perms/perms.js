@@ -1,6 +1,6 @@
-const executeMySqlQuery = require("../Utils/executeMySqlQuery");
-const stringifyFields = require("../Utils/stringifyFields");
-const sqlTransaction = require("../Utils/sqlTransaction");
+const executeMySqlQuery = require("../../Utils/executeMySqlQuery");
+const stringifyFields = require("../../Utils/stringifyFields");
+const sqlTransaction = require("../../Utils/sqlTransaction");
 class perms {
     // because no need to create instances we make them static and access through class
      
@@ -85,7 +85,7 @@ class perms {
                         if both not Employee we only need to update
                     */
                         if(otherUserRole === "Employee" && newRole !== "Employee"){
-                            const query = `INSERT INTO roles (emp_id , emp_email , role_name) VALUES (?,?,?)`
+                            const query = `INSERT INTO roles (emp_id , user_email , role_name) VALUES (?,?,?)`
                             await executeMySqlQuery(query ,[emp_id , otherUserEmail , newRole]);
                         }
                         else if(otherUserRole !== "Employee" && newRole !== "Employee"){

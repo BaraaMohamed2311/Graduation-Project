@@ -1,6 +1,6 @@
 import userNotification from "./userNotification";
 
-export default function updateImg(image_file ,emp_email , setBlobURL , token){
+export default function updateImg(image_file ,user_email , setBlobURL , token){
   const mimetypes = new Set(["image/jpeg" ,"image/JPEG" , "image/png" , "image/jpg" , "image/JPG" , "image/PNG"]);
   const maxSizeInBytes = 51200;
 
@@ -16,7 +16,7 @@ export default function updateImg(image_file ,emp_email , setBlobURL , token){
     let formData = new FormData();
     formData.append("emp_img",image_file);
     
-    fetch(`${process.env.APIKEY}/profile/update-prof-img?emp_email=${emp_email}`,{
+    fetch(`${process.env.APIKEY}/profile/update-prof-img?user_email=${user_email}`,{
         method:"PUT",
         mode:"cors",
         headers:{

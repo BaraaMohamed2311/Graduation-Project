@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS employees_hospital;
 CREATE TABLE employees_hospital (
     hosp_emp_id INT NOT NULL PRIMARY KEY , 
     emp_id INT NOT NULL UNIQUE,
-    emp_title ENUM('Doctor', 'Surgeon', 'Nurse','Employee') NOT NULL, -- Employee refers to non-hospital staff
+    emp_title VARCHAR(50) NOT NULL, -- Employee refers to non-hospital staff
     FOREIGN KEY (emp_id) REFERENCES employees(emp_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,

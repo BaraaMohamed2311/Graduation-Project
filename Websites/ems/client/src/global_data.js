@@ -134,4 +134,14 @@ const global_mapped_specialities = {
             {value:"Employee", text:"Employee"},
     ]
 
-        export  {global_perms  ,global_roles,global_title, global_specialty , global_mapped_specialities};
+        // --------------------------------------------------
+//        IndexedDB 
+// --------------------------------------------------
+const global_store_names = [
+  "employees",
+  "user_images"
+];
+
+
+
+        export  {global_perms  ,global_roles,global_title, global_specialty , global_mapped_specialities,global_store_names};

@@ -116,8 +116,9 @@ useEffect(() => {
 //        Clear Filters
 // ===========================================
   function handleClearFilterOption(){
-    const EMAIL_REF = inputsBoxsRef.current["Email"];
-    const ByPhoneREF = inputsBoxsRef.current["Phone"];
+    const EMAIL_REF = inputsBoxsRef.current["user_email"];
+    const NAME_REF = inputsBoxsRef.current["user_name"];
+    const ByPhoneREF = inputsBoxsRef.current["patient_phone"];
 
     setIsFiltered(false) // set to false to render cached employees with no filters
     setFilteredResults([]); //to remove all
@@ -125,6 +126,7 @@ useEffect(() => {
 
     // reset select filters back to no filter
     EMAIL_REF.value = ""
+    NAME_REF.value = ""
     ByPhoneREF.value = ""
 }
 

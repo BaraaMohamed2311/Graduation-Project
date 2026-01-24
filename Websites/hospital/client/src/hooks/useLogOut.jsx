@@ -23,8 +23,8 @@ export default function  useLogOut(){
         router.replace("/")
         setUser_Data({
             emp_id: null,
-            emp_name: null,
-            emp_email: null,
+            user_name: null,
+            user_email: null,
             emp_title: null,
             emp_specialty: null,
             emp_salary: null,

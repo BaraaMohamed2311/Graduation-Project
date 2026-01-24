@@ -62,7 +62,7 @@ def generate_insert(table="employees", count=200, start_id=1000):
             f"({emp_id},'{name}','{title}','{specialty}','{email}','{password}')"
         )
 
-    sql = f"INSERT INTO `{table}` (emp_id, emp_name, emp_title, emp_specialty, emp_email, emp_password) VALUES\n"
+    sql = f"INSERT INTO `{table}` (emp_id, user_name, emp_title, emp_specialty, user_email, user_password) VALUES\n"
     sql += ",\n".join(values) + ";"
     return sql
 

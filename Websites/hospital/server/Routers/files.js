@@ -9,7 +9,7 @@ const conect_mongodb = require("../Utils/connect_mongodb");
 const connect_bucket = require("../Utils/connect_mongo_bucket");
 const deleteFromBucket = require("../middlewares/deleteFromBucket");
 const User = require("../Classes/User");
-const HospitalUsersMethods = require("../Classes/HospitalUsersMethods");
+const HospitalUsersMethods = require("../Classes/HospitalUsers/HospitalUsersMethods");
 const jwtVerify = require("../middlewares/jwtVerify");
 const mongoose = require("mongoose")
 

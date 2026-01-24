@@ -5,7 +5,7 @@ let inputs_info = [
 
         label:"Email",
         type:"email",
-        name:"emp_email",
+        name:"user_email",
         
 
     },
@@ -13,7 +13,7 @@ let inputs_info = [
 
         label:"Name",
         type:"text",
-        name:"emp_name",
+        name:"user_name",
         
 
     },

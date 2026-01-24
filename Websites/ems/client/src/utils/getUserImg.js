@@ -1,9 +1,9 @@
 import statusNotification from "./statusNotification";
 import userNotification from "./userNotification";
 
-export default function getUserImage(url , emp_email , reader ,setBlobURL , token){
+export default function getUserImage(url , user_email , reader ,setBlobURL , token){
 
-    fetch(`${process.env.APIKEY}${url}?emp_email=${emp_email}`,{
+    fetch(`${process.env.APIKEY}${url}?user_email=${user_email}`,{
       mode:"cors",
        headers:{
         Authorization: `BEARER ${token}`

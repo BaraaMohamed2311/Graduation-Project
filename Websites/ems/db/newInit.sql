@@ -32,14 +32,14 @@ CREATE TABLE employees (
 DROP TABLE IF EXISTS `unregistered_employees`;
 CREATE TABLE `unregistered_employees` (
   `emp_id` int NOT NULL AUTO_INCREMENT,
-  `emp_name` varchar(255) DEFAULT NULL,
+  `user_name` varchar(255) DEFAULT NULL,
   `emp_title` varchar(100) DEFAULT NULL,
   `emp_specialty` varchar(100) DEFAULT NULL,
-  `emp_password` varchar(255) DEFAULT NULL,
-  `emp_email` varchar(255) DEFAULT NULL,
+  `user_password` varchar(255) DEFAULT NULL,
+  `user_email` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`emp_id`),
-  UNIQUE KEY `emp_email` (`emp_email`),
-  UNIQUE KEY `emp_email_2` (`emp_email`)
+  UNIQUE KEY `user_email` (`user_email`),
+  UNIQUE KEY `user_email_2` (`user_email`)
 ) 
 --------===================================================
 --                      roles Map 1:1
@@ -283,7 +283,7 @@ INSERT INTO employees (emp_id, emp_salary, emp_abscence, emp_bonus, emp_rate, em
 (200, 0, 0, 0, 0, 'Nurse', 'Cancer Nursing'),
 (201, 0, 0, 0, 0, 'Designer', 'UI/UX');
 
-INSERT INTO `unregistered_employees` (emp_id, emp_name, emp_title, emp_specialty, emp_email, emp_password) VALUES(1,'Ali Hamed','Scientist','Data','ali.hamed2464@gmail.com','$2b$12$XUxExC4fNH59oWlS69ddEOTXSiNhx5DuU7HFYnVhCoOxiY15j0YK2'),(2,'Mostafa Zaki','CEO','Management','mostafa.zaki3353@gmail.com','$2b$12$pLqeAPIdVH9g/WH2p89LfuOc.vtjSErXiYb8TPQKQ0do5XZQNl6ee'),(3,'Zein Yasser','Developer','Front-End','zein.yasser8384@gmail.com','$2b$12$xg6cHBT.woeF6SVUO5n.6Ob6TWwaDR2h80ydMPrWPdrPuzu4j40IW'),(4,'Mai Mahmoud','Nurse','Intensive Care Nursing','mai.mahmoud876@gmail.com','$2b$12$vIRxsbV.D6N6tGiGSdokBeiJw/tUGd3uQgiRg2/mldb6EKEhe5XAa'),(5,'Sara Hany','Surgeon','ENT Surgery','sara.hany7833@gmail.com','$2b$12$XQ.uN2uCitbuEXkyAPJbJ.puHvvfHAupka.wSTexwx/DN5kVGzOqK'),(6,'Youssef Masoud','Cloud Engineer','Cloud','youssef.masoud1354@gmail.com','$2b$12$OiBtxaMKBGIbfMD7DgEpvu2q3p.6wf/y/2KqAgFlGEIjn/YEDFVKi');
+INSERT INTO `unregistered_employees` (emp_id, user_name, emp_title, emp_specialty, user_email, user_password) VALUES(1,'Ali Hamed','Scientist','Data','ali.hamed2464@gmail.com','$2b$12$XUxExC4fNH59oWlS69ddEOTXSiNhx5DuU7HFYnVhCoOxiY15j0YK2'),(2,'Mostafa Zaki','CEO','Management','mostafa.zaki3353@gmail.com','$2b$12$pLqeAPIdVH9g/WH2p89LfuOc.vtjSErXiYb8TPQKQ0do5XZQNl6ee'),(3,'Zein Yasser','Developer','Front-End','zein.yasser8384@gmail.com','$2b$12$xg6cHBT.woeF6SVUO5n.6Ob6TWwaDR2h80ydMPrWPdrPuzu4j40IW'),(4,'Mai Mahmoud','Nurse','Intensive Care Nursing','mai.mahmoud876@gmail.com','$2b$12$vIRxsbV.D6N6tGiGSdokBeiJw/tUGd3uQgiRg2/mldb6EKEhe5XAa'),(5,'Sara Hany','Surgeon','ENT Surgery','sara.hany7833@gmail.com','$2b$12$XQ.uN2uCitbuEXkyAPJbJ.puHvvfHAupka.wSTexwx/DN5kVGzOqK'),(6,'Youssef Masoud','Cloud Engineer','Cloud','youssef.masoud1354@gmail.com','$2b$12$OiBtxaMKBGIbfMD7DgEpvu2q3p.6wf/y/2KqAgFlGEIjn/YEDFVKi');
 
 -- Make me SuperAdmin
 INSERT INTO `roles` VALUES (1200,'baraamohamed2311@gmail.com','SuperAdmin');

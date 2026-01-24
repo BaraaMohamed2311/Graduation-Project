@@ -51,7 +51,7 @@ const storage = new GridFsStorage({
     try{ 
         if(gfs_bucket){
         // search for user
-        const employee = await Employees_Img_module.findOne({emp_email:req.query["emp_email"]});
+        const employee = await Employees_Img_module.findOne({user_email:req.query["user_email"]});
 
         // let cursor find and point to it's img in bucket
         if(!employee || !employee.emp_pic.file_name){
@@ -113,7 +113,7 @@ router.put("/update-prof-img" , jwtVerify, createUser, async (req , res , next)=
           if(req.file.size > maxSizeInBytes) return res.status(400).json({success: false , message:"Image Size Must be 50Kbs At Max"});
             // find employee and update img file id 
 
-            await Employees_Img_module.findOneAndUpdate({emp_email:req.query["emp_email"]},{emp_pic:{ file_name:req.file.filename , ImgId:req.file.id}});
+            await Employees_Img_module.findOneAndUpdate({user_email:req.query["user_email"]},{emp_pic:{ file_name:req.file.filename , ImgId:req.file.id}});
             // we pipe img file by reading from db then writing into response
             if(req.file && req.file.filename){
               gfs_bucket.openDownloadStreamByName(req.file.filename).pipe(res)

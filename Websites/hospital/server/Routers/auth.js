@@ -10,7 +10,7 @@ const mailer = require("../Utils/mailer.js");
 const ResetPasswordTokensModel = require("../Models/ResetPassword.js");
 const crypto = require("crypto");
 const consoleLog = require("../Utils/consoleLog.js");
-const HospitalUsersMethods = require("../Classes/HospitalUsersMethods.js");
+const HospitalUsersMethods = require("../Classes/HospitalUsers/HospitalUsersMethods.js");
 const stringifyFields = require("../Utils/stringifyFields.js");
 // =================================
 //  Login User (Employees or Patients)
@@ -131,8 +131,8 @@ const stringifyFields = require("../Utils/stringifyFields.js");
                 const hashedPassword = await User.hashPassword(user_password);
                 if(!hashedPassword) return res.status().json({success: false, message: "Failed To Hash Password"})
                 
-                // First Insert to patients table
-                const queryPatients = `INSERT INTO users (${columns_field}) VALUES (${values_field})`
+                // First Insert to users table
+                const queryPatients = `INSERT INTO users (${columns_field},user_type) VALUES (${values_field},'patient')`
                 const InsertedToPatients = await executeMySqlQuery( queryPatients );
 
                 if(InsertedToPatients.affectedRows == 0) return res.status().json({success:false,message:"Failed To Register User"})

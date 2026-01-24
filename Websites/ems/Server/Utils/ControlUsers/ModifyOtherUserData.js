@@ -1,13 +1,13 @@
-const SuperAdmin = require("../../Classes/SuperAdmin");
-const Admin = require("../../Classes/Admin");
+const SuperAdmin = require("../../Classes/Roles/SuperAdmin");
+const Admin = require("../../Classes/Roles/Admin");
 const User = require("../../Classes/User");
-async function ModifyOtherUserData(emp_id, userRole, modifierRole, updatedEmployeeData, employee_emp_email,failing_messages) {
+async function ModifyOtherUserData(emp_id, userRole, modifierRole, updatedEmployeeData, employee_user_email,failing_messages) {
     // This function is used to modify data in the database
     // It will be implemented later
         
-        if(updatedEmployeeData.emp_email && employee_emp_email && employee_emp_email !== updatedEmployeeData.emp_email){
+        if(updatedEmployeeData.user_email && employee_user_email && employee_user_email !== updatedEmployeeData.user_email){
             // if email is changed we check if it exists in db
-            const emailExists = await User.emailExists(updatedEmployeeData.emp_email);
+            const emailExists = await User.emailExists(updatedEmployeeData.user_email);
             console.log("emailExists", emailExists)
                 if(emailExists){
                     failing_messages.push({success:false , message: "That Email Already Exists"})

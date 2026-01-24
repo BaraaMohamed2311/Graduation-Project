@@ -2,7 +2,7 @@ import { global_title, global_specialty } from "@/global_data";
 
 let inputs_info = [ 
     {
-        name:"emp_email",
+        name:"user_email",
         label:"Email",
         type:"email",
 
@@ -10,7 +10,7 @@ let inputs_info = [
 
     },
     {
-        name:"emp_name",
+        name:"user_name",
         label:"Name",
         type:"text",
 
@@ -18,7 +18,7 @@ let inputs_info = [
 
     },
     {
-        name:"emp_password",
+        name:"user_password",
         label:"Password",
         type:"password",
 

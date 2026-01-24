@@ -97,7 +97,7 @@ function UpdateState(reader_result){
             </div>
             
             <div className={styles["employee-info"]}>
-              <h1 className={styles["employee-name"]}>{employee_displayed.emp_name}</h1>
+              <h1 className={styles["employee-name"]}>{employee_displayed.user_name}</h1>
               <p className={styles["employee-position"]}>{`${employee_displayed.emp_title} | ${employee_displayed.emp_specialty}`}</p>
               <p><strong>Email:</strong> {employee_displayed.user_email}</p>
               <p><strong>Location:</strong> {employee_displayed.emp_address || "Not Specified"}</p>
@@ -142,11 +142,11 @@ function UpdateState(reader_result){
                     // delete button
                     handleDeletion("list/delete-employee", user_data.token , {
                       emp_id: employee_displayed.emp_id, 
-                      emp_name:employee_displayed.emp_name,
+                      user_name:employee_displayed.user_name,
                       user_email: employee_displayed.user_email,
                       modifier_email: user_data.user_email ,
                       modifier_id: user_data.emp_id ,
-                      modifier_name: user_data.emp_name ,
+                      modifier_name: user_data.user_name ,
                     })
                   }
                   className="red-button"

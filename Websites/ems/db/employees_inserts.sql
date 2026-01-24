@@ -1,4 +1,4 @@
-INSERT INTO `employees` (emp_id, emp_name, emp_title, emp_specialty, emp_email, emp_password) VALUES(1000,'Omar Abdallah','Scientist','Data','omar.abdallah2464@gmail.com','$2b$12$XUxExC4fNH59oWlS69ddEOTXSiNhx5DuU7HFYnVhCoOxiY15j0YK2'),(1001,'Ramy Amin','CEO','Management','ramy.amin3353@gmail.com','$2b$12$pLqeAPIdVH9g/WH2p89LfuOc.vtjSErXiYb8TPQKQ0do5XZQNl6ee'),
+INSERT INTO `employees` (emp_id, user_name, emp_title, emp_specialty, user_email, user_password) VALUES(1000,'Omar Abdallah','Scientist','Data','omar.abdallah2464@gmail.com','$2b$12$XUxExC4fNH59oWlS69ddEOTXSiNhx5DuU7HFYnVhCoOxiY15j0YK2'),(1001,'Ramy Amin','CEO','Management','ramy.amin3353@gmail.com','$2b$12$pLqeAPIdVH9g/WH2p89LfuOc.vtjSErXiYb8TPQKQ0do5XZQNl6ee'),
 (1002,'Ramy Amin','Developer','Front-End','ramy.amin8384@gmail.com','$2b$12$xg6cHBT.woeF6SVUO5n.6Ob6TWwaDR2h80ydMPrWPdrPuzu4j40IW'),
 (1003,'Mai Kamal','Nurse','Intensive Care Nursing','mai.kamal876@gmail.com','$2b$12$vIRxsbV.D6N6tGiGSdokBeiJw/tUGd3uQgiRg2/mldb6EKEhe5XAa'),
 (1004,'Sara Kamel','Surgeon','ENT Surgery','sara.kamel7833@gmail.com','$2b$12$XQ.uN2uCitbuEXkyAPJbJ.puHvvfHAupka.wSTexwx/DN5kVGzOqK'),

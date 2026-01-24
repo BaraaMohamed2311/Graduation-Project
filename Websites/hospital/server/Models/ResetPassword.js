@@ -7,7 +7,7 @@ const ResetPasswordTokens = new mongoose.Schema({
     
     
         emp_id: {type:Number, required:true},
-        emp_email: {type:String, required:true},
+        user_email: {type:String, required:true},
         ResetToken: {type:String},
         createdAtToken: {type:Date} 
     
