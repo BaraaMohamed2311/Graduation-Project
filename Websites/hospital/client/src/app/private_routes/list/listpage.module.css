@@ -1,46 +1,81 @@
 .list-page {
+  min-height: calc(100vh - 6rem);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2rem;
-  padding: 2rem 1rem;
+  justify-content: center;
 }
 
 .title {
-  font-size: 1.8rem;
-  font-weight: 600;
   text-align: center;
+  margin-bottom: var(--spacing-xl);
+  color: var(--text-main);
+  font-size: 2.4rem;
 }
 
 .cards-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl);
 }
 
 .nav-card {
-  width: 260px;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  background-color: var(--card-bg, #f9fafb);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 3.5rem 2.5rem;
   text-align: center;
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: 
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    background 0.3s ease;
+}
+
+.nav-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent,
+    var(--main-hovers)
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .nav-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: var(--shadow-hover);
+}
+
+.nav-card:hover::before {
+  opacity: 0.08;
 }
 
 .nav-card h2 {
-  font-size: 1.4rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
+  margin-top: 1rem;
+  color: var(--text-main);
 }
 
 .nav-card p {
-  color: #666;
-  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  font-size: 1.05rem;
+}
+
+.card-icon {
+  font-size: 3.8rem;
+  color: var(--main-hovers);
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.nav-card:hover .card-icon {
+  transform: scale(1.15) rotate(-3deg);
+  color: var(--sec-dark);
 }

@@ -2,15 +2,12 @@ const router = require("express").Router();
 const multer = require("multer");
 const { GridFsStorage } = require("multer-gridfs-storage");
 const Profile_Pic_Module = require("../Models/Profile_Pic");
-const Patient_File_Module = require("../Models/Patient_file");
-const mongo_url = process.env.Hospital_MongoDB;
-const {Tables , setOfPerms} = require("../Tables/data.js");
+const mongo_url = process.env.EMS_MongoDB;
+
 const conect_mongodb = require("../Utils/connect_mongodb");
 const connect_bucket = require("../Utils/connect_mongo_bucket");
 const deleteFromBucket = require("../middlewares/deleteFromBucket");
-const User = require("../Classes/User");
 const jwtVerify = require("../middlewares/jwtVerify");
-const mongoose = require("mongoose")
 
 let gfs_bucket;
 
@@ -28,7 +25,7 @@ const ProfileImagemimetypes = new Set([
 
 // ===2. Connect to MongoDB and return uploads bucket
 async function initializeConnectionMDB() {
-  const db = await conect_mongodb(process.env.Hospital_MongoDB);
+  const db = await conect_mongodb(process.env.EMS_MongoDB);
   const bucket = await connect_bucket(db, "uploads");
   return bucket;
 }
@@ -54,20 +51,6 @@ const profileStorage = new GridFsStorage({
 });
 const uploadProfileImg = multer({ storage: profileStorage });
 
-// ===5. Configure multer-gridfs-storage for patient files
-const patientStorage = new GridFsStorage({
-  url: mongo_url,
-  file: (req, file) => {
-    if (patientFileTypes.has(file.mimetype)) {
-      return {
-        bucketName: "patient_uploads",
-        filename: `${file.originalname}_${Date.now()}`,
-      };
-    } else {
-      return null;
-    }
-  },
-});
 
 
 
@@ -137,7 +120,7 @@ router.put(
   async (req, res, next) => {
     await deleteFromBucket(gfs_bucket, req, res, next);
   },
-  uploadProfileImg.single("user_img"),
+  uploadProfileImg.single("user_pic"),
   async (req, res) => {
     try {
 
@@ -184,67 +167,6 @@ router.put(
   }
 );
 
-
-
-// ==============================================
-//                Fix
-// ==============================================
-
-router.delete("//:file_id/delete",jwtVerify, async (req, res) => {
-  const session = await mongoose.startSession();
-  // Opened transaction so both deleting meta-data and file itself must succeed
-  session.startTransaction();
-
-  try {
-    const { file_id } = req.params;
-
-    if (!file_id)
-      return res.status(400).json({ success: false, message: "file_id is required" });
-
-    const db = mongoose.connection.db;
-
-    // 1️⃣ GridFS bucket for patient files (same db as session)
-    const patientBucket = new mongoose.mongo.GridFSBucket(db, {
-      bucketName: "patient_uploads",
-    });
-
-    // 2️⃣ Find the file in GridFS
-    const files = await patientBucket.find({ _id: new mongoose.Types.ObjectId(file_id) }).toArray();
-
-    if (!files || files.length === 0)
-      return res.status(404).json({ success: false, message: "File not found" });
-
-    const file = files[0];
-
-    // 3️⃣ Delete the GridFS file
-    await patientBucket.delete(file._id, { session }); // pass session for transaction
-
-    // 4️⃣ Delete metadata from Patients_Files
-    const updateResult = await Patient_File_Module.updateOne(
-      { "files.file_id": file_id },
-      { $pull: { files: { file_id: file_id } } },
-      { session }
-    );
-
-    // 5️⃣ Commit the transaction
-    await session.commitTransaction();
-    session.endSession();
-
-    return res.status(200).json({
-      success: true,
-      message: `File "${file.filename}" and its metadata deleted successfully`,
-      deletedMetadataCount: updateResult.modifiedCount,
-    });
-
-  } catch (err) {
-    // Rollback on error
-    await session.abortTransaction();
-    session.endSession();
-
-    console.error("Error deleting file with transaction", err);
-    res.status(500).json({ success: false, message: err.message || "Error deleting file" });
-  }
-});
 
 
 

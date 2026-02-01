@@ -27,7 +27,7 @@ class HospitalUsersMethods {
         return await HospitalUserFactory.updateData(user_id, title, data, actions);
     }
 
-    static async MapUserToFullUpdateFunction(user_id, title, updating_string) {
+    static async MapUserToFullUpdateFunction(user_id, title, updating_string ) {
         return await HospitalUserFactory.updateFullCore(user_id, title, updating_string);
     }
 
@@ -55,154 +55,132 @@ class HospitalUsersMethods {
     }
 
     /**
-     * Get count of all hospital employees with optional filters
-     */
-    static async getAllHospitalEmployeesCOUNT(filtering_string = null, emp_perms = null) { 
-        const perms_CONDITION = emp_perms 
-            ? `HAVING FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT hp.perm_name)) > 0` 
-            : "";
+ * Get count of all hospital employees with optional filters
+ * OPTIMIZED VERSION
+ */
+static async getAllHospitalEmployeesCOUNT(filtering_string = null, emp_perms = null) { 
+    const perms_CONDITION = emp_perms 
+        ? `HAVING FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT hp.perm_name)) > 0` 
+        : "";
 
-        const query = `
-            SELECT COUNT(*) as total_count
-            FROM (
-                SELECT u.user_id
-                FROM users u
-                INNER JOIN employees e ON u.user_id = e.emp_id
-                INNER JOIN employees_hospital eh ON e.emp_id = eh.emp_id
+    const query = `
+        SELECT COUNT(DISTINCT u.user_id) as total_count
+        FROM users u
+        INNER JOIN employees e ON u.user_id = e.emp_id
+        INNER JOIN employees_hospital eh ON e.emp_id = eh.emp_id
 
-                LEFT JOIN doctors d ON eh.hosp_emp_id = d.doctor_id AND eh.emp_title = 'Doctor'
-                LEFT JOIN surgeons s ON eh.hosp_emp_id = s.surgeon_id AND eh.emp_title = 'Surgeon'
-                LEFT JOIN nurses n ON eh.hosp_emp_id = n.nurse_id AND eh.emp_title = 'Nurse'
-
-                LEFT JOIN hospital_emp_perms hep ON eh.hosp_emp_id = hep.hosp_emp_id
-                LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
-                LEFT JOIN hospital_roles hr ON eh.hosp_emp_id = hr.hosp_emp_id
-
-                WHERE u.user_type = 'employee' AND eh.emp_title != 'Employee' 
-                ${filtering_string ? "AND " + filtering_string : ""}
-
-                GROUP BY u.user_id
-                ${perms_CONDITION}
-            ) as subquery;
-        `;
-
-        const COUNT = await executeMySqlQuery(query);
-        return COUNT[0]?.total_count;
-    }
-
-    /**
-     * Get all hospital employees with full data and optional filters
-     */
-    static async getAllHospitalEmployeesFullData(limit = 10, offset = 0, filtering_string = null, emp_perms = null) { 
-        const perms_CONDITION = emp_perms 
-            ? `HAVING FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT hp.perm_name)) > 0` 
-            : "";
-
-        const query = `
-            SELECT 
-                u.user_id,
-                u.user_email,
-                u.user_name,
-                u.created_at,
-                e.emp_abscence,
-                e.emp_rate,
-                e.emp_specialty,
-                eh.emp_title,
-                
-                CASE 
-                    WHEN eh.emp_title = 'Doctor' THEN d.initial_consultation_price
-                    WHEN eh.emp_title = 'Surgeon' THEN s.initial_consultation_price
-                    ELSE NULL 
-                END AS initial_consultation_price,
-                
-                CASE 
-                    WHEN eh.emp_title = 'Doctor' THEN d.followup_consultation_price
-                    WHEN eh.emp_title = 'Surgeon' THEN s.followup_consultation_price
-                    ELSE NULL 
-                END AS followup_consultation_price,
-                
-                CASE 
-                    WHEN eh.emp_title = 'Surgeon' THEN s.surgery_price
-                    ELSE NULL 
-                END AS surgery_price,
-                
-                CASE 
-                    WHEN eh.emp_title = 'Doctor' THEN d.years_of_exp
-                    WHEN eh.emp_title = 'Surgeon' THEN s.years_of_exp
-                    ELSE NULL 
-                END AS years_of_exp,
-                
-                CASE 
-                    WHEN eh.emp_title = 'Nurse' THEN n.floor_number
-                    ELSE NULL 
-                END AS floor_number,
-                
-                COALESCE(NULLIF(GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
-                COALESCE(hr.role_name, 'NormalUser') AS role_name,
-                
-                COALESCE((
-                    SELECT GROUP_CONCAT(
-                        DISTINCT CONCAT(
-                            formatted.day_of_week, 
-                            ': ', 
-                            formatted.formatted_start, 
-                            '-', 
-                            formatted.formatted_end
-                        )
-                        ORDER BY formatted.day_of_week
-                        SEPARATOR '; '
-                    )
-                    FROM (
-                        SELECT 
-                            day_of_week,
-                            DATE_FORMAT(start_time, '%H:%i') as formatted_start,
-                            DATE_FORMAT(end_time, '%H:%i') as formatted_end
-                        FROM availability 
-                        WHERE hosp_emp_id = eh.hosp_emp_id
-                    ) AS formatted
-                ), 'None') AS availability_schedule
-
-            FROM users u
-            INNER JOIN employees e ON u.user_id = e.emp_id
-            INNER JOIN employees_hospital eh ON e.emp_id = eh.emp_id
-
-            LEFT JOIN doctors d ON eh.hosp_emp_id = d.doctor_id AND eh.emp_title = 'Doctor'
-            LEFT JOIN surgeons s ON eh.hosp_emp_id = s.surgeon_id AND eh.emp_title = 'Surgeon'
-            LEFT JOIN nurses n ON eh.hosp_emp_id = n.nurse_id AND eh.emp_title = 'Nurse'
-
+        -- Only join what's needed for filtering and permissions
+        ${emp_perms ? `
             LEFT JOIN hospital_emp_perms hep ON eh.hosp_emp_id = hep.hosp_emp_id
             LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
-            LEFT JOIN hospital_roles hr ON eh.hosp_emp_id = hr.hosp_emp_id
+        ` : ''}
 
-            WHERE u.user_type = 'employee' AND eh.emp_title != 'Employee' 
-            ${filtering_string ? "AND " + filtering_string : ""}
+        WHERE u.user_type = 'employee' 
+        AND eh.emp_title IN ('Doctor', 'Surgeon', 'Nurse')
+        ${filtering_string ? "AND " + filtering_string : ""}
 
-            GROUP BY 
-                u.user_id,
-                u.user_email,
-                u.user_name,
-                u.created_at,
-                e.emp_abscence,
-                e.emp_rate,
-                eh.emp_title,
-                e.emp_specialty,
-                d.initial_consultation_price,
-                d.followup_consultation_price,
-                s.initial_consultation_price,
-                s.followup_consultation_price,
-                s.surgery_price,
-                d.years_of_exp,
-                s.years_of_exp,
-                n.floor_number,
-                hr.role_name
+        ${emp_perms ? `
+            GROUP BY u.user_id
             ${perms_CONDITION}
-            ORDER BY u.user_id
-            LIMIT ${limit} OFFSET ${offset}
-        `;
-        
-        const result = await executeMySqlQuery(query);
-        return result;
+        ` : ''}
+    `;
+
+    const COUNT = await executeMySqlQuery(query);
+    
+    // Handle both grouped and non-grouped results
+    if (emp_perms) {
+        // When grouped, count the rows
+        return COUNT.length;
+    } else {
+        // When not grouped, use the COUNT result
+        return COUNT[0]?.total_count || 0;
     }
+}
+
+/**
+ * Get all hospital employees with full data and optional filters
+ * OPTIMIZED VERSION
+ */
+/**
+ * Get all hospital employees with full data and optional filters
+ */
+static async getAllHospitalEmployeesFullData(limit = 10, offset = 0, filtering_string = null, emp_perms = null) { 
+    const perms_CONDITION = emp_perms 
+        ? `HAVING FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT hp.perm_name)) > 0` 
+        : "";
+
+    const query = `
+        SELECT 
+            u.user_id,
+            u.user_email,
+            u.user_name,
+            u.created_at,
+            e.emp_abscence,
+            e.emp_rate,
+            e.emp_specialty,
+            eh.emp_title,
+            
+            -- Use ANY_VALUE for non-aggregated columns from 1:1 relationships
+            COALESCE(ANY_VALUE(d.initial_consultation_price), ANY_VALUE(s.initial_consultation_price)) AS initial_consultation_price,
+            COALESCE(ANY_VALUE(d.followup_consultation_price), ANY_VALUE(s.followup_consultation_price)) AS followup_consultation_price,
+            ANY_VALUE(s.surgery_price) AS surgery_price,
+            COALESCE(ANY_VALUE(d.years_of_exp), ANY_VALUE(s.years_of_exp)) AS years_of_exp,
+            ANY_VALUE(n.floor_number) AS floor_number,
+            
+            -- Permissions (aggregated)
+            COALESCE(NULLIF(GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
+            
+            -- Role (use ANY_VALUE since it's 1:1 with hospital employee)
+            COALESCE(ANY_VALUE(hr.role_name), 'NormalUser') AS role_name,
+            
+            -- Availability schedule
+            COALESCE(
+                (SELECT GROUP_CONCAT(
+                    CONCAT(
+                        day_of_week, 
+                        ': ', 
+                        DATE_FORMAT(start_time, '%H:%i'), 
+                        '-', 
+                        DATE_FORMAT(end_time, '%H:%i')
+                    )
+                    ORDER BY FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+                    SEPARATOR '; '
+                )
+                FROM availability 
+                WHERE hosp_emp_id = eh.hosp_emp_id
+                ),
+                'None'
+            ) AS availability_schedule
+
+        FROM users u
+        INNER JOIN employees e ON u.user_id = e.emp_id
+        INNER JOIN employees_hospital eh ON e.emp_id = eh.emp_id
+
+        -- Title-specific joins
+        LEFT JOIN doctors d ON eh.hosp_emp_id = d.doctor_id
+        LEFT JOIN surgeons s ON eh.hosp_emp_id = s.surgeon_id
+        LEFT JOIN nurses n ON eh.hosp_emp_id = n.nurse_id
+
+        -- Permissions and roles
+        LEFT JOIN hospital_emp_perms hep ON eh.hosp_emp_id = hep.hosp_emp_id
+        LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+        LEFT JOIN hospital_roles hr ON eh.hosp_emp_id = hr.hosp_emp_id
+
+        WHERE u.user_type = 'employee' 
+        AND eh.emp_title IN ('Doctor', 'Surgeon', 'Nurse')
+        ${filtering_string ? "AND " + filtering_string : ""}
+
+        -- Minimal GROUP BY
+        GROUP BY u.user_id, eh.hosp_emp_id, e.emp_id
+            
+        ${perms_CONDITION}
+        ORDER BY u.user_id
+        LIMIT ${limit} OFFSET ${offset}
+    `;
+    
+    const result = await executeMySqlQuery(query);
+    return result;
+}
 }
 
 module.exports = HospitalUsersMethods;

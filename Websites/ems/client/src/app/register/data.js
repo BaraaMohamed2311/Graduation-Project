@@ -1,4 +1,4 @@
-import { global_title, global_specialty } from "@/global_data";
+import { global_title } from "@/global_data";
 
 let inputs_info = [ 
     {
@@ -35,16 +35,16 @@ let select_title_options ={
     options:global_title,
 
 }
-
+// not used to display options but used to access ref by name instead
+// generated options are dynamically generated at form fields component
 let select_specialty_options ={
-    key:"Select Job specialty",
-    label:"Select Job specialty",
-    name:"emp_specialty",
-    options:global_specialty,
 
+    name:"emp_specialty",
 }
 
-let select_options = {select_title_options, select_specialty_options}
 
 
-export  {inputs_info , select_options}
+let select_def = {select_title_options ,select_specialty_options}
+
+
+export  {inputs_info , select_def}

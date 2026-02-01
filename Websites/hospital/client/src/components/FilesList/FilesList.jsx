@@ -8,7 +8,7 @@ import userNotification from "@/utils/userNotification";
 import Pagination_Btns from "../Pagination_Btns/Pagination_Btns";
 import {convertUTCToLocal} from "@/utils/Date/dateHelpers"
 
-export default function PatientFiles({onUploadFile,onDeleteFile , urls,files_meta , setFilesMeta }) {
+export default function PatientFiles({onUploadFile,onDeleteFile , urls,files_meta , setFilesMeta , isEditable=true }) {
   const [currPage, setCurrPage] = useState(1);
   const filesPerPage = 5;
   const { user_data } = useUserDataContext();
@@ -131,12 +131,14 @@ export default function PatientFiles({onUploadFile,onDeleteFile , urls,files_met
                     <span className={styles["file-name"]}>{fileName.length > 10 ? fileName.slice(0,11) +"...." : "N/A"}</span>
                     <span className={styles["file-type"]}>{fileType}</span>
                     <span className={styles["file-date"]}>{convertUTCToLocal(createdAt)?.split(" ")[0] }</span>
-                 <button
+                  {isEditable &&  <button
                   className={styles["file-delete-btn"]}
                   onClick={(e) => onDeleteFile(e, entry)}
-                >
-                  🗑
-                </button>
+                    >
+                      🗑
+                    </button>
+                }
+                 
                 </li>
               );
             })}
@@ -147,10 +149,11 @@ export default function PatientFiles({onUploadFile,onDeleteFile , urls,files_met
       {/* ============================
           File Buttons
       ============================ */}
+      {isEditable && 
       <div className={styles["file-actions"]}>
         <FileUploadButton onFileSelect={onUploadFile} setProgress={setProgress} setIsUploading={setIsUploading}/>
 
-      </div>
+      </div>}
       {/* ============================
           progress bar
       ============================ */}

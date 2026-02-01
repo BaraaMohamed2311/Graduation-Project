@@ -1,0 +1,252 @@
+/* AvailabilitySelector.module.css */
+
+.availabilitySelector {
+  max-width: 900px;
+  height: 40rem;
+  overflow-y: auto;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.availabilitySelector h2 {
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.instructions {
+  color: #666;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+/* Days Grid */
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dayCard {
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fafafa;
+}
+
+.dayCard:hover {
+  border-color: #4CAF50;
+  background: #f5f5f5;
+}
+
+.dayCardSelected {
+  border-color: #4CAF50;
+  background: #e8f5e9;
+}
+
+.dayHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dayName {
+  font-weight: 600;
+  color: #333;
+}
+
+.checkbox {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.dayCardSelected .checkbox {
+  background: #4CAF50;
+  border-color: #4CAF50;
+}
+
+.checkmark {
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Time Selection */
+.timeSelectionSection {
+  margin-bottom: 2rem;
+}
+
+.timeSelectionSection h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.dayLabel {
+  min-width: 100px;
+  font-weight: 600;
+  color: #555;
+}
+
+.timeInputs {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.timeInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.timeInputGroup label {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.timeSelect {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  min-width: 100px;
+  cursor: pointer;
+}
+
+.timeSelect:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.timeSeparator {
+  color: #999;
+  font-weight: 500;
+  margin-top: 1.5rem;
+}
+
+.removeDayBtn {
+  padding: 0.5rem 0.75rem;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background 0.2s ease;
+}
+
+.removeDayBtn:hover {
+  background: #d32f2f;
+}
+
+/* Summary */
+.summary {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.summary h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.noSelection {
+  color: #999;
+  font-style: italic;
+}
+
+.summaryList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.summaryItem {
+  color: #555;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+.submitBtn {
+  padding: 1rem 3rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.submitBtn:hover {
+  background: #45a049;
+}
+
+.submitBtn:disabled,
+.submitBtnDisabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.submitBtn:disabled:hover {
+  background: #ccc;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .daysGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .timeRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dayLabel {
+    width: 100%;
+  }
+
+  .timeInputs {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .timeSeparator {
+    margin-top: 0;
+  }
+
+  .removeDayBtn {
+    align-self: flex-end;
+  }
+}

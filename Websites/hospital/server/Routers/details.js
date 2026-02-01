@@ -6,12 +6,14 @@ const jwtVerify = require("../middlewares/jwtVerify.js");
 const PatientMethods = require("../Utils/methods/PatientMethods.js");
 const JoinFiltering = require("../Utils/JoinFiltering.js");
 const PatientFile = require("../Models/Patient_file.js");
-const PatientHealthStatus = require("../Models/Patient_health_status.js");
 const User = require("../Classes/User.js");
 const HospitalUsersMethods = require("../Classes/HospitalUsers/HospitalUsersMethods.js");
 const mailer = require("../Utils/mailer");
 const buildJoinedUpdate = require("../Utils/buildJoinedUpdate.js");
-const { approvalRequiredFields ,roleToEntityMap} = require("../Tables/data.js");
+const { approvalRequiredFields ,roleToEntityMap  } = require("../Tables/data.js");
+const { pickAllowedFields , SELF_UPDATE_FIELDS} = require("../Tables/pick_exc_fields.js");
+const AuditLogs = require("../Utils/methods/AuditLogs.js");
+const PatientHealthStatus = require("../Models/Patient_health_status.js")
 
 // =================================
 //  Get One Patient Data MySQL
@@ -23,9 +25,14 @@ router.get("/employee/:id",jwtVerify,async (req,res)=>{
         //Bad Request if modifier id or others doesn't exist
         if( !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
 
+        // Ceck if list page can be accessible
+        const Modifier_role = await User.getUserRole(user_id);
+        
+        if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
+
         const employeeTitle = await User.getUserTitleByID(user_id);
 
-        if(!employeeTitle || !User.isHospitalUser(employeeTitle)){
+        if(!employeeTitle || !HospitalUsersMethods.isHospitalUser(employeeTitle)){
             return res.status(404).json({success : false , message:"No Users Found !"})
         }
 
@@ -58,6 +65,11 @@ router.get("/patient/:id",jwtVerify,async (req,res)=>{
         //Bad Request if modifier id or others doesn't exist
         if( !user_id  ) return res.status(400).json({success:false,message:"Bad Request"});
 
+        // Ceck if list page can be accessible
+        const Modifier_role = await User.getUserRole(user_id);
+        
+        if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
+
         const patientData = await PatientMethods.getPatientSpecificData(user_id);
 
       if( patientData ){
@@ -88,6 +100,13 @@ router.get("/patient",jwtVerify,async (req,res)=>{
 
         //Bad Request if both do not exist
         if( !user_email &&  !user_phone  ) return res.status(400).json({success:false,message:"Bad Request"});
+
+        // Ceck if list page can be accessible
+        const Modifier_role = await User.getUserRole(user_id);
+        
+        if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
+
+
         const filter_email = JoinFiltering(Object.entries({user_email}),"u");
         const filter_phone = JoinFiltering(Object.entries({patient_phone: user_phone}),"p");
         // joins them with "AND" if both exists
@@ -98,7 +117,7 @@ router.get("/patient",jwtVerify,async (req,res)=>{
         res.status(200).json({success : true , body:patientData, message:"Successfully Fetched Data"})
       }
       else{
-        res.status(404).json({success : false , message:"No Users Found !"})
+        res.status(404).json({success : false , message:"No Patient Found, please register!"})
       }
 
         
@@ -167,7 +186,7 @@ router.get("/patient-files/:patientId",jwtVerify,async (req,res)=>{
 // =================================
 //  Patch Any User  (we will update specific fields not whole user data)
 // =================================
-router.patch("/user",jwtVerify, async (req, res) => {
+router.patch("/self",jwtVerify, async (req, res) => {
     try {
         const { user_id, ...newUserDetails } = req.body;
         
@@ -180,9 +199,14 @@ router.patch("/user",jwtVerify, async (req, res) => {
         if(!userExists){
             return res.status(404).json({ success: false, message: "User Not Found" });
         }
+
+
+        // prevent updating other fields like salary etc.
+        const safeUserDetails = pickAllowedFields(newUserDetails, SELF_UPDATE_FIELDS);
+
         
-        if(newUserDetails.user_email){
-            const emailExists = await User.checkIfUserExistsByEmail(newUserDetails.user_email);
+        if(safeUserDetails.user_email){
+            const emailExists = await User.checkIfUserExistsByEmail(safeUserDetails.user_email);
             if(emailExists){
                 return res.status(409).json({ success: false, message: "Email Already In Use" });
             }
@@ -195,21 +219,28 @@ router.patch("/user",jwtVerify, async (req, res) => {
         const titleApprovalRequiredFields = approvalRequiredFields[roleKey] || [];
 
         titleApprovalRequiredFields.forEach(key => {
-        delete newUserDetails[key];
+        delete safeUserDetails[key];
         });
 
 
         // build the updating string for query
-        const updating_string = buildJoinedUpdate(newUserDetails);
+        const updating_string = buildJoinedUpdate(safeUserDetails);
 
             
             const isUpdated =  await HospitalUsersMethods.MapUserToFullUpdateFunction(user_id, userTitle, updating_string);
+                //===7. Add Audit Log
+            await AuditLogs.addLog(
+                user_id,
+                `Updated Self User Data`,
+                isUpdated ? "Successful Update My User Data" : "Failed Update My User Data",
+                isUpdated ? "info" : "failure"
+            )
 
         if(isUpdated){
             return res.status(200).json({ success: true, message: "User Updated Successfully" });
         }
         else{
-            return res.status(500).json({ success: false, message: "Failed to update user data" });
+            return res.status(409).json({ success: false, message: "Failed to update user data" });
         }
         
     } catch (err) {
@@ -219,6 +250,7 @@ router.patch("/user",jwtVerify, async (req, res) => {
         });
     }
 });
+
 
 
 
@@ -232,7 +264,6 @@ router.delete("/patient",jwtVerify, async (req, res) => {
 
         // all these fields required to delete & send email
         if(!user_id  ) return res.status(400).json({success:false,message:"Bad Request"});
-        
         
 
             const userType = await User.getUserTypeById(user_id);

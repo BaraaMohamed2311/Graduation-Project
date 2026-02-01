@@ -10,7 +10,7 @@ router.get("/employees", async (req, res) => {
         const {  max_version } = req.query;
 
         const { needsSync, latest_version } =
-            await SyncMethods.syncAllHospitalEmployeesFullData( max_version);
+            await SyncMethods.syncAllEmployeesFullData( max_version);
 
         res.json({ success: true, needsSync, latest_version });
 

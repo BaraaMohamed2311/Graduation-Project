@@ -22,8 +22,6 @@ function ProfilePage() {
       // fetch image
       getUserImage('/files/profile', user_data.user_id ,user_data.token ,setBlobURL )
     
-
-
 } ,[user_data.user_email,user_data.token])
 
 
@@ -46,7 +44,7 @@ function ProfilePage() {
               <Image priority={true}  src={blobURL} className={"avatar"} width="192" height="192" alt="User Profile Image" />
             </div>
             
-          <ProfileComponent user_data={user_data}  />
+          <ProfileComponent user_data={user_data}  permissions={permissions}/>
         </div>
       </div>
       </main>

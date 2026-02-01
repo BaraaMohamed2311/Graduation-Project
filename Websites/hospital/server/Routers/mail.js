@@ -16,7 +16,7 @@ const mailer = require("../Utils/mailer")
                 });
             }
             else{
-                res.status(500).json({
+                res.status(502).json({
                     success:false,
                     message:"Email Wasn't Sent"
                 });

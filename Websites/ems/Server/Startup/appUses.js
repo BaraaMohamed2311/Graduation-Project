@@ -4,10 +4,11 @@ const hpp = require("hpp")
 // routers
 const listApis = require("../Routers/list.js");
 const authApis = require("../Routers/auth.js");
-const profileApis = require("../Routers/profile.js");
+const filesApis = require("../Routers/files.js");
 const MailApis = require("../Routers/mail.js");
 const dashboardApis = require("../Routers/dashboard.js");
 const SyncApis = require("../Routers/sync.js");
+const detailsApis = require("../Routers/details.js");
 
 function appUses(express ,app){
 
@@ -40,10 +41,12 @@ function appUses(express ,app){
     // Routes
     app.use("/api/list",listApis)
     app.use("/api/user",authApis)
-    app.use("/api/profile",profileApis)
+    app.use("/api/files",filesApis)
     app.use("/api/mail",MailApis)
     app.use("/api/dashboard",dashboardApis)
     app.use("/api/sync",SyncApis)
+    app.use("/api/details",detailsApis)
+
 
 }
 

@@ -109,6 +109,7 @@ useEffect(() => {
 // ===========================================
   function handleClearFilterOption(){
     const EMAIL_REF = inputsBoxsRef.current["Email"];
+    const NAME_REF = inputsBoxsRef.current["user_name"];
     const ByTitleREF = selectBoxsRef.current["emp_title"];
     const ByspecialtyREF = selectBoxsRef.current["emp_specialty"];
     const ByRoleREF = selectBoxsRef.current["role_name"];
@@ -120,6 +121,7 @@ useEffect(() => {
 
     // reset select filters back to no filter
     EMAIL_REF.value = ""
+    NAME_REF.value = ""
     ByTitleREF.value = ""
     ByspecialtyREF.value = ""
     ByRoleREF.value = ""
@@ -132,19 +134,21 @@ function handleFilterOption(e , cause){
     if(e) e.preventDefault();
     // get filter inputs 
     const EMAIL_REF = inputsBoxsRef.current["user_email"];
+    const NAME_REF = inputsBoxsRef.current["user_name"];
     const ByTitleREF = selectBoxsRef.current["emp_title"];
     const ByspecialtyREF = selectBoxsRef.current["emp_specialty"];
     const ByRoleREF = selectBoxsRef.current["role_name"];
     const ByPermsREF = selectBoxsRef.current["emp_perms"];
     
     const user_email = EMAIL_REF.value === "" ? null : EMAIL_REF.value;
+    const user_name = NAME_REF.value === "" ? null : NAME_REF.value;
     const role_name = ByRoleREF.value === "Role Filter" ? null : ByRoleREF.value;
     const emp_title = ByTitleREF.value === "Title Filter" ? null : ByTitleREF.value;
     const emp_specialty = ByspecialtyREF.value === "specialty Filter" ? null : ByspecialtyREF.value;
     const emp_perms = ByPermsREF.value === "Perms Filter" ? null : ByPermsREF.value;
     console.log("handleFilterOption: emp_perms", emp_perms);
     // making sure this checking is applied when only pressing btn 
-    if(!user_email && !role_name && !emp_title && !emp_specialty && !emp_perms && cause === "button"){
+    if(!user_name &&  !user_email && !role_name && !emp_title && !emp_specialty && !emp_perms && cause === "button"){
         userNotification("error","No Filters Entered");
         handleClearFilterOption(); // resets if no filtering specified
         return; // to escape rest of the function
@@ -155,7 +159,7 @@ function handleFilterOption(e , cause){
         setCurrPage(1)
 
     // we use stringifyFields function to exclude null values and do not add as query also join them
-    const filter_queries = stringifyFields("anded",Object.entries({isFiltered,user_email , role_name:role_name , emp_title:emp_title, emp_specialty:emp_specialty, emp_perms: emp_perms}))
+    const filter_queries = stringifyFields("anded",Object.entries({isFiltered,user_email,user_name , role_name:role_name , emp_title:emp_title, emp_specialty:emp_specialty, emp_perms: emp_perms}))
     
     // fetching data on filter 
     fetch(`${process.env.APIKEY}/list/employees?user_id=${user_data.user_id}&${filter_queries}&pagination=${currPage}&size=${sizeOfPage}`,{

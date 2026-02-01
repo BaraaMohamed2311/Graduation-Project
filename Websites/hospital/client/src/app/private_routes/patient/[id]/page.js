@@ -18,12 +18,12 @@ import HealthStatus from "@/components/HealthStatus/HealthStatus";
 import statusNotification from "@/utils/statusNotification";
 import uploadPatientFile from "@/utils/uploadPatientFile";
 import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
+import EditableSection from "@/components/EditableSection/EditableSection";
 function PatientDetailsPage() {
-  const [isEditing, setIsEditing] = useState(false);
   const [files_meta , setFilesMeta] = useState([]);
   const [blobURL, setBlobURL] = useState("/avatar.jpg");
   const { id: user_id, currPage } = useParams();
-  const { cached_patients, isIndexedDBLoaded, setCached_Patients } = usePatientsCache(); // Added setCached_Patients
+  const { cached_patients, isIndexedDBLoaded, setCached_Patients, deletePatientFromStore } = usePatientsCache(); // Added setCached_Patients
   const { user_data } = useUserDataContext();
   const router = useRouter();
   const inputsBoxsRef = useRef({})
@@ -32,12 +32,53 @@ function PatientDetailsPage() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Efficiently find the patient from cache
-  const patient = cached_patients?.find(p => p.user_id === parseInt(user_id));
+  
+  const patient = cached_patients?.find(
+          p => p.user_id === parseInt(user_id) || p.user_id === user_id || String(p.user_id) === user_id
+        );
+
   const modifierObj = patient ? {
           other_user_email: patient.user_email,
           modifier_email: user_data.user_email,
           modifier_id: user_data.user_id,
         } : {};
+
+
+
+  // Fetch employee data if not found in cache
+  useEffect(() => {
+  if (!isIndexedDBLoaded || patient) return;
+
+      fetch(`${process.env.APIKEY}/details/employee/${user_id}`, {
+        mode: "cors",
+        method: "GET",
+        headers: {
+          authorization: `BEARER ${user_data.token}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((res) => {
+          statusNotification(res.status);
+          return res.json();
+        })
+        .then((data) => {
+          if (data && data.success && data.body) {
+            setCached_Employees((prev) => {
+      const updated = [...prev, data.body];
+      console.log("Updated cached_employees:", updated);
+      return updated;
+    });
+            userNotification("success", "Employee loaded successfully");
+          } else {
+            userNotification("error", "Employee not found");
+          }
+        })
+        .catch((err) => {
+          console.error("Error Fetching Employee", err);
+          userNotification("error", "Error Fetching Employee");
+        });
+}, [isIndexedDBLoaded, patient, user_id, user_data.token]);
+
 
   // Load User Image
   useEffect(() => {
@@ -60,21 +101,7 @@ function PatientDetailsPage() {
     setBlobURL(reader_result);
   }
 
-  // handle deletion function
-  async function handleDeletion(url, token, body) {
-    if (!user_data?.emp_perms?.has("Modify Data")) {
-      return userNotification("error", "You Do Not Have Permission to Delete Others");
-    }
-    
-    deleteFetch(url, token, body);
-    
-    // Delete from cache - FIXED: use patient instead of employee_displayed
-    await setCached_Patients(prev => {
-      return prev.filter((p) => p.user_id !== patient.user_id);
-    });
-    
-    router.replace("/private_routes/list");
-  }
+
 
 
 
@@ -92,7 +119,7 @@ function PatientDetailsPage() {
                       ...updatedPatientData
                     }
 
-          updateUserFetch( url, token, reqBody ,actionString , setCached_Patients , currPage );
+          updateUserFetch( url, token, reqBody ,actionString  );
         
 
         
@@ -156,11 +183,40 @@ function PatientDetailsPage() {
     
       // ================================
       //      Upload
-      function onUploadFile(files, setProgress, setIsUploading) {
-        
-        setIsUploading(true)
-        uploadPatientFile(`files/other/patient?my=true`, files, modifierObj, user_data.token,setProgress);
-      }
+      async function onUploadFile(files, setProgress, setIsUploading) {
+      
+        try {
+          setIsUploading(true);
+
+          const res = await uploadPatientFile(
+            `files/other/patient?my=false`,
+            files,
+            modifierObj,
+            user_data.token,
+            setProgress
+          );
+          console.log("Upload response:", res);
+
+          // ✅ UPDATE STATE IMMEDIATELY
+          if (res?.success && res?.record?.files) {
+            setFilesMeta(prev => {
+              const map = new Map();
+              [...(prev || []), ...res.record.files].forEach(f =>
+                map.set(f.file_id, f)
+              );
+              return Array.from(map.values());
+            });
+
+          }
+
+        } catch (err) {
+          console.error("Upload error:", err);
+        } finally {
+          setIsUploading(false);
+          setProgress(0);
+        }
+}
+      
       // ================================
       //      Delete
       async function onDeleteFile(e, entry) {
@@ -207,6 +263,47 @@ function PatientDetailsPage() {
           userNotification("error", "Error deleting file");
         }
     }
+
+
+
+    
+async function confirmDeleteAccount() {
+    setIsDeletingAccount(true);
+
+    try {
+      const query = new URLSearchParams({
+        modifier_email: user_data.user_email,
+        modifier_id: user_data.user_id,
+        modifier_name: user_data.user_name,
+        other_user_email: patient.user_email
+      }).toString();
+
+      const res = await fetch(
+        `${process.env.APIKEY}/list/other/patient?${query}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${user_data.token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!data.success) {
+        setIsDeletingAccount(false);
+        deletePatientFromStore(patient.user_id);
+        return userNotification("error", data.message);
+      }
+
+      userNotification("success", "Account deleted successfully");
+      router.replace("/");
+    } catch (err) {
+      console.error(err);
+      userNotification("error", "Error deleting account");
+      setIsDeletingAccount(false);
+    }
+  }
     
 
   // Move conditional returns AFTER all hooks
@@ -222,56 +319,12 @@ function PatientDetailsPage() {
   
 
 
-                    async function confirmDeleteAccount() {
-                        setIsDeletingAccount(true);
 
-                        try {
-                          const res = await fetch(
-                            `${process.env.APIKEY}/users/${user_data.user_id}`,
-                            {
-                              method: "DELETE",
-                              headers: {
-                                Authorization: `Bearer ${user_data.token}`,
-                              },
-                            }
-                          );
 
-                          const data = await res.json();
-
-                          if (!data.success) {
-                            setIsDeletingAccount(false);
-                            return userNotification("error", data.message);
-                          }
-
-                          userNotification("success", "Account deleted successfully");
-                          router.replace("/login");
-                        } catch (err) {
-                          console.error(err);
-                          userNotification("error", "Error deleting account");
-                          setIsDeletingAccount(false);
-                        }
-                      }
-
-  
-console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patient )
   return (
     <main className={styles["page-main"]}>
       
-          {isEditing  && can_modify_unrelated_patient &&  
-              <UpdateUserForm
-                  url={`list/other/patient`}
-                  isEditing={isEditing}
-                  setIsEditing={setIsEditing}
-                  user_displayed={patient}
-                  currPage={currPage}
-                  userData={user_data}
-                  modifier_data={user_data}
-                  // Pass the references and functions as props
-                  references={{inputsBoxsRef,selectBoxsRef}}
-                  update_handler={update_handler}
-                  fieldDefinitions={{select_def,inputs_info}}
-                />
-            }
+          
         <div className={"page-container"}>
           {/* --- Header Section --- */}
           <div className={"main-content"}>
@@ -324,12 +377,20 @@ console.log("setIsEditing(prev => !prev)",isEditing  ,can_modify_unrelated_patie
           <div className={"user-details"}>
             <ul className={styles["activity-list"]}>
               <li className={styles["buttons-wrapper"]}>
-                <button
-                  onClick={(e) => setIsEditing(prev => !prev)}
-                  className="grey-button"
-                >
-                  Edit Data
-                </button>
+                {can_modify_unrelated_patient && <EditableSection buttonText="Edit Employee" buttonClassName="grey-button">
+                  <UpdateUserForm
+                    url={`list/other/patient`}
+                    user_displayed={patient}
+                    currPage={currPage}
+                    userData={user_data}
+                    modifier_data={user_data}
+                    // Pass the references and functions as props
+                    references={{inputsBoxsRef,selectBoxsRef}}
+                    update_handler={update_handler}
+                    fieldDefinitions={{select_def,inputs_info}}
+                    token={user_data.token}
+                  />
+                </EditableSection>}
 
                 
                 <button

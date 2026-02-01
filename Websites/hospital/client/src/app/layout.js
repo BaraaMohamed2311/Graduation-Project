@@ -13,8 +13,8 @@ import Script from "next/script";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "EMS",
-  description: "Employers' Management System App",
+  title: "Hospital",
+  description: "Hospital's Management System App",
 };
 
 export default function RootLayout({ children }) {

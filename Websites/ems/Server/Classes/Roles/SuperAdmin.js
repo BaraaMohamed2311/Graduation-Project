@@ -9,14 +9,14 @@ class SuperAdmin extends User {
         return this.priority
     }
     
-    // this updates role_name field in roles table
-    static async ChangeOtherUserRole( emp_id , otherUserRole , newRole , otherUserEmail){
+    // this updates role_name field in roles table 
+    static async ChangeOtherUserRole( emp_id , other_user_Role , other_user_new_role ){
         return new Promise(async (resolve , reject )=>{
             try{
                 
             // compares user modifier priority with other user's 
-                if( this.priority >= roles.getRolePriority(otherUserRole)){
-                    await perms.executeChangeOtherRole( emp_id , otherUserRole , newRole , otherUserEmail)
+                if( this.priority >= roles.getRolePriority(other_user_Role)){
+                    await perms.executeChangeOtherRole( emp_id , other_user_Role , other_user_new_role )
                     resolve(true);
                 }
                 else{
@@ -31,12 +31,13 @@ class SuperAdmin extends User {
 
     
     // this updates emp_perms field in perms table
-    static async ChangeOtherUserperms(emp_id , otherUserRole , StringOfNewperms , oldUserpermsSet){
+    static async ChangeOtherUserperms(emp_id , other_user_Role , StringOfNewperms , oldUserpermsSet){
+        
         
         return new Promise(async (resolve , reject )=>{
             try{
                 
-                if( this.priority >= roles.getRolePriority(otherUserRole)){
+                if( this.priority >= roles.getRolePriority(other_user_Role)){
                     
                     await perms.executeChangeOtherPerms(emp_id , StringOfNewperms , oldUserpermsSet)
                 
@@ -55,14 +56,15 @@ class SuperAdmin extends User {
 
 
     // this updates any data field in employees table
-    static async EditOtherUser(emp_id , otherUserRole , entries){
-        
+
+    static async EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updating_string  ){
+            console.log("Superadnin EditOtherUserData",other_user_id, other_user_title, updating_string)
         return new Promise(async (resolve , reject )=>{
             try{
                 
-            if( this.priority >= roles.getRolePriority(otherUserRole)){
+            if( this.priority >= roles.getRolePriority(other_user_Role)){
                 
-                await perms.executeEditOthers(emp_id  , entries)
+                await perms.executeChangeOtherUserData(other_user_id, other_user_title, updating_string )
                 
                 resolve(true);
             }

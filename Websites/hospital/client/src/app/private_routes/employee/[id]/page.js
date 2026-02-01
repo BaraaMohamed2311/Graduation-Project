@@ -2,7 +2,7 @@
 import Image from "next/image";
 import styles from "./employee.module.css";
 import MapToEmployeeDetails from "./employee_fields"
-import { useState , useRef } from "react";
+import { useState , useRef , useMemo,useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useEmployeesCache } from "@/hooks/useEmployeesCache";
 import private_routes from "../../page";
@@ -10,9 +10,14 @@ import { useUserDataContext } from "@/contexts/user_data";
 import UpdateUserForm from "@/components/UpdateUserForm/UpdateUserForm";
 import {inputs_info , select_def  , check_box} from "./data"
 import updateUserFetch from "@/utils/updateUserFetch"
+import AvailabilitySelector from "@/components/AvailabilitySelector/AvailabilitySelector";
+import EditableSection from "@/components/EditableSection/EditableSection";
+import userNotification  from "@/utils/userNotification";
+import statusNotification from "@/utils/statusNotification";
+import AvailabilityList from "@/components/AvailabilityList/AvailabilityList";
 
  function EmployeeDetailsPage() {
-  const [isEditing, setIsEditing] = useState(false);
+
   let [blobURL , setBlobURL] = useState("/avatar.jpg");
    const { id :user_id ,currPage} = useParams(); // Get user_id from URL
    const { cached_employees , setCached_Employees,isIndexedDBLoaded } = useEmployeesCache();
@@ -21,10 +26,22 @@ import updateUserFetch from "@/utils/updateUserFetch"
   
 
   
-   // Efficiently find the patient from cache
-    const originalEmployee = cached_employees?.find(
-      e => e.user_id === parseInt(user_id)
-    );
+   // Efficiently find the employee from cache
+  // Efficiently find the employee from cache
+const originalEmployee = cached_employees?.find(
+  e => e.user_id === parseInt(user_id) || e.user_id === user_id || String(e.user_id) === user_id
+);
+
+  // Recalculate employee whenever originalEmployee changes
+  const employee = useMemo(() => {
+    if (!originalEmployee) return null;
+    
+    return {
+      ...originalEmployee,
+      emp_perms: new Set(originalEmployee?.emp_perms?.split(", ") ?? ["None"])
+    };
+  }, [originalEmployee]);
+  console.log("employee",employee)
     
      // Define references at page level
   const inputsBoxsRef = useRef({});
@@ -37,6 +54,41 @@ import updateUserFetch from "@/utils/updateUserFetch"
     checkBoxsRef,
     selectBoxsRef
   };
+
+  // fetch if employee not found in cache
+  useEffect(() => {
+  if (!isIndexedDBLoaded || originalEmployee) return;
+
+  fetch(`${process.env.APIKEY}/details/employee/${user_id}`, {
+    mode: "cors",
+    method: "GET",
+    headers: {
+      authorization: `BEARER ${user_data.token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    .then((res) => {
+      statusNotification(res.status);
+      return res.json();
+    })
+    .then((data) => {
+      if (data && data.success && data.body) {
+        setCached_Employees((prev) => {
+  const updated = [...prev, data.body];
+  console.log("Updated cached_employees:", updated);
+  return updated;
+});
+        userNotification("success", "Employee loaded successfully");
+      } else {
+        userNotification("error", "Employee not found");
+      }
+    })
+    .catch((err) => {
+      console.error("Error Fetching Employee", err);
+      userNotification("error", "Error Fetching Employee");
+    });
+}, [isIndexedDBLoaded, originalEmployee, user_id, user_data.token]);
+
 
   /***************************************update_handler***************************************/
      function update_handler(e, url, token) {
@@ -52,7 +104,7 @@ import updateUserFetch from "@/utils/updateUserFetch"
                       ...updatedEmployeeData
                     }
 
-          updateUserFetch( url, token, reqBody ,actionString , setCached_Employees , currPage );
+          updateUserFetch( url, token, reqBody ,actionString );
         
 
         
@@ -84,35 +136,7 @@ import updateUserFetch from "@/utils/updateUserFetch"
           
         });
 
-        // === 2. Check If any SelectBox is empty ===
-
-        if ( 
-            (selectBoxsRef.current[select_def.select_title_options.name] && !selectBoxsRef.current[select_def.select_title_options.name].value) ||
-            (selectBoxsRef.current[select_def.select_specialty_options.name] && !selectBoxsRef.current[select_def.select_specialty_options.name].value) ||
-            (selectBoxsRef.current[select_def.select_role_options.name] && !selectBoxsRef.current[select_def.select_role_options.name].value) 
-          ){
-            userNotification("error", "Input fields cannot be empty");
-            return
-          }
-
-        // === 3. Check for changes in Title ===
-
-
-          // we check at first that input element is rendered using current of reference
-          if (selectBoxsRef.current[select_def.select_title_options.name] && (selectBoxsRef.current[select_def.select_title_options.name].value !== employee[select_def.select_title_options.name])) {
-            updatedEmployeeData[select_def.select_title_options.name] = selectBoxsRef.current[select_def.select_title_options.name].value;
-            if (!actions.includes("Modify Employee Data")) actions.push("Modify Employee Data"); 
-          }
-
-          // === 4. Check for changes in specialty ===
-
-          // we check at first that input element is rendered using current of reference
-          console.log("debugging",selectBoxsRef.current, selectBoxsRef.current[select_def.select_specialty_options.name],employee[select_def.select_specialty_options.name])
-          if (selectBoxsRef.current[select_def.select_specialty_options.name] && (selectBoxsRef.current[select_def.select_specialty_options.name].value !== employee[select_def.select_specialty_options.name])) {
-            updatedEmployeeData[select_def.select_specialty_options.name] = selectBoxsRef.current[select_def.select_specialty_options.name].value;
-            if (!actions.includes("Modify Employee Data")) actions.push("Modify Employee Data"); 
-          }
-
+        
 
       //  ====================================================== Modify Role ======================================================
         
@@ -169,38 +193,57 @@ import updateUserFetch from "@/utils/updateUserFetch"
 
      
 
-    if (!isIndexedDBLoaded || !originalEmployee) {
-      return <p>Loading...</p>;
-    }
 
-    // make sure you NEVER mutate originalEmployee
-    const employee = {
-      ...originalEmployee,
-      emp_perms: new Set(originalEmployee.emp_perms?.split(", ") ?? [])
-    };
+
+
+    ///*******************************updateAvailability***************************************/
+    function updateAvailability(newAvailabilityString) {
+      fetch(`${process.env.APIKEY}/list/other/employee/availability?perms_requested=Modify Availability`,{
+              mode:"cors",
+              method:"PUT",
+              headers:{
+                  authorization:`BEARER ${user_data.token}`,
+                  'Content-Type': 'application/json'
+              },
+              body:JSON.stringify({
+                newAvailabilityString: newAvailabilityString,
+                modifier_id: user_data.user_id,
+                modifier_email: user_data.user_email,
+                other_user_email: employee.user_email
+              })
+          }).then((res)=>{
+              statusNotification(res.status)
+              return res.json()
+          })
+          .then(async (data)=>{
+              console.log("data after updating employee")
+                  if(data && data.success){
+                      
+                      
+                      
+                  }
+                  
+                userNotification(data.message.success ?"success" : "error", data.message.message);
+              
+          })
+          .catch((err)=>{
+              console.error("Error Updating Employee Fetch", err)
+              userNotification("error","Error Updating Employee Fetch")
+          });
+    }
 
 console.log("employee", employee);
 
    // SpecificContentFields when employee is defined
-   const SpecificContentFields = MapToEmployeeDetails[employee.emp_title] || (<></>)
+   const SpecificContentFields = MapToEmployeeDetails[employee?.emp_title] || (() => <></>)
+
+   
+    if (!isIndexedDBLoaded) return <p>Loading cache...</p>;
+    if (!originalEmployee) return <p>Employee not found</p>;
 
   return (
     <main className={styles["page-main"]}>
-      {isEditing &&
-         <UpdateUserForm
-            url={`list/other/employee`}
-            isEditing={isEditing}
-            setIsEditing={setIsEditing}
-            user_displayed={employee}
-            currPage={currPage}
-            userData={user_data}
-            modifier_data={user_data}
-            // Pass the references and functions as props
-            references={references}
-            update_handler={update_handler}
-            fieldDefinitions={{select_def,inputs_info,check_box}}
-          />
-      }
+      
         <div className={"page-container"}>
           {/* --- Header --- */}
           <div className={"main-content"}>
@@ -234,23 +277,7 @@ console.log("employee", employee);
               <li><strong>Rating:</strong> {employee.emp_rate}</li>
                {/* Availability Schedule */}
               <li className={styles.availability_box}>
-                <strong className={styles.availability_header}>Availability</strong>
-                <div className={styles.availability_wrapper}>
-                  {employee.availability_schedule ? (
-                    employee.availability_schedule.split("; ").map((schedule) => {
-                      const [dayIndex, timeRange] = schedule.split(": ");
-                      const [startTime, endTime] = timeRange.split("-");
-                      const days = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun"};
-                      
-                      return (
-                        <div key={dayIndex} className={styles.schedule_item}>
-                          <span className={styles.day}>{days[dayIndex] || `Day ${dayIndex}`}</span>
-                          <span className={styles.time}>{startTime} - {endTime}</span>
-                        </div>
-                      );
-                    })
-                  ) : "No schedule available"}
-                </div>
+                <AvailabilityList availability_schedule={employee.availability_schedule} />
               </li>
               <li><strong>Role:</strong> {employee.role_name || "NormalUser"}</li>
               <li className={styles.perms_box}><strong className={styles.perms_header}>Permissions </strong>
@@ -267,9 +294,32 @@ console.log("employee", employee);
 
             {/* --- Action Buttons --- */}
             <div className={styles["buttons-wrapper"]}>
-              <button onClick={() => setIsEditing(prev => !prev)} className="grey-button">
-                Edit Employee
-              </button>
+              <EditableSection buttonText="Edit Employee" buttonClassName="grey-button">
+                <UpdateUserForm
+                  url={`list/other/employee`}
+                  user_displayed={employee}
+                  currPage={currPage}
+                  userData={user_data}
+                  modifier_data={user_data}
+                  references={references}
+                  update_handler={update_handler}
+                  fieldDefinitions={{select_def, inputs_info, check_box}}
+                  token={user_data.token}
+                />
+              </EditableSection>
+
+              <EditableSection 
+                buttonText="Edit Availability" 
+                buttonClassName="grey-button"
+                onClose={() => console.log('Availability editor closed')}
+              >
+                  <AvailabilitySelector
+                    url={`list/other/employee`}
+                    initialAvailability={user_data.availability_schedule}
+                    onSubmit={updateAvailability}
+                    
+                  />
+              </EditableSection>
             </div>
           </div>
         </div>

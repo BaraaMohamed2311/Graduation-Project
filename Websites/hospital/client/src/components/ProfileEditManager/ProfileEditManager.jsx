@@ -194,7 +194,7 @@ console.log("Show Self Edit Button:", selfFields , approvalFields);
       {/* Self editable form */}
       {isSelfEditing && (
         <UpdateUserForm
-          url={'/details/user'}
+          url={'/details/self'}
           isEditing={isSelfEditing}
           setIsEditing={setIsSelfEditing}
           user_displayed={userData}
@@ -202,13 +202,14 @@ console.log("Show Self Edit Button:", selfFields , approvalFields);
           update_handler={(e, url) => patchUserData(e, url, selfFields)}
           fieldDefinitions={selfFields}
           isUpdatingSelf={true}
+          token={userToken}
         />
       )}
 
       {/* Approval required form */}
       {isApprovalEditing && (
         <UpdateUserForm
-          url={'/details/user'}
+          url={'/details/self'}
           isEditing={isApprovalEditing}
           setIsEditing={setIsApprovalEditing}
           user_displayed={userData}
@@ -216,6 +217,7 @@ console.log("Show Self Edit Button:", selfFields , approvalFields);
           update_handler={(e, url) => patchUserData(e, url, approvalFields)}
           fieldDefinitions={approvalFields}
           isUpdatingSelf={true}
+          token={userToken}
         />
       )}
     </>

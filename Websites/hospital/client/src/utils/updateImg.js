@@ -14,7 +14,7 @@ export default function updateImg(image_file ,user_id , setBlobURL , token){
   
   // Valid image updating
     let formData = new FormData();
-    formData.append("user_img",image_file);
+    formData.append("user_pic",image_file);
     
     fetch(`${process.env.APIKEY}/files/profile/?user_id=${user_id}`,{
         method:"PUT",

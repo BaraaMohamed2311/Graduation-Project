@@ -43,21 +43,14 @@ class CompanyUsersMethods {
         return await CompanyUserFactory.getFullData(user_id, user_title);
     }
 
-    /**
-     * Update user data (partial update)
 
-     */
-    static async MapUserToUpdateFunction(user_id, title, data, actions) {
-        console.log(user_id, title, data, actions);
-        return await CompanyUserFactory.updateData(user_id, title, data, actions);
-    }
 
     /**
      * Update user data (full/core update)
 
      */
     static async MapUserToFullUpdateFunction(user_id, title, updating_string) {
-        console.log(user_id, title);
+
         return await CompanyUserFactory.updateFullCore(user_id, title, updating_string);
     }
 
@@ -101,63 +94,64 @@ class CompanyUsersMethods {
     /**
      * Get all company employees with full data and optional filters
      */
-    static async getAllCompanyEmployeesFullData(limit = 10, offset = 0, filtering_string = null, emp_perms = null) { 
-        const perms_CONDITION = emp_perms 
-            ? `HAVING FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT p.perm_name)) > 0` 
-            : "";
+  static async getAllCompanyEmployeesFullData(limit = 10, offset = 0, filtering_string = null, emp_perms = null) { 
+    const perms_CONDITION = emp_perms 
+        ? `HAVING FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT p.perm_name)) > 0` 
+        : "";
 
-        const query = `
-                    SELECT 
-                        u.user_id,
-                        u.user_email,
-                        u.user_name,
-                        u.created_at,
-                        e.emp_abscence,
-                        e.emp_rate,
-                        e.emp_salary,
-                        e.emp_bonus,
-                        e.emp_title,
-                        e.emp_specialty,
-                        
-                        -- Permissions
-                        COALESCE(NULLIF(GROUP_CONCAT(DISTINCT p.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
-                        
-                        -- Role
-                        COALESCE(r.role_name, 'NormalUser') AS role_name
+    const query = `
+        SELECT 
+            u.user_id,
+            u.user_email,
+            u.user_name,
+            u.created_at,
+            e.emp_abscence,
+            e.emp_rate,
+            e.emp_salary,
+            e.emp_bonus,
+            e.emp_title,
+            e.emp_specialty,
+            
+            -- Use ANY_VALUE for non-aggregated columns from 1:1 relationships
+            COALESCE(ANY_VALUE(d.initial_consultation_price), ANY_VALUE(s.initial_consultation_price)) AS initial_consultation_price,
+            COALESCE(ANY_VALUE(d.followup_consultation_price), ANY_VALUE(s.followup_consultation_price)) AS followup_consultation_price,
+            ANY_VALUE(s.surgery_price) AS surgery_price,
+            COALESCE(ANY_VALUE(d.years_of_exp), ANY_VALUE(s.years_of_exp)) AS years_of_exp,
+            ANY_VALUE(n.floor_number) AS floor_number,
+            
+            -- Permissions (aggregated)
+            COALESCE(NULLIF(GROUP_CONCAT(DISTINCT p.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
+            
+            -- Role (use ANY_VALUE since it's 1:1 with employee)
+            COALESCE(ANY_VALUE(r.role_name), 'NormalUser') AS role_name
 
-                    FROM users u
-                    INNER JOIN employees e ON u.user_id = e.emp_id
+        FROM users u
+        INNER JOIN employees e ON u.user_id = e.emp_id
 
-                    -- Permissions and roles
-                    LEFT JOIN employee_perms ep ON e.emp_id = ep.emp_id
-                    LEFT JOIN perms p ON ep.perm_id = p.perm_id
-                    LEFT JOIN roles r ON e.emp_id = r.emp_id
+        -- Title-specific joins
+        LEFT JOIN doctors d ON d.doctor_id = e.emp_id
+        LEFT JOIN surgeons s ON s.surgeon_id = e.emp_id
+        LEFT JOIN nurses n ON n.nurse_id = e.emp_id
 
-                    WHERE u.user_type = 'employee'
-                    ${filtering_string ? "AND " + filtering_string : ""}
+        -- Permissions and roles
+        LEFT JOIN employee_perms ep ON e.emp_id = ep.emp_id
+        LEFT JOIN perms p ON ep.perm_id = p.perm_id
+        LEFT JOIN roles r ON e.emp_id = r.emp_id
 
-                    GROUP BY 
-                        u.user_id,
-                        u.user_email,
-                        u.user_name,
-                        u.created_at,
-                        e.emp_abscence,
-                        e.emp_rate,
-                        e.emp_salary,
-                        e.emp_bonus,
-                        e.emp_specialty,
-                        r.role_name
+        WHERE u.user_type = 'employee'
+        ${filtering_string ? "AND " + filtering_string : ""}
 
-                    ${perms_CONDITION}
-                    ORDER BY u.user_id
-                    LIMIT ${limit} OFFSET ${offset}
-                    `;
+        -- Minimal GROUP BY
+        GROUP BY u.user_id, e.emp_id
 
-        
-        const result = await executeMySqlQuery(query);
-        
-        return result;
-    }
+        ${perms_CONDITION}
+        ORDER BY u.user_id
+        LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    const result = await executeMySqlQuery(query);
+    return result;
+}
 
     // ========================================
     // Category-based Operations
@@ -179,21 +173,9 @@ class CompanyUsersMethods {
         return await CompanyUserFactory.getCountByCategory(category, whereClause);
     }
 
-    /**
-     * Check if user title is in a specific category
+  
 
-     */
-    static isInCategory(user_title, category) {
-        return CompanyUserFactory.isInCategory(user_title, category);
-    }
 
-    /**
-     * Get the category of a user title
-
-     */
-    static getUserCategory(user_title) {
-        return CompanyUserFactory.getUserCategory(user_title);
-    }
 
     // ========================================
     // Utility Methods
@@ -207,21 +189,7 @@ class CompanyUsersMethods {
         return CompanyUserFactory.getAllValidTitles();
     }
 
-    /**
-     * Get all employee categories
 
-     */
-    static getAllCategories() {
-        return CompanyUserFactory.getAllCategories();
-    }
-
-    /**
-     * Get all titles in a specific category
-
-     */
-    static getTitlesByCategory(category) {
-        return CompanyUserFactory.getTitlesByCategory(category);
-    }
 }
 
 module.exports = CompanyUsersMethods;

@@ -2,6 +2,8 @@ const executeMySqlQuery = require("../executeMySqlQuery");
 const stringifyFields = require("../stringifyFields");
 const Tables = require("../../Tables/data");
 const sqlTransaction = require("../../Utils/sqlTransaction")
+const parseUpdatingStringByTable = require("../parseUpdatingStringByTable");
+const parsedUpdatesToObjects = require("../parsedUpdatesToObjects");
 class PatientMethods {
     // ============================
     //              GET
@@ -280,27 +282,56 @@ class PatientMethods {
     //              Update
     // ============================
 
-    static async updatePatietnFullCore(patient_id, updating_string){
-        const query = `
-        UPDATE patients p
-            JOIN users u 
-                ON u.user_type = 'patient' AND u.user_id = p.patient_id
-
-            SET
-                ${updating_string}
-
-
-            WHERE p.patient_id = ${patient_id};
-        `
-        const version_query = `UPDATE table_version
-                            SET current_version = current_version + 1
-                            WHERE table_name = 'patients';
-                            `
-        const result = await sqlTransaction([query,version_query])
-
-        return result;
-
+    static async updatePatientFullCore(patient_id, updating_string) {
+    const parsedUpdates = parseUpdatingStringByTable(updating_string);
+    const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
+    const queries = [];
+    console.log("executing PatientMethods.updatePatientFullCore result:");
+    // 1. Ensure user exists
+    if (parsedUpdates.users) {
+        queries.push(`
+            UPDATE users
+            SET ${parsedUpdates.users}
+            WHERE user_id = ${patient_id} AND user_type = 'patient'
+        `);
     }
+
+    // 2. UPSERT patients
+    if (parsedUpdates.patients) {
+        const { columns_field, values_field } = stringifyFields(
+            "seperate",
+            Object.entries(parsedObjects.patients) || {}
+        );
+        queries.push(`
+            INSERT INTO patients (patient_id${columns_field ? ', ' + columns_field : ''})
+            SELECT
+                ${patient_id}
+                ${values_field ? ', ' + values_field : ''}
+            FROM users u
+            WHERE u.user_type = 'patient' AND u.user_id = ${patient_id}
+            ON DUPLICATE KEY UPDATE
+                ${parsedUpdates.patients}
+        `);
+    }
+
+    // 3. Version update
+    queries.push(`
+        UPDATE table_version
+        SET current_version = current_version + 1
+        WHERE table_name = 'patients'
+    `);
+
+    const result = await sqlTransaction(queries);
+    console.log("PatientMethods.updatePatientFullCore result:", result);
+    // Check if user update affected any rows (to know if user exists)
+    if (parsedUpdates.users && !result) {
+        throw new Error('User not found. Please register the user first.');
+    }
+    
+    return result;
+
+    
+}
     
 
 

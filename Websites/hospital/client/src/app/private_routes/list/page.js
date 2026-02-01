@@ -6,31 +6,27 @@ import private_routes from "../page";
 function ListPage() {
   const router = useRouter();
 
-  function goToAllPatients() {
-    router.push("/private_routes/patients-list");
-  }
-
-  function goToMyPatients() {
-    router.push("/private_routes/mypatients-list");
-  }
-
   return (
     <main className={`${styles["list-page"]} wrapper`}>
-      <h1 className={styles["title"]}>Patients Management</h1>
+      <h1 className={styles["title"]}>
+        Patients Management
+      </h1>
 
       <div className={styles["cards-container"]}>
         <div
           className={styles["nav-card"]}
-          onClick={goToAllPatients}
+          onClick={() => router.push("/private_routes/patients-list")}
         >
+          <i className={`fa-solid fa-users ${styles["card-icon"]}`}></i>
           <h2>All Patients</h2>
           <p>View and manage all hospital patients</p>
         </div>
 
         <div
           className={styles["nav-card"]}
-          onClick={goToMyPatients}
+          onClick={() => router.push("/private_routes/mypatients-list")}
         >
+          <i className={`fa-solid fa-user-doctor ${styles["card-icon"]}`}></i>
           <h2>My Patients</h2>
           <p>See only patients assigned to you</p>
         </div>

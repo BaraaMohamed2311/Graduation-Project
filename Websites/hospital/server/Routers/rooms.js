@@ -2,8 +2,10 @@ const router = require("express").Router();
 const jwtVerify = require("../middlewares/jwtVerify.js");
 const RoomsMethods = require("../Utils/methods/RoomsMethods.js");
 const cacheCountNodeCache = require("../Utils/cacheCountNodeCache.js");
-const JoinFiltering = require("../Utils/JoinFiltering.js")
-
+const JoinFiltering = require("../Utils/JoinFiltering.js");
+const AuditLogs = require("../Utils/methods/AuditLogs.js");
+const extractUserFromToken = require("../Utils/extractUserFromToken.js");
+const User = require("../Classes/User.js");
 // ============================
 //              GET
 // ============================
@@ -11,9 +13,29 @@ const JoinFiltering = require("../Utils/JoinFiltering.js")
 // Get all rooms
 router.get("/",jwtVerify, async function (req, res) {
     try {
-        const {pagination, size,...restFilters} = req.query
+        const {pagination, size,...restFilters} = req.query;
 
         if (!pagination || !size )  return res.status(400).json({success:false,message:"Bad Request"});
+
+        const tokenFields = extractUserFromToken(req);
+        console.log("tokenFields",tokenFields)
+        const userRole = await User.getUserRole(tokenFields.user_id);
+        if(userRole === "NormalUser" || !userRole){
+            return res.status(401).json({
+                success:false,
+                message:"Required Role to access this page"
+            })
+        }
+        const userPerms = await User.getSetUserperms(tokenFields.user_id);
+
+        if(!userPerms || !userPerms.has("Access Rooms")){
+            return res.status(401).json({
+                success:false,
+                message:"Required permission to access this page"
+            })
+        }
+
+        
 
         // Check if we have any filters
             const isFiltered = Object.keys(restFilters).length > 0;
@@ -67,6 +89,24 @@ router.get("/room/:roomId",jwtVerify, async function (req, res) {
         const { roomId } = req.params;
         const { patientId } = req.query;
         if (!roomId || !patientId )  return res.status(400).json({success:false,message:"Bad Request"});
+
+        const tokenFields = extractUserFromToken(req);
+        const userRole = await User.getUserRole(tokenFields.user_id);
+        if(userRole === "NormalUser" || !userRole){
+            return res.status(401).json({
+                success:false,
+                message:"Required Role to access this page"
+            })
+        }
+        const userPerms = await User.getSetUserperms(tokenFields.user_id);
+
+        if(!userPerms || !userPerms.has("Access Rooms")){
+            return res.status(401).json({
+                success:false,
+                message:"Required permission to access this page"
+            })
+        }
+
         const room = await RoomsMethods.getRoomByRoomID(roomId);
         const patient = patientId ? await RoomsMethods.getPatientInRoom(patientId) : {};
         console.log("room and patient ",room,patient)
@@ -84,6 +124,24 @@ router.get("/room/room_number/:roomNum",jwtVerify, async function (req, res) {
         const { roomNum } = req.params;
         const {pagination, size,status} = req.query
         if (!roomNum || !pagination || !size || !status)  return res.status(400).json({success:false,message:"Bad Request"});
+
+        const tokenFields = extractUserFromToken(req);
+        const userRole = await User.getUserRole(tokenFields.user_id);
+        if(userRole === "NormalUser" || !userRole){
+            return res.status(401).json({
+                success:false,
+                message:"Required Role to access this page"
+            })
+        }
+        const userPerms = await User.getSetUserperms(tokenFields.user_id);
+
+        if(!userPerms || !userPerms.has("Access Rooms")){
+            return res.status(401).json({
+                success:false,
+                message:"Required permission to access this page"
+            })
+        }
+
         const rooms = await RoomsMethods.getRoomsByRoomsNumber(roomNum,parseInt(size) , parseInt((pagination - 1) * size),status);
         res.json({success:true, rooms});
     } catch (error) {
@@ -99,6 +157,23 @@ router.get("/empty",jwtVerify, async function (req, res) {
         const {pagination, size} = req.query
 
         if ( !pagination || !size )  return res.status(400).json({success:false,message:"Bad Request"});
+
+        const tokenFields = extractUserFromToken(req);
+        const userRole = await User.getUserRole(tokenFields.user_id);
+        if(userRole === "NormalUser" || !userRole){
+            return res.status(401).json({
+                success:false,
+                message:"Required Role to access this page"
+            })
+        }
+        const userPerms = await User.getSetUserperms(tokenFields.user_id);
+
+        if(!userPerms || !userPerms.has("Access Rooms")){
+            return res.status(401).json({
+                success:false,
+                message:"Required permission to access this page"
+            })
+        }
 
 
         const rooms = await RoomsMethods.getEmptyRooms(parseInt(size) , parseInt((pagination - 1) * size));
@@ -125,6 +200,23 @@ router.get("/occupied",jwtVerify, async function (req, res) {
 
         if ( !pagination || !size )  return res.status(400).json({success:false,message:"Bad Request"});
 
+        const tokenFields = extractUserFromToken(req);
+        const userRole = await User.getUserRole(tokenFields.user_id);
+        if(userRole === "NormalUser" || !userRole){
+            return res.status(401).json({
+                success:false,
+                message:"Required Role to access this page"
+            })
+        }
+        const userPerms = await User.getSetUserperms(tokenFields.user_id);
+
+        if(!userPerms || !userPerms.has("Access Rooms")){
+            return res.status(401).json({
+                success:false,
+                message:"Required permission to access this page"
+            })
+        }
+
         const isFiltered = true;
         const rooms = await RoomsMethods.getOccupiedRooms(parseInt(size) , parseInt((pagination - 1) * size));
         // get cached count 
@@ -147,6 +239,24 @@ router.get("/floor/floor_number/:floorNum",jwtVerify, async function (req, res) 
         const { floorNum } = req.params;
         const {pagination, size,status} = req.query
         if (!floorNum || !pagination || !size || !status)  return res.status(400).json({success:false,message:"Bad Request"});
+
+        const tokenFields = extractUserFromToken(req);
+        const userRole = await User.getUserRole(tokenFields.user_id);
+        if(userRole === "NormalUser" || !userRole){
+            return res.status(401).json({
+                success:false,
+                message:"Required Role to access this page"
+            })
+        }
+        const userPerms = await User.getSetUserperms(tokenFields.user_id);
+
+        if(!userPerms || !userPerms.has("Access Rooms")){
+            return res.status(401).json({
+                success:false,
+                message:"Required permission to access this page"
+            })
+        }
+
         const rooms = await RoomsMethods.getRoomsByFloor(floorNum,parseInt(size) , parseInt((pagination - 1) * size),status);
         res.json({success:true, rooms});
     } catch (error) {
@@ -159,6 +269,25 @@ router.get("/patient/:patientId",jwtVerify, async function (req, res) {
     try {
         const { patientId } = req.params;
         if (!patientId )  return res.status(400).json({success:false,message:"Bad Request"});
+
+        const tokenFields = extractUserFromToken(req);
+        const userRole = await User.getUserRole(tokenFields.user_id);
+        if(userRole === "NormalUser" || !userRole){
+            return res.status(401).json({
+                success:false,
+                message:"Required Role to access this page"
+            })
+        }
+        const userPerms = await User.getSetUserperms(tokenFields.user_id);
+
+        if(!userPerms || !userPerms.has("Access Rooms")){
+            return res.status(401).json({
+                success:false,
+                message:"Required permission to access this page"
+            })
+        }
+
+
         const room = await RoomsMethods.getRoomByPatient(patientId);
         res.json({success:true, room});
     } catch (error) {
@@ -170,6 +299,28 @@ router.get("/patient/:patientId",jwtVerify, async function (req, res) {
 router.get("/patient/:patientId/details",jwtVerify, async function (req, res) {
     try {
         const { patientId } = req.params;
+        if(!patientId){
+            return res.status(404).json({
+                success:false,
+                message:"Bad Request"
+            })
+        }
+        const tokenFields = extractUserFromToken(req);
+        const userRole = await User.getUserRole(tokenFields.user_id);
+        if(userRole === "NormalUser" || !userRole){
+            return res.status(401).json({
+                success:false,
+                message:"Required Role to access this page"
+            })
+        }
+        const userPerms = await User.getSetUserperms(tokenFields.user_id);
+
+        if(!userPerms || !userPerms.has("Access Rooms")){
+            return res.status(401).json({
+                success:false,
+                message:"Required permission to access this page"
+            })
+        }
         const patient = await RoomsMethods.getPatientInRoom(patientId);
         res.json({success:true,patient});
     } catch (error) {
@@ -190,6 +341,23 @@ router.put("/:roomId/assign",jwtVerify, async function (req, res) {
 
         
         if (!patient_id || !roomId || !floor_id || !room_number)  return res.status(400).json({success:false,message:"Bad Request"});
+
+        const tokenFields = extractUserFromToken(req);
+        const userRole = await User.getUserRole(tokenFields.user_id);
+        if(userRole === "NormalUser" || !userRole){
+            return res.status(401).json({
+                success:false,
+                message:"Required Role to modify this page"
+            })
+        }
+        const userPerms = await User.getSetUserperms(tokenFields.user_id);
+
+        if(!userPerms || !userPerms.has("Modify Rooms")){
+            return res.status(401).json({
+                success:false,
+                message:"Required permission to modify this page"
+            })
+        }
 
 
         // ==== 1. Check if this patient already exists in another room
@@ -228,6 +396,14 @@ router.put("/:roomId/assign",jwtVerify, async function (req, res) {
         console.log("patient_id, roomId",patient_id, roomId)
         // 2. Proceed with update
         const updated = await RoomsMethods.assignPatientToRoom(patient_id, roomId);
+        
+        //===3. Add Audit Log
+        await AuditLogs.addLog(
+            req.userData.user_id,
+            `Assigned Patient ${patient_id} to Room ${room_number} on Floor ${floor_id}`,
+            updated ? "Successful Room Assignment" : "Failed Room Assignment",
+            updated ? "info" : "failure"
+        )
 
         if (updated) {
             res.json({success:true, message: "Room updated successfully" });
@@ -244,9 +420,42 @@ router.put("/:roomId/empty",jwtVerify, async function (req, res) {
     try {
         const { roomId } = req.params;
 
+        if(!roomId){
+            return res.status(404).json({
+                success:false,
+                message:"Bad Request"
+            })
+        }
+
+        const tokenFields = extractUserFromToken(req);
+        const userRole = await User.getUserRole(tokenFields.user_id);
+        if(userRole === "NormalUser" || !userRole){
+            return res.status(401).json({
+                success:false,
+                message:"Required Role to modify this page"
+            })
+        }
+        const userPerms = await User.getSetUserperms(tokenFields.user_id);
+
+        if(!userPerms || !userPerms.has("Modify Rooms")){
+            return res.status(401).json({
+                success:false,
+                message:"Required permission to modify this page"
+            })
+        }
+
         // Reset room assignment
         const result = await RoomsMethods.emptyRoom(roomId);
         const room = await RoomsMethods.getRoomByRoomID(roomId);
+
+        //===2. Add Audit Log
+        await AuditLogs.addLog(
+            req.userData.user_id,
+            `Emptied Room ${room.room_number} on Floor ${room.floor_id}`,
+            result ? "Successful Room Emptying" : "Failed Room Emptying",
+            result ? "info" : "failure"
+        )
+
         if (result && !room.isOccupied && room.patient_id === null) {
             res.json({success:true, message: `Room ${room.room_number} floor ${room.floor_id} has been emptied successfully.` });
         } else {
@@ -258,19 +467,7 @@ router.put("/:roomId/empty",jwtVerify, async function (req, res) {
     }
 });
 
-// health state
-router.post("/:floor_number/:room_number",jwtVerify, async function (req, res) {
-    try {
-        // ===1. Extract request data
 
-        //===2. Get corresponding Patient
-
-        //====3. send state data to client-side
-
-    } catch (error) {
-        res.status(500).json({ success:false, message: error.message });
-    }
-});
 
 
 module.exports = router;

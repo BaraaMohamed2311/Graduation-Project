@@ -137,7 +137,7 @@ useEffect(() => {
 }, [fetched_booking_pages]);
 
  // Check if a specific page needs sync
-  const checkPageSync = async (limit, offset, max_version , target ,token) => {
+  const checkPageSync = async (max_version , target ) => {
 
     try {
       const response = await fetch(`${process.env.APIKEY}/sync/${target}?max_version=${max_version}`);

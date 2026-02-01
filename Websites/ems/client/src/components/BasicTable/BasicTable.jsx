@@ -64,7 +64,7 @@ export default function BasicTable({currPage,sizeOfPage , setCurrPage ,numOfPage
 
           {/* We have to pass row to each  handleActionBtn to act on targeted user*/}
           {(!isFiltered && data.length > 0) && data.slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((row, indx) => {return (
-            <tr  className={styles.table_row}>
+            <tr key={row.user_id} className={styles.table_row}>
               <MapTableColumns tableType={tableType}
                 key={row.user_id}
                 type="row"
@@ -77,7 +77,7 @@ export default function BasicTable({currPage,sizeOfPage , setCurrPage ,numOfPage
           )})}
 
           {(isFiltered && filteredResults.length > 0) && filteredResults.map((row, indx) => (
-             <tr  className={styles.table_row}>
+             <tr key={row.user_id}  className={styles.table_row}>
               <MapTableColumns tableType={tableType}
                 key={row.user_id}
                 type="row"

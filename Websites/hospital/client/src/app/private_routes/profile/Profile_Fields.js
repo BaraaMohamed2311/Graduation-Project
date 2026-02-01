@@ -9,37 +9,15 @@ import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
 import { useRef, useState } from "react";
 import ProfileEditManager from "@/components/ProfileEditManager/ProfileEditManager";
 import { selfEditableFields , approvalRequiredFields } from "./data";
+import AvailabilityList from "@/components/AvailabilityList/AvailabilityList"
 // ===================================================
 //            Rendering helpers
 // ===================================================
 
-const AvailabilityList = ({availability_schedule})=>{
-  console.log("Availability Schedule:", availability_schedule);
-  return (<>
-  {/* Availability Schedule */}
 
-                <strong className={styles.availability_header}>Availability</strong>
-                <div className={styles.availability_wrapper}>
-                  {availability_schedule ? (
-                    availability_schedule.split("; ").map((schedule) => {
-                      const [dayIndex, timeRange] = schedule.split(": ");
-                      const [startTime, endTime] = timeRange.split("-");
-                      const days = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 0: "Sun"};
-                      
-                      return (
-                        <div key={dayIndex} className={styles.schedule_item}>
-                          <span className={styles.day}>{days[dayIndex] || `Day ${dayIndex}`}</span>
-                          <span className={styles.time}>{startTime} - {endTime}</span>
-                        </div>
-                      );
-                    })
-                  ) : "No schedule available"}
-                </div>
-
-  </>)
-}
 
 const PermsList = ({permissions})=>{
+  
   return (<>
     {/* Perms List */}
     <strong className={styles.perms_header}>Permissions</strong>
@@ -58,6 +36,7 @@ const PermsList = ({permissions})=>{
 //            Doctor
 const DoctorProfile = ({ user_data, permissions }) => {
   const inputsBoxsRef = useRef({})
+  console.log("Permissions List:", permissions);
   return (
     <>
       <div className={"user-info"}>
@@ -216,79 +195,6 @@ const PatientProfile = ({ user_data }) => {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const inputsBoxsRef = useRef({})
 
-  // ================================================================
-  //      File Handlers
-  // ================================================================
-
-  // ================================
-  //      Upload
-  function onUploadFile(files, setProgress, setIsUploading) {
-    setIsUploading(true);
-    uploadPatientFile(
-      `files/other/patient`,
-      files,
-      modifierObj,
-      user_data.token,
-      setProgress
-    );
-  }
-
-  // ================================
-  //      Delete
-  async function onDeleteFile(e, entry) {
-    e.stopPropagation(); // prevent triggering download if button inside file item
-
-    if (!entry || !entry.file_id) {
-      return userNotification("error", "Invalid file selected");
-    }
-
-    // 1️⃣ Ask for confirmation
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${entry.file_name}"?`
-    );
-    if (!confirmDelete) return;
-
-    // 2️⃣ Optimistic UI update
-    const prevFiles = [...files_meta];
-    setFilesMeta((files) =>
-      files.filter((f) => f.file_id !== entry.file_id)
-    );
-
-    try {
-      // 3️⃣ Call the DELETE endpoint
-      const res = await fetch(
-        `${process.env.APIKEY}/files/patient/${entry.file_id}/delete`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${user_data.token}`,
-          },
-        }
-      );
-
-      const data = await res.json();
-
-      if (!data.success) {
-        // rollback if deletion failed
-        setFilesMeta(prevFiles);
-        return userNotification(
-          "error",
-          data.message || "Failed to delete file"
-        );
-      }
-
-      // 4️⃣ Success notification
-      userNotification(
-        "success",
-        `Deleted "${entry.file_name}" successfully`
-      );
-    } catch (err) {
-      // rollback if error
-      setFilesMeta(prevFiles);
-      console.error(err);
-      userNotification("error", "Error deleting file");
-    }
-  }
 
   async function confirmDeleteAccount() {
     setIsDeletingAccount(true);
@@ -346,13 +252,13 @@ const PatientProfile = ({ user_data }) => {
       <PatientFiles 
           urls={{initial_url:`files/patient/${user_data.user_id}` ,download_one_url:`files/patient`}} 
           files={[]} 
-          onDeleteFile={onDeleteFile} 
-          onUploadFile={onUploadFile} 
           patient={user_data} 
           files_meta ={files_meta} 
           setFilesMeta ={setFilesMeta} 
+          isEditable={false}
         /> 
-      <HealthStatus user_id={user_data.user_id} />
+      {/* Cannot modify it urself */}
+      <HealthStatus user_id={user_data.user_id} isEditable={false} />
     </div>
       <button className="red-button" onClick={() => setShowDeleteModal(true)}>
         Delete Account

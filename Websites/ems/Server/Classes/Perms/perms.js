@@ -1,22 +1,10 @@
 const executeMySqlQuery = require("../../Utils/executeMySqlQuery");
 const stringifyFields = require("../../Utils/stringifyFields");
 const sqlTransaction = require("../../Utils/sqlTransaction");
+const CompanyUsersMethods = require("../CompanyUsers/CompanyUsersMethods");
 class perms {
-    // because no need to create instances we make them static and access through class
-     
-    /* 
-       "AR" => Accept Registered User
-       "MD" => Modify Data Users
-       "MR" => Modify Role
-       "MP" => Modify Perms
-       "MS" => Modify Salary
-       */
 
-       constructor(arrayOfperms){
-        this.perms = new Set(arrayOfperms);
-       }
-
-       static async getAllpermsInTable(){
+    static async getAllpermsInTable(){
             const query = "SELECT * FROM perms";
             // declare as let to use map and edit elements
             const permsObjects =  await executeMySqlQuery(query);
@@ -29,20 +17,17 @@ class perms {
         return this.perms.has(perm)
     }
 
-    static async executeEditOthers(emp_id  , entries){
-        
-        const fields = stringifyFields("joined",entries);
-        const query = `UPDATE employees SET ${fields} WHERE emp_id = ?`
-        await executeMySqlQuery(query ,[emp_id]);
-
+    static async executeChangeOtherUserData(other_user_id, other_user_title, updating_string){
+        console.log("executeChangeOtherUserData",other_user_id, other_user_title, updating_string)
+        return await CompanyUsersMethods.MapUserToFullUpdateFunction(other_user_id, other_user_title, updating_string)
     }
 
 
-    static async executeChangeOtherPerms(emp_id , StringOfNewperms , oldUserpermsSet){
+    static async executeChangeOtherPerms(emp_id , newpermsSet , oldUserpermsSet){
         
         const permsHash =  await perms.getAllpermsInTable(); // fetch map hash of perms and their ids
-        const newpermsArray = StringOfNewperms.split(", ");
-        const newpermsSet = new Set(newpermsArray);
+        const ArrayOfNewPerms = newpermsSet ? Array.from(newpermsSet) : []
+        const StringOfNewperms = ArrayOfNewPerms.length > 0 ? ArrayOfNewPerms.join(", ") : "None"
 
         /******************* Stage 1 = Delete All Old Perms *******************/
         if(!oldUserpermsSet.has("None")){
@@ -75,22 +60,24 @@ class perms {
         })
 
         if(addingpermsQuery.length > 0)
-            await executeMySqlQuery("INSERT INTO employee_perms (emp_id , perm_id) VALUES" + addingpermsQuery.join(",") ,"Error Updating User perms");
+            console.log("Inserting perms" ,await executeMySqlQuery("INSERT INTO employee_perms (emp_id , perm_id) VALUES" + addingpermsQuery.join(",") ,"Error Updating User perms"));
     }
 
-    // need otherUserRole as parameter
-    static async executeChangeOtherRole(emp_id , otherUserRole , newRole , otherUserEmail){
+    // need other_user_Role as parameter 
+    static async executeChangeOtherRole(emp_id , other_user_Role , other_user_new_role ){
                     /*
-                        if Role was Employee (which means user is not in roles table) and new Role is not, then we add user with new Role
-                        if both not Employee we only need to update
+                        (condition 1): If user was NormalUser && new role is differnt, this means user wasn't in roles table
+                        (condition 2): If user was having another role then it was added and we just update
+                        (condition 3): If user was having another role and new role is NormalUser then it has to be deleted so (condition 1) stays valid, and free up space
                     */
-                        if(otherUserRole === "Employee" && newRole !== "Employee"){
-                            const query = `INSERT INTO roles (emp_id , user_email , role_name) VALUES (?,?,?)`
-                            await executeMySqlQuery(query ,[emp_id , otherUserEmail , newRole]);
+                        console.log("execue other_user_new_role",other_user_new_role)
+                        if(other_user_Role === "NormalUser" && other_user_new_role !== "NormalUser"){
+                            const query = `INSERT INTO roles (emp_id  , role_name) VALUES (?,?)`
+                            await executeMySqlQuery(query ,[emp_id  , other_user_new_role]);
                         }
-                        else if(otherUserRole !== "Employee" && newRole !== "Employee"){
+                        else if(other_user_Role !== "NormalUser" && other_user_new_role !== "NormalUser"){
                             const query = `UPDATE roles SET role_name = ? WHERE emp_id = ?`
-                            await executeMySqlQuery(query ,[ newRole , emp_id]);
+                            await executeMySqlQuery(query ,[ other_user_new_role , emp_id]);
                         }
                         else{
                             const query = `DELETE FROM roles  WHERE emp_id = ?`
@@ -100,7 +87,7 @@ class perms {
 
     static async executeRemoveOtherUser(emp_id){
         // To create Transaction & Rollback on errors
-        const queries = [ `DELETE FROM employee_perms WHERE emp_id = ${emp_id}` , `DELETE FROM roles WHERE emp_id = ${emp_id}` , `DELETE FROM employees WHERE emp_id = ${emp_id}` ]
+        const queries = [ `DELETE FROM users WHERE user_id = ${emp_id}`]
             return await sqlTransaction(queries);
         
     }

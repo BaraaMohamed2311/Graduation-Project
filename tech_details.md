@@ -1,0 +1,1 @@
+We assume all specific fields exist when fetching all employees to optimize query without many cases and joins

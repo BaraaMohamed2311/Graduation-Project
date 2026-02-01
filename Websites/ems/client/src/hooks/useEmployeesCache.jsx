@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { getAllFromStore } from "@/utils/indexDB/getCacheMethods";
 import { putIndexDB } from "@/utils/indexDB/updateCacheMethods";
-import { clearStore } from "@/utils/indexDB/deleteCacheMethods";
+import { clearStore , deleteRecordById} from "@/utils/indexDB/deleteCacheMethods";
 
 export const useEmployeesCache = () => {
   const [cached_employees, setCached_Employees] = useState([]);
@@ -89,6 +89,19 @@ export const useEmployeesCache = () => {
     }
   };
 
+  // Save employees to IndexedDB
+  const deleteEmployeeFromStore = async (emp_id) => {
+    try {
+      // delete specific employee by id from IndexedDB and from state
+        await deleteRecordById("employees", emp_id);
+        setCached_Employees((prev) => prev.filter(emp => emp.user_id !== emp_id));
+
+    } catch (err) {
+      console.error("Failed to delete employee to IndexedDB:", err);
+      throw err;
+    }
+  };
+
   return {
     cached_employees,
     setCached_Employees,
@@ -97,6 +110,7 @@ export const useEmployeesCache = () => {
     saveEmployeesToStore,
     isIndexedDBLoaded,
     setIsIndexedDBLoaded,
-    checkPageSync
+    checkPageSync,
+    deleteEmployeeFromStore
   };
 };

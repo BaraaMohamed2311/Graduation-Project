@@ -420,7 +420,7 @@ router.put("/update-consultation-status",jwtVerify,async (req,res)=>{
             message: "Appointment updated successfully.",
         });
         } else {
-        res.status(500).json({
+        res.status(409).json({
             success: false,
             message: "Failed to update appointment.",
         });
@@ -480,7 +480,7 @@ router.put("/update-consultation-patient",jwtVerify,async (req,res)=>{
             message: "Appointment Patient updated successfully.",
         });
         } else {
-        res.status(500).json({
+        res.status(409).json({
             success: false,
             message: "Failed to update Patient in appointment.",
         });
@@ -568,7 +568,7 @@ router.put("/reschedule-appointment",jwtVerify,async (req,res)=>{
             message: "Appointment rescheduled successfully.",
         });
         } else {
-        res.status(500).json({
+        res.status(409).json({
             success: false,
             message: "Failed to reschedule appointment.",
         });
@@ -626,7 +626,7 @@ router.delete("/delete-appointment",jwtVerify,async (req,res)=>{
             message: "Appointment deleted successfully.",
         });
         } else {
-        res.status(500).json({
+        res.status(409).json({
             success: false,
             message: "Failed to delete appointment.",
         });

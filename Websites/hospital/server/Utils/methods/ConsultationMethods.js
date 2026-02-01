@@ -1,6 +1,6 @@
 const executeMySqlQuery = require("../executeMySqlQuery");
 const stringifyFields = require("../stringifyFields");
-const AvailabilityService = require("./AvailabilityMethods")
+const AvailabilityMethods = require("./AvailabilityMethods")
 class ConsultationMethods {
     // ========================================
     //   COUNT Data
@@ -141,14 +141,14 @@ class ConsultationMethods {
     //   availability Data
 
         static async getAllAvailabilityDays(hosp_emp_id) {
-            return AvailabilityService.getAllAvailabilityDays(hosp_emp_id);
+            return AvailabilityMethods.getAllAvailabilityDays(hosp_emp_id);
         }
 
         
     
     static async getAvailabilityDay(hosp_emp_id,dayIndx) {
 
-            return  AvailabilityService.getAvailabilityDay(hosp_emp_id,dayIndx);
+            return  AvailabilityMethods.getAvailabilityDay(hosp_emp_id,dayIndx);
 
     }
 

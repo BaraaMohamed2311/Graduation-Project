@@ -1,5 +1,5 @@
 import SearchOptions from "@/components/SearchOptions/SearchOptions";
-import SelectUserCard from "../UserCard/SelectUserCard";
+import SelectUserCard from "../SelectUserCard/SelectUserCard";
 import Inputs from "../Inputs/Inputs";
 import Select from "../Select/Select";
 import userNotification from "@/utils/userNotification";
@@ -136,7 +136,8 @@ function fetchUser(e)  {
 
 
   return (
-    <>  
+    <div className={styles["select-user-wrapper"]}>  
+    
         <div className={styles["table-search-options"]}>
             {inputs_info && <Inputs 
               styles={styles}
@@ -165,7 +166,7 @@ function fetchUser(e)  {
             <SelectUserCard selectedUser={selectedUser} />
         </Suspense>
         {selectedUser && <button className={styles.select_btn} onClick={handleConfirmBtn}>Confirm</button>}
-    </>
+    </div>
   );
 }
 

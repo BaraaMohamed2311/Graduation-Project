@@ -8,8 +8,6 @@ const Tables = {
     "user_name",
     "user_password",
     "user_type",
-    "created_at",
-    "latest_update"
   ],
 
   // ==========================================
@@ -93,20 +91,15 @@ const Tables = {
   // ==========================================
   // Role & Permission Tables
   // ==========================================
-
-
   hospital_roles: [
     "hosp_emp_id",
     "role_name"
   ],
 
-
-
   hospital_perms: [
     "perm_id",
     "perm_name"
   ],
-
 
   hospital_emp_perms: [
     "perm_id",
@@ -156,7 +149,7 @@ const Tables = {
   ],
 
   // ==========================================
-  // Legacy Tables (for reference - these might be deprecated)
+  // Legacy Tables
   // ==========================================
   doctor_availability: [
     "availability_id",
@@ -169,6 +162,7 @@ const Tables = {
   ]
 };
 
+
 const TableAliases = {
   users: 'u',
   patients: 'p',
@@ -176,16 +170,17 @@ const TableAliases = {
   employees_hospital: 'eh',
   doctors: 'd',
   surgeons: 's',
-  nurses: 'n',
+  nurses: 'n',  // ← ADD THIS
   hospital_roles: 'hr',
   consultations: 'c',
   availability: 'a',
-  rooms: 'r',
-  floors: 'f',
   staff_patient: 'sp',
   hospital_perms: 'hp',
   hospital_emp_perms: 'hep',
+  floors: 'f',
+  rooms: 'rm',
 };
+
 const permissions = [
   "Access Rooms",
   "Delete Patient",
@@ -218,6 +213,9 @@ const roleToEntityMap = {
   surgeon: 'surgeons',
   nurse: 'nurses',
 };
+
+
+
 
 
 module.exports = {TableAliases , Tables ,setOfPerms ,approvalRequiredFields,roleToEntityMap};

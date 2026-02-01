@@ -53,7 +53,7 @@ export const convertMinutesToTime = (totalMinutes) => {
 // ==========================================
 //  Slots generation within available range
 // ==========================================
-const generateTimeSlotsInRange = (availableStart, availableEnd, interval = 60) => {
+export const generateTimeSlotsInRange = (availableStart, availableEnd, interval = 60) => {
   if (!availableStart || !availableEnd) return [];
   if(availableStart === availableEnd) return generateAllTimeSlots(interval); // full day available
   const slots = [];
@@ -66,8 +66,7 @@ const generateTimeSlotsInRange = (availableStart, availableEnd, interval = 60) =
   let currentMinutes = startMinutes;
   
   while (currentMinutes < endMinutes) {
-    // Convert back to "HH:MM" format in 12-hour format using helper
-    const timeSlot = minutesTo12Hour(currentMinutes);
+    const timeSlot = convertMinutesToTime(currentMinutes);
     slots.push(timeSlot);
     currentMinutes += interval;
   }
@@ -81,7 +80,7 @@ const generateTimeSlotsInRange = (availableStart, availableEnd, interval = 60) =
 // ==========================================
 export const getAvailableTimeSlots = ( selectedDayIndx,parsedAvailability, consultationDuration = 60) => {
   // if it's not available at all, return empty array (no slots)
-  if (!parsedAvailability || Object.keys(parsedAvailability).length === 0 || !selectedDayIndx) {
+  if (!parsedAvailability || Object.keys(parsedAvailability).length === 0 || selectedDayIndx == null) {
     return [];
   }
   
@@ -94,7 +93,7 @@ export const getAvailableTimeSlots = ( selectedDayIndx,parsedAvailability, consu
 //  Generate all possible time slots (60-minute intervals)
 // ==========================================
 
-const generateAllTimeSlots = (interval=60) => {
+export const generateAllTimeSlots = (interval=60) => {
   const slots = [];
   for (let hour = 0; hour < 24; hour++) {
     for (let minute = 0; minute < 60; minute += interval) {

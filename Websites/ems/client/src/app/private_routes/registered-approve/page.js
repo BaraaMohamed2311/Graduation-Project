@@ -1,7 +1,7 @@
 "use client"
 import styles from "./registered-approve.module.css"
 import private_routes from "../page";
-import { Table ,Sheet} from "@mui/joy";
+import stringifyFields  from "@/utils/stringifyFields";
 import { useEffect, useRef, useState } from "react";
 import { useUserDataContext } from "@/contexts/user_data";
 import userNotification from "@/utils/userNotification";
@@ -32,7 +32,7 @@ useEffect(() => {
   if (isFiltered) return;
 
   fetch(
-    `${process.env.APIKEY}/list/registered-approve?modifier_id=${user_data.emp_id}&currPage=${currPage}&size=${sizeOfPage}`,
+    `${process.env.APIKEY}/list/registered-approve?modifier_id=${user_data.user_id}&currPage=${currPage}&size=${sizeOfPage}`,
     {
       mode: "cors",
       headers: {
@@ -96,7 +96,7 @@ function handleFilterOption(e, cause = "button") {
   );
 
   fetch(
-    `${process.env.APIKEY}/list/registered-approve?modifier_id=${user_data.emp_id}&${filter_queries}&currPage=${filterPage}&size=${sizeOfPage}`,
+    `${process.env.APIKEY}/list/registered-approve?modifier_id=${user_data.user_id}&${filter_queries}&currPage=${filterPage}&size=${sizeOfPage}`,
     {
       mode: "cors",
       headers: {
@@ -265,7 +265,7 @@ function handleClearFilterOption() {
                     acceptBtn: (e, row) =>
                       handleAccept(
                         e,
-                        user_data.emp_id,
+                        user_data.user_id,
                         user_data.user_email,
                         user_data.user_name,
                         row.user_name,
@@ -275,7 +275,7 @@ function handleClearFilterOption() {
                     declineBtn: (e, row) =>
                       handleDecline(
                         e,
-                        user_data.emp_id,
+                        user_data.user_id,
                         user_data.user_email,
                         user_data.user_name,
                         row.user_name,

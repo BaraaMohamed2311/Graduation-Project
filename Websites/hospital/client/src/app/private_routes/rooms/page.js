@@ -32,8 +32,7 @@ function EmployeesListPage() {
     ROOMNUM_REF.value = "";
     FLOORNUM_REF.value = "";
     STATUS_REF.value = "";
-  }
-;
+  
 
   setIsFiltered(false)
 
@@ -56,7 +55,7 @@ function EmployeesListPage() {
     }
   })
 
-
+  }
 
 
 useEffect(()=>{

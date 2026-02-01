@@ -1,5 +1,3 @@
-
-
 const Tables = {
   // ==========================================
   // Core Users Table
@@ -10,8 +8,6 @@ const Tables = {
     "user_name",
     "user_password",
     "user_type",
-    "created_at",
-    "latest_update"
   ],
 
   // ==========================================
@@ -42,27 +38,70 @@ const Tables = {
     "user_email"
   ],
 
+  // ==========================================
+  // Medical Staff Tables
+  // ==========================================
+  doctors: [
+    "doctor_id",
+    "hosp_emp_id",
+    "initial_consultation_price",
+    "followup_consultation_price",
+    "years_of_exp"
+  ],
 
+  surgeons: [
+    "surgeon_id",
+    "hosp_emp_id",
+    "initial_consultation_price",
+    "followup_consultation_price",
+    "surgery_price",
+    "years_of_exp"
+  ],
+
+  nurses: [
+    "nurse_id",
+    "hosp_emp_id",
+    "floor_number"
+  ],
+
+  // ==========================================
+  // Patient Related Tables
+  // ==========================================
+  patients: [
+    "patient_id",
+    "patient_phone",
+    "patient_address",
+    "isAssignedToRoom",
+    "room_number",
+    "floor_number",
+    "date_of_birth",
+    "next_check_date",
+    "patient_gender",
+    "emergency_contact",
+    "created_at"
+  ],
+
+  staff_patient: [
+    "staff_id",
+    "patient_id",
+    "relation_type",
+    "assigned_date"
+  ],
 
   // ==========================================
   // Role & Permission Tables
   // ==========================================
-
-
-  roles: [
+  hospital_roles: [
     "hosp_emp_id",
     "role_name"
   ],
 
-
-
-  perms: [
+  hospital_perms: [
     "perm_id",
     "perm_name"
   ],
 
-
-  employee_perms: [
+  hospital_emp_perms: [
     "perm_id",
     "hosp_emp_id"
   ],
@@ -80,28 +119,98 @@ const Tables = {
     "updated_at"
   ],
 
+  consultations: [
+    "consultation_id",
+    "hosp_emp_id",
+    "patient_id",
+    "availability_id",
+    "consultation_date",
+    "start_time",
+    "end_time",
+    "consultation_status",
+    "created_at",
+    "consultation_type"
+  ],
+
+  // ==========================================
+  // Facility Management Tables
+  // ==========================================
+  floors: [
+    "floor_id",
+    "floor_number"
+  ],
+
+  rooms: [
+    "room_id",
+    "room_number",
+    "floor_id",
+    "patient_id",
+    "isOccupied"
+  ],
+
+  // ==========================================
+  // Legacy Tables
+  // ==========================================
+  doctor_availability: [
+    "availability_id",
+    "doctor_id",
+    "day_of_week",
+    "start_time",
+    "end_time",
+    "created_at",
+    "updated_at"
+  ]
 };
+
 
 const TableAliases = {
   users: 'u',
+  patients: 'p',
   employees: 'e',
+  employees_hospital: 'eh',
+  doctors: 'd',
+  surgeons: 's',
+  nurses: 'n',  // ← ADD THIS
+  hospital_roles: 'hr',
+  consultations: 'c',
   availability: 'a',
+  staff_patient: 'sp',
+  hospital_perms: 'hp',
+  hospital_emp_perms: 'hep',
   floors: 'f',
-  roles: 'r',
-  perms: 'p',
-  employee_perms: 'ep',
+  rooms: 'rm',
 };
+
 const permNames = [
-  "Modify Data",
+  "Modify Employee Data",
   "Modify Salary",
   "Display Salary",
   "Accept Registered",
-  "Modify Perms",
-  "Modify Role",
+  "Modify Employee Perms",
+  "Modify Employee Role",
   "Delete User"
 ];
 
+
 const setOfPerms = new Set(permNames);
+
+// ==========================================
+// Field to Table Mapping for Ambiguous Fields
+// ==========================================
+const fieldToTableMap = {
+  // floor_number exists in nurses, patients, and floors tables
+  'floor_number': {
+    'nurse': 'nurses',
+    'patient': 'patients',
+    'default': 'floors'
+  },
+  // Add other ambiguous fields here if needed
+  // Example:
+  // 'room_number': {
+  //   'patient': 'patients',
+  //   'default': 'rooms'
+  // }
+};
 
 const approvalRequiredFields = {
   patients: [],

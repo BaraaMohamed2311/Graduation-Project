@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     user_email varchar(255) NOT NULL,
-    user_name varchar(255) NOT NULL,
+    user_name varchar(255) NOT NULL DEFAULT "Unknown",
 	  user_password varchar(255) NOT NULL,
     user_type ENUM('patient', 'employee') NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
@@ -25,7 +25,7 @@ CREATE TABLE employees (
   emp_rate int NOT NULL DEFAULT 0,
   emp_title varchar(100) DEFAULT NULL,
   emp_specialty varchar(100) DEFAULT NULL,
-  FOREIGN KEY (emp_id) REFERENCES users(user_id) ON DELETE CASCADE
+  FOREIGN KEY (emp_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ;
 --------===================================================
 --                      unregistered_employees
@@ -49,7 +49,7 @@ CREATE TABLE `roles` (
   `emp_id` int NOT NULL,
   `role_name` enum('Employee','SuperAdmin','Admin') NOT NULL,
   PRIMARY KEY (`emp_id`,`role_name`),
-  FOREIGN KEY (`emp_id`) REFERENCES `employees` (`emp_id`)
+  FOREIGN KEY (`emp_id`) REFERENCES `employees` (`emp_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) 
 --------===================================================
 --                      perms titles
@@ -68,7 +68,7 @@ CREATE TABLE `employee_perms` (
   `emp_id` int NOT NULL,
   UNIQUE KEY `perm_id` (`perm_id`,`emp_id`),
   KEY `emp_id` (`emp_id`),
-  FOREIGN KEY (`emp_id`) REFERENCES `employees` (`emp_id`),
+  FOREIGN KEY (`emp_id`) REFERENCES `employees` (`emp_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (`perm_id`) REFERENCES `perms` (`perm_id`)
 )
 
@@ -286,11 +286,11 @@ INSERT INTO employees (emp_id, emp_salary, emp_abscence, emp_bonus, emp_rate, em
 INSERT INTO `unregistered_employees` (emp_id, user_name, emp_title, emp_specialty, user_email, user_password) VALUES(1,'Ali Hamed','Scientist','Data','ali.hamed2464@gmail.com','$2b$12$XUxExC4fNH59oWlS69ddEOTXSiNhx5DuU7HFYnVhCoOxiY15j0YK2'),(2,'Mostafa Zaki','CEO','Management','mostafa.zaki3353@gmail.com','$2b$12$pLqeAPIdVH9g/WH2p89LfuOc.vtjSErXiYb8TPQKQ0do5XZQNl6ee'),(3,'Zein Yasser','Developer','Front-End','zein.yasser8384@gmail.com','$2b$12$xg6cHBT.woeF6SVUO5n.6Ob6TWwaDR2h80ydMPrWPdrPuzu4j40IW'),(4,'Mai Mahmoud','Nurse','Intensive Care Nursing','mai.mahmoud876@gmail.com','$2b$12$vIRxsbV.D6N6tGiGSdokBeiJw/tUGd3uQgiRg2/mldb6EKEhe5XAa'),(5,'Sara Hany','Surgeon','ENT Surgery','sara.hany7833@gmail.com','$2b$12$XQ.uN2uCitbuEXkyAPJbJ.puHvvfHAupka.wSTexwx/DN5kVGzOqK'),(6,'Youssef Masoud','Cloud Engineer','Cloud','youssef.masoud1354@gmail.com','$2b$12$OiBtxaMKBGIbfMD7DgEpvu2q3p.6wf/y/2KqAgFlGEIjn/YEDFVKi');
 
 -- Make me SuperAdmin
-INSERT INTO `roles` VALUES (1200,'baraamohamed2311@gmail.com','SuperAdmin');
+INSERT INTO `roles` VALUES (1200,'SuperAdmin');
 
 
 -- Permission Titles
-INSERT INTO `perms` VALUES (1,'Modify Data'),(2,'Modify Salary'),(3,'Display Salary'),(4,'Accept Registered'),(5,'Modify Perms'),(6,'Modify Role'),(7,'Delete User');
+INSERT INTO `perms` VALUES (1,'Modify Employee Data'),(2,'Modify Salary'),(3,'Display Salary'),(4,'Accept Registered'),(5,'Modify Employee Perms'),(6,'Modify Employee Role'),(7,'Delete User');
 
 -- for baraamohaed2311@gmail.com
 INSERT INTO employee_perms VALUES (1,14),(2,14),(3,14),(4,14),(5,14),(6,14),(7,14);

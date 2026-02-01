@@ -1,7 +1,7 @@
 // hooks/usePatientsCache.js
 import { useState, useEffect } from "react";
 import { getAllFromStore } from "@/utils/indexDB/getCacheMethods";
-import { clearStore } from "@/utils/indexDB/deleteCacheMethods";
+import { clearStore , deleteRecordById } from "@/utils/indexDB/deleteCacheMethods";
 import { putIndexDB } from "@/utils/indexDB/updateCacheMethods";
 
 export const usePatientsCache = () => {
@@ -88,6 +88,19 @@ export const usePatientsCache = () => {
     }
   };
 
+  // Save mypatients to IndexedDB
+  const deletePatientFromStore = async (patient_id) => {
+    try {
+      // delete specific employee by id from IndexedDB and from state
+        await deleteRecordById("patients", patient_id);
+        setCached_Patients((prev) => prev.filter(p => p.user_id !== patient_id));
+
+    } catch (err) {
+      console.error("Failed to delete patient to IndexedDB:", err);
+      throw err;
+    }
+  };
+
   return {
     cached_patients,
     setCached_Patients,
@@ -96,6 +109,7 @@ export const usePatientsCache = () => {
     savePatientsToStore,
     isIndexedDBLoaded, 
     setIsIndexedDBLoaded,
-    checkPageSync
+    checkPageSync,
+    deletePatientFromStore
   };
 };

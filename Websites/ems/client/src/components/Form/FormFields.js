@@ -30,7 +30,9 @@ function DynamicSelect({ selectOption, userDisplayed, references, onChange, styl
 // ================================
 function EmployeeSelectFields({ select_def, user_displayed, references, styles }) {
     const [selectedTitleValue, setSelectedTitleValue] = useState(
-        user_displayed?.emp_title ?? ""
+        user_displayed?.emp_title ??
+  select_def?.select_title_options?.options?.[0]?.value ??
+  "" // default title is first option
     );
 
      // Memoize specialty options for selected title 
@@ -38,10 +40,10 @@ function EmployeeSelectFields({ select_def, user_displayed, references, styles }
         return global_mapped_specialities[selectedTitleValue] && select_def?.select_title_options ? ({
             label: "specialty",
             options: global_mapped_specialities[selectedTitleValue] || [],
-            name: "specialty",
+            name: "emp_specialty",
         }) : null;
     }, [selectedTitleValue]);
-
+    console.log("specialitiesForTitle", specialitiesForTitle);
     return (
         <>
             {/* Title select */}
@@ -99,8 +101,6 @@ function RenderOtherSelects({ select_def, exclude = [], user_displayed, referenc
 
 export default function UpdateUserFormFields({
     references,
-    isEditing,
-    setIsEditing,
     formBtnState,
     user_displayed,
     styles,
@@ -137,17 +137,46 @@ export default function UpdateUserFormFields({
                 />
             ))}
 
-            {/* Cancel Edit Button */}
-            {isEditing && (
-                <button
-                    onClick={() => setIsEditing(false)}
-                    className={styles.formButton}
-                    disabled={formBtnState === "Submitting"}
-                    type="button"
-                >
-                    Cancel
-                </button>
-            )}
+
+        </>
+    );
+}
+
+
+function RegisterFormFields({
+    references,
+    styles,
+    fieldDefinitions,
+}) {
+    const {select_def , check_box}= fieldDefinitions;
+
+    return (
+        <>
+
+            {/* Employee-related grouped selects */}
+            <EmployeeSelectFields
+                select_def={select_def}
+                references={references}
+                styles={styles}
+            />
+            {/* Render all remaining selects dynamically */}
+            <RenderOtherSelects
+                select_def={select_def}
+                exclude={["select_title_options", "select_role_options"]}  // keep OCP
+                references={references}
+                styles={styles}
+            />
+
+            {/* Check Box Permissions */}
+            {check_box && Object.keys(check_box).map(key=>(
+                <Inputs
+                    inputs_info={check_box[key]}
+                    defaultValues={user_displayed}
+                    references={references.checkBoxsRef}
+                    formKind={"check_inputs_wrapper"}
+                />
+            ))}
+
         </>
     );
 }
@@ -173,6 +202,7 @@ function LoginFormFields({
 const FormFieldsMap = {
     update_form: UpdateUserFormFields,
     login_form: LoginFormFields,
+    register_form: RegisterFormFields,
 };
 
 export {FormFieldsMap};

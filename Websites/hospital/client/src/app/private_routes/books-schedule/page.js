@@ -104,7 +104,12 @@ console.log("filter_queries",filter_queries)
   let endpoint = `${process.env.APIKEY}/booking/get-all-consultations?user_id=${user_data.user_id}&user_email=${user_data.user_email}&pagination=${currPage}&size=${sizeOfPage}&${filter_queries}`;
  
 
-  fetch(endpoint)
+  fetch(endpoint, {
+      mode: "cors",
+      headers: {
+        Authorization: `BEARER ${user_data.token}`,
+        "Content-Type": "application/json",
+      }})
     .then((res) => {
       statusNotification(res.status);
       return res.json();

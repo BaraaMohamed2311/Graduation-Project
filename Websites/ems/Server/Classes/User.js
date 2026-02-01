@@ -128,9 +128,9 @@ static async getUserEmailByID(user_id) {
 
 
 
-    static async getUserRole(hosp_emp_id  ){
+    static async getUserRole(emp_id  ){
         //Finds Role of user using id or email & by default Role is Employee if not defined or user not exist
-        if (!hosp_emp_id)  return console.error("No emp_id Provided to get Role");
+        if (!emp_id)  return console.error("No emp_id Provided to get Role");
 
             const query = `
                 SELECT COALESCE(
@@ -142,20 +142,20 @@ static async getUserEmailByID(user_id) {
                 ) AS role_name;
             `;
 
-            const result = await executeMySqlQuery(query,[hosp_emp_id]);
+            const result = await executeMySqlQuery(query,[emp_id]);
             console.log("result and query from getUserRole",result[0]?.role_name)
             return result[0]?.role_name; 
 
     }
 
 
-    static async getSetUserperms(hosp_emp_id){
+    static async getSetUserperms(emp_id){
 // 
-        const query = `SELECT COALESCE((SELECT COALESCE(GROUP_CONCAT(DISTINCT p.perm_name SEPARATOR ', ') , 'None') FROM perms p JOIN employee_perms ep ON p.perm_id = ep.perm_id WHERE ep.emp_id =14), 'None') AS perm_name `
+        const query = `SELECT COALESCE((SELECT COALESCE(GROUP_CONCAT(DISTINCT p.perm_name SEPARATOR ', ') , 'None') FROM perms p JOIN employee_perms ep ON p.perm_id = ep.perm_id WHERE ep.emp_id =${emp_id}), 'None') AS perm_name `
         // [0] as result is in array form but perms field has a single value as string 
-        const result = await executeMySqlQuery(query ,[hosp_emp_id]);
+        const result = await executeMySqlQuery(query ,[emp_id]);
         const setOfPerms = result.length > 0 ?  new Set(result[0].perm_name.split(", ")) : new Set(result[0].perm_name.split(["None"]))
-
+        
             return  setOfPerms;
         
     }

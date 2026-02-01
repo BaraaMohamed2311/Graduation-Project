@@ -2,7 +2,9 @@ const executeMySqlQuery = require("../executeMySqlQuery");
 const sqlTransaction = require("../sqlTransaction")
 const Tables = require("../../Tables/data");
 const stringifyFields = require("../stringifyFields");
-const JoinFiltering = require("../JoinFiltering");
+const parseUpdatingStringByTable = require("../parseUpdatingStringByTable");
+const parsedUpdatesToObjects = require("../parsedUpdatesToObjects");
+
 class DoctorMethods {
 
 
@@ -64,79 +66,74 @@ class DoctorMethods {
         
         const query = `
             SELECT 
-                -- from users
-                u.user_id,
-                u.user_email,
-                u.user_name,
-                -- from employees
-
-                e.emp_abscence,
-                e.emp_rate,
-                e.emp_title,
-                e.emp_specialty,
-                
-                -- from doctors
-                d.doctor_id,
-                d.hosp_emp_id,
-                d.initial_consultation_price,
-                d.followup_consultation_price,
-                d.years_of_exp,
-                
-                -- from hospital_perms via hospital_emp_perms
-                COALESCE(NULLIF(GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
-                
-                -- from hospital_roles with COALESCE for default
-                COALESCE(hr.role_name, 'NormalUser') AS role_name,
-                
-                -- FIXED: Format availability schedule to remove seconds and use DISTINCT to avoid duplicates
-                COALESCE((
-                    SELECT GROUP_CONCAT(
-                        DISTINCT CONCAT(
-                            formatted.day_of_week, 
-                            ': ', 
-                            formatted.formatted_start, 
-                            '-', 
-                            formatted.formatted_end
-                        )
-                        ORDER BY formatted.day_of_week
-                        SEPARATOR '; '
+            -- from users
+            u.user_id,
+            u.user_email,
+            u.user_name,
+            
+            -- from employees
+            e.emp_abscence,
+            e.emp_rate,
+            e.emp_title,
+            e.emp_specialty,
+            
+            -- from employees_hospital
+            eh.hosp_emp_id,
+            
+            -- from doctors (may be NULL)
+            ANY_VALUE(d.doctor_id) AS doctor_id,
+            ANY_VALUE(d.initial_consultation_price) AS initial_consultation_price,
+            ANY_VALUE(d.followup_consultation_price) AS followup_consultation_price,
+            ANY_VALUE(d.years_of_exp) AS years_of_exp,
+            
+            -- from hospital_perms via hospital_emp_perms
+            COALESCE(NULLIF(GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', '), ''), 'None') AS emp_perms,
+            
+            -- from hospital_roles with COALESCE for default
+            COALESCE(ANY_VALUE(hr.role_name), 'NormalUser') AS role_name,
+            
+            -- FIXED: Format availability schedule to remove seconds and use DISTINCT to avoid duplicates
+            COALESCE((
+                SELECT GROUP_CONCAT(
+                    DISTINCT CONCAT(
+                        formatted.day_of_week, 
+                        ': ', 
+                        formatted.formatted_start, 
+                        '-', 
+                        formatted.formatted_end
                     )
-                    FROM (
-                        SELECT 
-                            day_of_week,
-                            DATE_FORMAT(start_time, '%H:%i') as formatted_start,
-                            DATE_FORMAT(end_time, '%H:%i') as formatted_end
-                        FROM availability 
-                        WHERE hosp_emp_id = d.doctor_id
-                    ) AS formatted
-                ), 'None') AS availability_schedule
+                    ORDER BY formatted.day_of_week
+                    SEPARATOR '; '
+                )
+                FROM (
+                    SELECT 
+                        day_of_week,
+                        DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                        DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                    FROM availability 
+                    WHERE hosp_emp_id = eh.hosp_emp_id
+                ) AS formatted
+            ), 'None') AS availability_schedule
 
-            FROM doctors d
-            JOIN employees e ON d.hosp_emp_id = e.emp_id
-            JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
-            LEFT JOIN availability a ON d.doctor_id = a.hosp_emp_id
+        FROM users u
+        INNER JOIN employees e ON u.user_id = e.emp_id
+        INNER JOIN employees_hospital eh ON e.emp_id = eh.emp_id
+        
+        -- LEFT JOIN for optional doctor data
+        LEFT JOIN doctors d ON eh.hosp_emp_id = d.hosp_emp_id
 
-            -- Join with hospital_emp_perms to get perm_id
-            LEFT JOIN hospital_emp_perms hep ON d.hosp_emp_id = hep.hosp_emp_id
+        -- LEFT JOIN for permissions and roles
+        LEFT JOIN hospital_emp_perms hep ON eh.hosp_emp_id = hep.hosp_emp_id
+        LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+        LEFT JOIN hospital_roles hr ON eh.hosp_emp_id = hr.hosp_emp_id
 
-            -- Join with hospital_perms to get perm_name using the perm_id
-            LEFT JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
+        WHERE u.user_type = 'employee' 
+        AND eh.emp_title = 'Doctor'
+        ${whereClause} 
 
-            -- Join with hospital_roles and use COALESCE for default role name
-            LEFT JOIN hospital_roles hr ON d.hosp_emp_id = hr.hosp_emp_id
-
-            ${whereClause} 
-
-            GROUP BY 
-                e.emp_id, 
-                d.doctor_id, 
-                d.hosp_emp_id, 
-                d.initial_consultation_price, 
-                d.followup_consultation_price, 
-                d.years_of_exp,
-                hr.role_name
-            ${perms_CONDITION}
-            LIMIT ${limit} OFFSET ${offset}
+        GROUP BY u.user_id, eh.hosp_emp_id, e.emp_id
+        ${perms_CONDITION}
+        LIMIT ${limit} OFFSET ${offset}
     `;
 
         const result = await executeMySqlQuery(query);
@@ -152,19 +149,20 @@ class DoctorMethods {
         SELECT 
             -- from users
             u.user_id,
-                u.user_email,
-                u.user_name,
+            u.user_email,
+            u.user_name,
+            
             -- from employees
-
             e.emp_abscence,
             e.emp_rate,
             e.emp_title,
             e.emp_specialty,
-
             
-            -- from doctors
+            -- from employees_hospital
+            eh.hosp_emp_id,
+            
+            -- from doctors (may be NULL)
             d.doctor_id,
-            d.hosp_emp_id,
             d.initial_consultation_price,
             d.followup_consultation_price,
             d.years_of_exp,
@@ -174,43 +172,49 @@ class DoctorMethods {
                 SELECT GROUP_CONCAT(DISTINCT hp.perm_name SEPARATOR ', ')
                 FROM hospital_emp_perms hep
                 JOIN hospital_perms hp ON hep.perm_id = hp.perm_id
-                WHERE hep.hosp_emp_id = d.hosp_emp_id
+                WHERE hep.hosp_emp_id = eh.hosp_emp_id
             ), ''), 'None') AS emp_perms,
             
             -- from hospital_roles with COALESCE for default (subquery)
             COALESCE((
                 SELECT hr.role_name
                 FROM hospital_roles hr
-                WHERE hr.hosp_emp_id = d.hosp_emp_id
+                WHERE hr.hosp_emp_id = eh.hosp_emp_id
             ), 'NormalUser') AS role_name,
             
             -- FIXED: availability schedule using subquery to format times first
-                COALESCE((
-                    SELECT GROUP_CONCAT(
-                        DISTINCT CONCAT(
-                            formatted.day_of_week, 
-                            ': ', 
-                            formatted.formatted_start, 
-                            '-', 
-                            formatted.formatted_end
-                        )
-                        ORDER BY formatted.day_of_week
-                        SEPARATOR '; '
+            COALESCE((
+                SELECT GROUP_CONCAT(
+                    DISTINCT CONCAT(
+                        formatted.day_of_week, 
+                        ': ', 
+                        formatted.formatted_start, 
+                        '-', 
+                        formatted.formatted_end
                     )
-                    FROM (
-                        SELECT 
-                            day_of_week,
-                            DATE_FORMAT(start_time, '%H:%i') as formatted_start,
-                            DATE_FORMAT(end_time, '%H:%i') as formatted_end
-                        FROM availability 
-                        WHERE hosp_emp_id = d.doctor_id
-                    ) AS formatted
-                ), 'None') AS availability_schedule
+                    ORDER BY formatted.day_of_week
+                    SEPARATOR '; '
+                )
+                FROM (
+                    SELECT 
+                        day_of_week,
+                        DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                        DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                    FROM availability 
+                    WHERE hosp_emp_id = eh.hosp_emp_id
+                ) AS formatted
+            ), 'None') AS availability_schedule
 
-        FROM doctors d
-        JOIN employees e ON d.hosp_emp_id = e.emp_id
-        JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
-        WHERE d.doctor_id = ?
+        FROM users u
+        INNER JOIN employees e ON u.user_id = e.emp_id
+        INNER JOIN employees_hospital eh ON e.emp_id = eh.emp_id
+        
+        -- LEFT JOIN for optional doctor data
+        LEFT JOIN doctors d ON eh.hosp_emp_id = d.hosp_emp_id
+        
+        WHERE u.user_type = 'employee' 
+        AND eh.hosp_emp_id = ?
+        AND eh.emp_title = 'Doctor'
     `;
 
         const result = await executeMySqlQuery(query,[doctor_id]);
@@ -226,119 +230,130 @@ class DoctorMethods {
     static async getAllDoctorsSpecificData(){
         
         const query = `
-                SELECT 
-                    -- from users
-                    u.user_id,
-                    u.user_email,
-                    u.user_name,
-                    -- from employees
+        SELECT 
+            -- from users
+            u.user_id,
+            u.user_email,
+            u.user_name,
+            
+            -- from employees
+            e.emp_abscence,
+            e.emp_rate,
+            e.emp_title,
+            e.emp_specialty,
+            
+            -- from employees_hospital
+            eh.hosp_emp_id,
+            
+            -- from doctors (may be NULL)
+            d.initial_consultation_price,
+            d.followup_consultation_price,
+            d.years_of_exp,
 
-                    e.emp_abscence,
-                    e.emp_rate,
-                    e.emp_title,
-                    e.emp_specialty,
-                    
-                    -- from doctors
-                    d.hosp_emp_id,
-                    d.initial_consultation_price,
-                    d.followup_consultation_price,
-                    d.years_of_exp,
+            -- availability schedule (subquery)
+            -- FIXED: availability schedule using subquery to format times first
+            COALESCE((
+                SELECT GROUP_CONCAT(
+                    DISTINCT CONCAT(
+                        formatted.day_of_week, 
+                        ': ', 
+                        formatted.formatted_start, 
+                        '-', 
+                        formatted.formatted_end
+                    )
+                    ORDER BY formatted.day_of_week
+                    SEPARATOR '; '
+                )
+                FROM (
+                    SELECT 
+                        day_of_week,
+                        DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                        DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                    FROM availability 
+                    WHERE hosp_emp_id = eh.hosp_emp_id
+                ) AS formatted
+            ), 'None') AS availability_schedule
 
-                    -- availability schedule (subquery)
-                    -- FIXED: availability schedule using subquery to format times first
-                    COALESCE((
-                        SELECT GROUP_CONCAT(
-                            DISTINCT CONCAT(
-                                formatted.day_of_week, 
-                                ': ', 
-                                formatted.formatted_start, 
-                                '-', 
-                                formatted.formatted_end
-                            )
-                            ORDER BY formatted.day_of_week
-                            SEPARATOR '; '
-                        )
-                        FROM (
-                            SELECT 
-                                day_of_week,
-                                DATE_FORMAT(start_time, '%H:%i') as formatted_start,
-                                DATE_FORMAT(end_time, '%H:%i') as formatted_end
-                            FROM availability 
-                            WHERE hosp_emp_id = d.doctor_id
-                        ) AS formatted
-                    ), 'None') AS availability_schedule
-
-                FROM doctors d
-                JOIN employees e ON d.hosp_emp_id = e.emp_id
-                JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
-
-`;
-
-        const result = await executeMySqlQuery(query);
-
-        return result[0];
+        FROM users u
+        INNER JOIN employees e ON u.user_id = e.emp_id
+        INNER JOIN employees_hospital eh ON e.emp_id = eh.emp_id
+        
+        -- LEFT JOIN for optional doctor data
+        LEFT JOIN doctors d ON eh.hosp_emp_id = d.hosp_emp_id
+        
+        WHERE u.user_type = 'employee'
+        AND eh.emp_title = 'Doctor'
+    `;
+    
+    const result = await executeMySqlQuery(query);
+    return result[0];
     }
 
     static async getDoctorSpecificData(doctor_id){
         
         const query = `
-                SELECT 
+        SELECT 
+            -- from users
+            u.user_id,
+            u.user_email,
+            u.user_password,
+            u.user_name,
+            
+            -- from employees
+            e.emp_salary,
+            e.emp_abscence,
+            e.emp_bonus,
+            e.emp_rate,
+            e.emp_title,
+            e.emp_specialty,
+            
+            -- from employees_hospital
+            eh.hosp_emp_id,
+            
+            -- from doctors (may be NULL)
+            d.doctor_id,
+            d.initial_consultation_price,
+            d.followup_consultation_price,
+            d.years_of_exp,
 
-                    -- from users
-                    u.user_id,
-                    u.user_email,
-                    u.user_password, -- include password for authentication purposes
-                    u.user_name,
-                    -- from employees
+            -- availability schedule (subquery)
+            -- FIXED: availability schedule using subquery to format times first
+            COALESCE((
+                SELECT GROUP_CONCAT(
+                    DISTINCT CONCAT(
+                        formatted.day_of_week, 
+                        ': ', 
+                        formatted.formatted_start, 
+                        '-', 
+                        formatted.formatted_end
+                    )
+                    ORDER BY formatted.day_of_week
+                    SEPARATOR '; '
+                )
+                FROM (
+                    SELECT 
+                        day_of_week,
+                        DATE_FORMAT(start_time, '%H:%i') as formatted_start,
+                        DATE_FORMAT(end_time, '%H:%i') as formatted_end
+                    FROM availability 
+                    WHERE hosp_emp_id = eh.hosp_emp_id
+                ) AS formatted
+            ), 'None') AS availability_schedule
 
-                    e.emp_salary,
-                    e.emp_abscence,
-                    e.emp_bonus,
-                    e.emp_rate,
-                    e.emp_title,
-                    e.emp_specialty,
-                    
-                    -- from doctors
-                    d.doctor_id,
-                    d.hosp_emp_id,
-                    d.initial_consultation_price,
-                    d.followup_consultation_price,
-                    d.years_of_exp,
-
-                    -- availability schedule (subquery)
-                    -- FIXED: availability schedule using subquery to format times first
-                    COALESCE((
-                        SELECT GROUP_CONCAT(
-                            DISTINCT CONCAT(
-                                formatted.day_of_week, 
-                                ': ', 
-                                formatted.formatted_start, 
-                                '-', 
-                                formatted.formatted_end
-                            )
-                            ORDER BY formatted.day_of_week
-                            SEPARATOR '; '
-                        )
-                        FROM (
-                            SELECT 
-                                day_of_week,
-                                DATE_FORMAT(start_time, '%H:%i') as formatted_start,
-                                DATE_FORMAT(end_time, '%H:%i') as formatted_end
-                            FROM availability 
-                            WHERE hosp_emp_id = d.doctor_id
-                        ) AS formatted
-                    ), 'None') AS availability_schedule
-
-                FROM doctors d
-                JOIN employees e ON d.hosp_emp_id = e.emp_id
-                JOIN users u ON u.user_type = 'employee' AND u.user_id = e.emp_id
-                WHERE d.doctor_id = ${doctor_id}
-
-`;
-
-        const result = await executeMySqlQuery(query);
-
-        return result[0];
+        FROM users u
+        INNER JOIN employees e ON u.user_id = e.emp_id
+        INNER JOIN employees_hospital eh ON e.emp_id = eh.emp_id
+        
+        -- LEFT JOIN for optional doctor data
+        LEFT JOIN doctors d ON eh.hosp_emp_id = d.hosp_emp_id
+        
+        WHERE u.user_type = 'employee'
+        AND eh.hosp_emp_id = ?
+        AND eh.emp_title = 'Doctor'
+    `;
+    
+    const result = await executeMySqlQuery(query, [doctor_id]);
+    return result[0];
     }
 
     
@@ -425,96 +440,72 @@ class DoctorMethods {
     //              Update
     // ============================
 
-    static async updateDoctorFullCore(doctor_id, updating_string){
-        const query = `
-        UPDATE doctors d
-            JOIN employees e 
-                ON d.hosp_emp_id = e.emp_id
-            JOIN users u 
-                ON u.user_type = 'employee' AND u.user_id = e.emp_id
+    static async updateDoctorFullCore(doctor_id, updating_string) {
+    const parsedUpdates = parseUpdatingStringByTable(updating_string);
+    const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
+    const queries = [];
 
-            SET
-                ${updating_string}
-
-            WHERE d.doctor_id = ${doctor_id};
-        `
-
-        const version_query = `UPDATE table_version
-                            SET current_version = current_version + 1
-                            WHERE table_name = 'hospital_employees';
-                            `
-        
-        const result = await sqlTransaction([query,version_query])
-
-        return result;
-
+    // 1. Ensure user exists
+    if (parsedUpdates.users) {
+        queries.push(`
+            UPDATE users
+            SET ${parsedUpdates.users}
+            WHERE user_id = ${doctor_id} AND user_type = 'employee'
+        `);
     }
 
+    // 2. UPSERT employees
+    if (parsedUpdates.employees) {
+        const { columns_field, values_field } = stringifyFields(
+            "seperate",
+            Object.entries(parsedObjects.employees) || {}
+        );
+        queries.push(`
+            INSERT INTO employees (emp_id,${columns_field})
+            VALUES (${doctor_id},${values_field})
+            ON DUPLICATE KEY UPDATE
+                ${parsedUpdates.employees}
+        `);
+    }
 
+    // 3. UPSERT doctors
+    if (parsedUpdates.doctors) {
+        const { columns_field, values_field } = stringifyFields(
+            "seperate",
+            Object.entries(parsedObjects.doctors) || {}
+        );
+        queries.push(`
+            INSERT INTO doctors (doctor_id, hosp_emp_id${columns_field ? ', ' + columns_field : ''})
+            SELECT
+                ${doctor_id},
+                ${doctor_id}
+                ${values_field ? ', ' + values_field : ''}
+            FROM employees e
+            JOIN users u
+                ON u.user_type = 'employee' AND u.user_id = e.emp_id
+            WHERE e.emp_id = ${doctor_id}
+            ON DUPLICATE KEY UPDATE
+                ${parsedUpdates.doctors}
+        `);
+    }
 
-        static async updateDoctorPatient(doctor_id, patient_id, data ) {
-            try{
-                // ===1. Filter data to only include fields relevant to doctor_patient table
-                const staff_patient_table_fields = Tables.staff_patient;
-                const MapOfData = new Map(Object.entries(data));
-                let fieldsToUpdate = {};
-                for (const field of staff_patient_table_fields) {
-                    if( MapOfData.has(field)){
-                        fieldsToUpdate[field] = MapOfData.get(field);
-                    }
-                }
-                // ===2.  Construct dynamic fields string for SQL
-                const fields = stringifyFields( "joined",Object.entries(fieldsToUpdate))
+    // 4. Version update
+    queries.push(`
+        UPDATE table_version
+        SET current_version = current_version + 1
+        WHERE table_name = 'ems_employees'
+    `);
 
-                    const query = `UPDATE staff_patient SET ${fields}
-                                    WHERE staff_id = ${doctor_id} AND patient_id = ${patient_id} AND relation_type = 'Doctor';`;
-                    const version_query = `UPDATE table_version
-                            SET current_version = current_version + 1
-                            WHERE table_name = 'patients';
-                            `
+    const result = await sqlTransaction(queries);
 
+    // Check if user update affected any rows (to know if user exists)
+    if (parsedUpdates.users && !result) {
+        throw new Error('User not found. Please register the user first.');
+    }
+    
+    return result;
+}
 
-                    return await sqlTransaction([query, version_query]);
-
-            }
-            catch(err){
-                console.error("Error updating doctor-patient data:", err);
-                return false;
-            }
-        
-            }
-
-
-
-        static async replaceDoctorAvailability(doctor_id, data ) {
-            // ===0. Extract days, start_time, end_time from array of availability it has a format of 'Monday: 09:00:00-13:00:00; Wednesday: 14:00:00-18:00:00'
-            const shifts = data.availability_schedule.split("; ")
-            const availabilities = [];
-            const seenDuplicateDay = new Set();
-            shifts.forEach((shift) => {
-                const [day_of_week, time] = shift.split(": ");
-                const [start_time, end_time] = time.split("-");
-                // Check for repition
-                if (!seenDuplicateDay.has(day_of_week)) {
-                    availabilities.push({ day_of_week, start_time, end_time });
-                    seenDuplicateDay.add(day_of_week);
-                }
-            });
-
-            const queries = [];
-            // ===1. Delete Old Availabilities
-            queries.push(`DELETE FROM availability WHERE hosp_emp_id = ${doctor_id}`);
-
-            // ===2. Insert New Ones 
-            for (const availability of availabilities) {
-                queries.push(`
-                INSERT INTO availability (hosp_emp_id, day_of_week,start_time,end_time)
-                VALUES (${doctor_id},'${availability.day_of_week}','${availability.start_time}','${availability.end_time}')
-                `);
-            }
-
-            return await sqlTransaction(queries); 
-            }
 
 
    

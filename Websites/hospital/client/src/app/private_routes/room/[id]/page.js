@@ -86,7 +86,10 @@ const fetchPatientDetails = async (patientId, roomId) => {
   }, [room_id, patient_id]);
 
   function handleEmptyRoom() {
-    fetch(`${process.env.APIKEY}/rooms/${room_id}/empty`, { method: "PUT" })
+    fetch(`${process.env.APIKEY}/rooms/${room_id}/empty`, { method: "PUT", mode: "cors" , headers:{
+      "Content-Type": "application/json",
+      Authorization: `BEARER ${user_data.token}`
+    } })
       .then(res => {
         statusNotification(res.status);
         return res.json();
@@ -118,7 +121,7 @@ const fetchPatientDetails = async (patientId, roomId) => {
     // First Assign Patient to Room
     const assignResponse = await fetch(`${process.env.APIKEY}/rooms/${room_id}/assign`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" ,Authorization: `BEARER ${user_data.token}`},
       mode: "cors",
       body: JSON.stringify({ 
         patient_id:selectedUser.patient_id, 

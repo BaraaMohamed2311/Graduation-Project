@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import styles from './ConsultationScheduler.module.css';
 import { getDaysInMonth, getPrevMonth, getNextMonth, isDateSelectable, monthNames, dayNames, formatDateDisplay,getDayIndexInWeek  } from '@/utils/Date/dateHelpers';
-import { calculateEndTime12Hour ,to24Hour , getDefaultStartTime , getCurrentTime24 , convertTimeLocalToUTC} from '@/utils/Date/timeHelpers';
+import { calculateEndTime12Hour ,to24Hour , getDefaultStartTime , getCurrentTime24 , convertTimeLocalToUTC, to12Hour, convertTimeUTCToLocal , calculateEndTime24Hour} from '@/utils/Date/timeHelpers';
 import { validateBookingData, canSubmitBooking, getConsultationTypeDisplay } from '@/utils/Date/bookingHelpers';
 import {parseAvailabilityData,isDateAvailable,getAvailableTimeSlots,getFirstAvailableTimeSlot} from '@/utils/Date/availabilityHelpers';
 import formatToMySQLDatetime from "@/utils/Date/formatToMySQLDatetime "
@@ -12,6 +12,7 @@ const ConsultationScheduler = ({ onBookingSubmit, availabilityData }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [startTime, setStartTime] = useState(getDefaultStartTime());
+  const [endTime,setEndTime] = useState(calculateEndTime24Hour(getDefaultStartTime()));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Parse availability data, parsedAvailability = {"day_indx": {start:"00:00",end:"00:00"}"}
@@ -76,37 +77,24 @@ const ConsultationScheduler = ({ onBookingSubmit, availabilityData }) => {
       // ==1. first get current date and time in UTC 
       const now = new Date();
       const bookedAtUTC = now.toISOString().slice(0,19).replace('T', ' ');  // YYYY-MM-DD HH:MM:SS in UTC
-      // ==2. Convert times to 24hr local-format
-      const end_time = calculateEndTime12Hour(startTime);
-      const start_time_24HR= to24Hour(startTime)
-      const end_time_24HR= to24Hour(end_time)
-      // ==3. Get local combined Date & Time of selectead date
-      const [selected_hour, selected_minutes] = start_time_24HR.split(':').map(Number);
-      const combined = new Date(
-            selectedDate.getFullYear(),
-            selectedDate.getMonth(),
-            selectedDate.getDate(),
-            selected_hour,
-            selected_minutes,
-            0
-          );
+      // combined is today's date along with selected start time
+      const [selected_hour , selected_minutes] = startTime.split(":")
+      // Extract date parts from selectedDate
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
 
-      // ==4. Convert selected combined to UTC format
-      const selectedDateUTC = combined.toISOString().slice(0,19).replace('T', ' ');
+      // startTime is already "HH:MM" in UTC, just append seconds
+      const selectedDateUTC = `${year}-${month}-${day} ${startTime}:00`;
+      // Result: "2026-02-01 10:30:00"
       
-      // ==5. Convert start/end times to UTC format
-      const start_timeUTC = convertTimeLocalToUTC(start_time_24HR)
-      const end_timeUTC = convertTimeLocalToUTC(end_time_24HR)
-
-      console.log("selectedDate",selectedDate,"bookedAtUTC",bookedAtUTC,"selectedDateUTC",selectedDateUTC)
-
       
     const bookingData = {
       consultationType: selectedPriceType,
       date_time:selectedDateUTC,
       bookedAt: bookedAtUTC,
-      startTime: start_timeUTC,
-      endTime: end_timeUTC,
+      startTime: startTime, // already retrived from option's value as UTC 24-hr
+      endTime: endTime, // already retrived from option's value as UTC 24-hr
       duration: '1 hour'
     };
 
@@ -126,9 +114,11 @@ const ConsultationScheduler = ({ onBookingSubmit, availabilityData }) => {
   // Get calendar days and only available time slots for selected date
 
     const days = getDaysInMonth(currentDate);
+    console.log("selectedDate, parsed_availability",selectedDate, parsed_availability)
     const availableTimeSlots = getAvailableTimeSlots(getDayIndexInWeek(selectedDate), parsed_availability);
     const canBook = canSubmitBooking(selectedDate, isSubmitting);
 
+    console.log("startTime,endTime",startTime,endTime)
 
   return (
     <div className={styles.consultationScheduler}>
@@ -201,21 +191,24 @@ const ConsultationScheduler = ({ onBookingSubmit, availabilityData }) => {
       {selectedDate && (
         <div className={styles.timeSelection}>
           <h3>Select Start Time for {formatDateDisplay(selectedDate)}</h3>
+          {console.log("availableTimeSlots",availableTimeSlots)}
           {availableTimeSlots.length > 0 ? (
             <>
+            { /* Set both start and endtime states to avoid recalling functions many times */}
               <select 
-                value={startTime} 
-                onChange={(e) => setStartTime(e.target.value)}
+                onChange={(e) => {setStartTime(e.target.value); setEndTime(calculateEndTime24Hour(e.target.value)) }}
                 className={styles.timeSelect}
               >
+                {/* let option value retrieved be in UTC */}
                 {availableTimeSlots.map(time => (
-                  <option key={time} value={time}>{time}</option>
+                  <option key={time} value={convertTimeLocalToUTC(time)}>{to12Hour(time)}</option>
                 ))}
               </select>
               
               <div className={styles.timeDisplay}>
-                <p><strong>Start Time:</strong> {startTime}</p>
-                <p><strong>End Time:</strong> {calculateEndTime12Hour(startTime)}</p>
+                {/** startTime uses option value in UTC-24hr so when display we convert to Local-12hr **/}
+                <p><strong>Start Time:</strong> {to12Hour(convertTimeUTCToLocal(startTime))}</p>
+                <p><strong>End Time:</strong> {to12Hour(convertTimeUTCToLocal(endTime))}</p>
                 <p className={styles.durationNote}>Duration: 1 hour (fixed)</p>
               </div>
             </>
@@ -232,7 +225,8 @@ const ConsultationScheduler = ({ onBookingSubmit, availabilityData }) => {
         <h3>Appointment Summary</h3>
         <p><strong>Consultation Type:</strong> {getConsultationTypeDisplay(selectedPriceType)}</p>
         <p><strong>Selected Date:</strong> {selectedDate ? formatDateDisplay(selectedDate) : 'Not selected'}</p>
-        <p><strong>Time:</strong> {selectedDate ? `${startTime} - ${calculateEndTime12Hour(startTime)}` : 'Not selected'}</p>
+        <p><strong>Local Time:</strong> {selectedDate ? `${to12Hour(convertTimeUTCToLocal(startTime))} - ${to12Hour(convertTimeUTCToLocal(endTime))}` : 'Not selected'}</p>
+        <p><strong>UTC Time:</strong> {selectedDate ? `${startTime} - ${endTime}` : 'Not selected'}</p>
         
         {/* Booking Button */}
         <div className={styles.bookingActions}>

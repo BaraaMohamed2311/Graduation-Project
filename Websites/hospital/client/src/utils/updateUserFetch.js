@@ -1,10 +1,10 @@
 "use client"
 import userNotification from "./userNotification";
 import statusNotification from "./statusNotification"
-import {updateRecordByProp} from "@/utils/indexDB/updateCacheMethods"
-export default function updateUserFetch(url , token , body, actionsString , setCached_Employees , currPage , router ,storeName){
-    
 
+export default function updateUserFetch(url , token , body, actionsString){
+    
+    console.log("updateUserFetch called with token:", token);
     fetch(`${process.env.APIKEY}/${url}?perms_requested=${actionsString}`,{
         mode:"cors",
         method:"PUT",
@@ -18,14 +18,7 @@ export default function updateUserFetch(url , token , body, actionsString , setC
         return res.json()
     })
     .then(async (data)=>{
-        console.log("data after updating employee")
-            if(data && data.success){
-                
-                // updateRecordByProp(storeName,"user_id",body.user_id ,)
-                
-            }
-            
-          data.messages.forEach((messageObj)=> userNotification(messageObj.success ?"success" : "error", messageObj.message));
+            data.messages.forEach((messageObj)=> userNotification(messageObj.success ?"success" : "error", messageObj.message));
         
     })
     .catch((err)=>{

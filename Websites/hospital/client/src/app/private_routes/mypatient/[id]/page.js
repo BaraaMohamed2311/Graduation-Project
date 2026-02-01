@@ -16,20 +16,24 @@ import PatientFiles from "@/components/FilesList/FilesList";
 import { inputs_info , select_def } from "./data";
 import HealthStatus from "@/components/HealthStatus/HealthStatus";
 import uploadPatientFile from "@/utils/uploadPatientFile";
+import EditableSection from "@/components/EditableSection/EditableSection";
 function PatientDetailsPage() {
-  const [isEditing, setIsEditing] = useState(false);
   const [files_meta , setFilesMeta] = useState([]);
   const [blobURL, setBlobURL] = useState("/avatar.jpg");
   const { id: user_id, currPage } = useParams();
-  const { cached_my_patients, isIndexedDBLoaded, setCached_My_Patients } = useMyPatientsCache(); 
+  const { cached_my_patients, isIndexedDBLoaded, setCached_My_Patients , deleteMyPatientFromStore } = useMyPatientsCache(); 
   const { user_data } = useUserDataContext();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const router = useRouter();
   // Define references at page level
     const inputsBoxsRef = useRef({});
     const selectBoxsRef = useRef({});
 
   // Efficiently find the patient from cache
-  const mypatient = cached_my_patients?.find(mp => mp.user_id === parseInt(user_id));
+  const mypatient = cached_my_patients?.find(
+          mp => mp.user_id === parseInt(user_id) || mp.user_id === user_id || String(mp.user_id) === user_id
+        );
   const modifierObj = mypatient ? {
       other_user_email: mypatient.user_email,
       modifier_email: user_data.user_email,
@@ -37,7 +41,44 @@ function PatientDetailsPage() {
     } : {};
 
 
+
+  // Fetch employee data if not found in cache
+  useEffect(() => {
+  if (!isIndexedDBLoaded || mypatient) return;
+
+  fetch(`${process.env.APIKEY}/details/employee/${user_id}`, {
+    mode: "cors",
+    method: "GET",
+    headers: {
+      authorization: `BEARER ${user_data.token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    .then((res) => {
+      statusNotification(res.status);
+      return res.json();
+    })
+    .then((data) => {
+      if (data && data.success && data.body) {
+        setCached_Employees((prev) => {
+  const updated = [...prev, data.body];
+  console.log("Updated cached_employees:", updated);
+  return updated;
+});
+        userNotification("success", "Employee loaded successfully");
+      } else {
+        userNotification("error", "Employee not found");
+      }
+    })
+    .catch((err) => {
+      console.error("Error Fetching Employee", err);
+      userNotification("error", "Error Fetching Employee");
+    });
+}, [isIndexedDBLoaded, mypatient, user_id, user_data.token]);
+
+    // ========================================
     // Load User Image
+    // ========================================
   useEffect(() => {
     if (!mypatient || !user_data?.token) return; // Add null checks
     
@@ -58,20 +99,7 @@ function PatientDetailsPage() {
     setBlobURL(reader_result);
   }
 
-  // handle deletion function
-  async function handleDeletion(url, token, body) {
-    if (!user_data?.emp_perms?.has("Modify Data")) {
-      return userNotification("error", "You Do Not Have Permission to Delete Others");
-    }
-    
-    deleteFetch(url, token, body);
-    
-    setCached_My_Patients(prev => {
-      return prev.filter((p) => p.user_id !== mypatient.user_id);
-    });
-    
-    router.replace("/private_routes/list");
-  }
+
 
 
    /***************************************update_handler***************************************/
@@ -88,7 +116,7 @@ function PatientDetailsPage() {
                         ...updatedPatientData
                       }
   
-            updateUserFetch( url, token, reqBody ,actionString , setCached_My_Patients , currPage );
+            updateUserFetch( url, token, reqBody ,actionString );
           
   
           
@@ -147,10 +175,38 @@ function PatientDetailsPage() {
 
   // ================================
   //      Upload
-  function onUploadFile(files , setProgress, setIsUploading) {
+  async function onUploadFile(files , setProgress, setIsUploading) {
+
+    try {
+              setIsUploading(true);
     
-    setIsUploading(true)
-    uploadPatientFile(`files/other/patient?my=true`, files, modifierObj, user_data.token , setProgress);
+              const res = await uploadPatientFile(
+                `files/other/patient?my=true`,
+                files,
+                modifierObj,
+                user_data.token,
+                setProgress
+              );
+              console.log("Upload response:", res);
+    
+              // ✅ UPDATE STATE IMMEDIATELY
+              if (res?.success && res?.record?.files) {
+                setFilesMeta(prev => {
+                  const map = new Map();
+                  [...(prev || []), ...res.record.files].forEach(f =>
+                    map.set(f.file_id, f)
+                  );
+                  return Array.from(map.values());
+                });
+
+              }
+    
+            } catch (err) {
+              console.error("Upload error:", err);
+            } finally {
+              setIsUploading(false);
+              setProgress(0);
+            }
   }
   // ================================
   //      Delete
@@ -199,7 +255,43 @@ function PatientDetailsPage() {
     }
 }
 
+  async function confirmDeleteAccount() {
+      setIsDeletingAccount(true);
   
+      try {
+        const query = new URLSearchParams({
+        modifier_email: user_data.user_email,
+        modifier_id: user_data.user_id,
+        modifier_name: user_data.user_name,
+        other_user_email: mypatient.user_email
+      }).toString();
+        const res = await fetch(
+          `${process.env.APIKEY}/list/other/patient?${query}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${user_data.token}`,
+            },
+          }
+        );
+  
+        const data = await res.json();
+  
+        if (!data.success) {
+          setIsDeletingAccount(false);
+          deleteMyPatientFromStore(mypatient.user_id);
+          return userNotification("error", data.message);
+          
+        }
+  
+        userNotification("success", "Account deleted successfully");
+        router.replace("/");
+      } catch (err) {
+        console.error(err);
+        userNotification("error", "Error deleting account");
+        setIsDeletingAccount(false);
+      }
+    }
 
   // Move conditional returns AFTER all hooks
   if (!isIndexedDBLoaded) {
@@ -213,20 +305,21 @@ function PatientDetailsPage() {
   return (
     <main className={styles["page-main"]}>
       
-      {isEditing && is_authorized_to_modify_my_patents_data && 
-        <UpdateUserForm
-            url={`list/other/mypatient`}
-            isEditing={isEditing}
-            setIsEditing={setIsEditing}
-            user_displayed={mypatient}
-            currPage={currPage}
-            userData={user_data}
-            modifier_data={user_data}
-            // Pass the references and functions as props
-            references={{inputsBoxsRef,selectBoxsRef}}
-            update_handler={update_handler}
-            fieldDefinitions={{select_def,inputs_info}}
-          />
+      {is_authorized_to_modify_my_patents_data && 
+        <EditableSection buttonText="Edit Employee" buttonClassName="grey-button">
+          <UpdateUserForm
+              url={`list/other/mypatient`}
+              user_displayed={mypatient}
+              currPage={currPage}
+              userData={user_data}
+              modifier_data={user_data}
+              // Pass the references and functions as props
+              references={{inputsBoxsRef,selectBoxsRef}}
+              update_handler={update_handler}
+              fieldDefinitions={{select_def,inputs_info}}
+              token={user_data.token}
+            />
+          </EditableSection>
       }
         <div className={"page-container"}>
           {/* --- Header Section --- */}
@@ -304,6 +397,25 @@ function PatientDetailsPage() {
                 >
                   Delete Patient
                 </button>
+
+                <button
+                                  className="red-button"
+                                  onClick={() => setShowDeleteModal(true)}
+                                >
+                                  Delete Account
+                                </button>
+                
+                                <ConfirmModal
+                                  open={showDeleteModal}
+                                  title="Delete Account"
+                                  message="This action will permanently delete your account and all associated data. This cannot be undone."
+                                  confirmText="Yes, delete"
+                                  cancelText="Cancel"
+                                  danger
+                                  isLoading={isDeletingAccount}
+                                  onConfirm={confirmDeleteAccount}
+                                  onCancel={() => setShowDeleteModal(false)}
+                                />
               </li>
             </ul>
           </div>

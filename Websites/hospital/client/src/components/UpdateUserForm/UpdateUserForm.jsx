@@ -4,8 +4,6 @@ import styles from "./update_emp_form.module.css";
 import { useRouter } from "next/navigation";
 export default function UpdateUserForm({
     url,
-  isEditing,
-  setIsEditing,
   user_displayed,
     currPage,
     // New props
@@ -13,7 +11,8 @@ export default function UpdateUserForm({
     update_handler,
     modifier_data,
     fieldDefinitions,
-    isUpdatingSelf=false
+    isUpdatingSelf=false,
+    token
  
 
 }) {
@@ -38,21 +37,20 @@ export default function UpdateUserForm({
     console.log("authorized fieldDefinitions",fieldDefinitions)
 
     return (
-        <div className={styles["update-emp-page"]}>
+        <>
             <div className={styles["center"]}>
                 {/* we have to check user modifier perms to check which inputs are displayed for editable fields  */}
                 <Form 
                     references ={{ inputsBoxsRef, checkBoxsRef ,selectBoxsRef}} 
-                    form_handler = {(e)=>update_handler(e ,url )}
+                    form_handler = {(e)=>update_handler(e ,url,token )}
                     // add employee_displayed to form to show prev values of inputs
                     user_displayed = {user_displayed} 
                     fieldDefinitions={fieldDefinitions}
                     formBtnState = {formBtnState}  
                     isLoginPage={false} 
-                    isEditing={isEditing}  
-                    setIsEditing={setIsEditing} 
+
                     formKind={"update_form"}/>
             </div>
-        </div>
+        </>
     )
 }

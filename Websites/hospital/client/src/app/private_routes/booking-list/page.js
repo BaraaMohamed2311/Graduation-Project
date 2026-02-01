@@ -42,7 +42,7 @@ function BookingListPage() {
 useEffect(() => {
   (async () => {
     const since = getLastSync(`booking-${selectedBookingType}`)
-    const needsSyncObj = await checkPageSync(since)
+    const needsSyncObj = await checkPageSync(since, selectedBookingType);
     setNeedsSync(needsSyncObj?.needsSync);
     setLastSync(`booking-${selectedBookingType}`,needsSyncObj.latest_version);
   })();
@@ -101,7 +101,19 @@ if (shouldSkipFetch) return;
 
       // Update cache
       
-      setCached_Booking_List(prev => ({ ...prev, [endpoint]: data.body }));
+      setCached_Booking_List(prev => {
+        const existing = prev[endpoint] || [];
+        const startIndex = (currPage - 1) * sizeOfPage;
+        
+        // Create a new array with the fetched data inserted at the correct position
+        const updated = [...existing];
+        data.body.forEach((item, idx) => {
+          updated[startIndex + idx] = item;
+        });
+        
+        return { ...prev, [endpoint]: updated };
+      });
+
       setNumOfPages(data.numOfPages || 1);
       setFetched_Booking_Pages(prev => {
         const currentPages = prev[endpoint] || new Set();
@@ -213,7 +225,7 @@ function handleFilterOption(e){
             <div className={styles["booking-card-wrapper"]}>
               {cached_booking_list && Object.keys(cached_booking_list).length > 0 && cached_booking_list[selectedBookingType]  && cached_booking_list[selectedBookingType].slice((currPage - 1) * sizeOfPage, currPage * sizeOfPage).map((booking , index)=>{
                 return <BookingCard 
-                key={booking._id || booking.user_email}
+                key={booking.user_id || booking.user_email || booking._id}
                 userType={selectedBookingType} 
                 bookingData={booking} 
                 handleBookBtn={handleBookBtn}

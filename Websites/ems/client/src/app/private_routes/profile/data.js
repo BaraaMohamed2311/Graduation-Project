@@ -7,6 +7,13 @@ const selfEditableFields = {
         name: "user_email",
         type: "email",
       },
+      {
+        key: "user_name",
+        label: "Name",
+        name: "user_name",
+        type: "text",
+      }
+      
     ],
   },
 
@@ -24,13 +31,7 @@ const selfEditableFields = {
         name: "patient_address",
         type: "text",
       },
-      {
-        key: "patient_gender",
-        label: "Gender",
-        name: "patient_gender",
-        type: "select",
-        options: ["Male", "Female", "Other"],
-      },
+      
       {
         key: "date_of_birth",
         label: "Date of Birth",
@@ -44,6 +45,14 @@ const selfEditableFields = {
         type: "text",
       },
     ],
+    select_def:{
+      select_gender:{
+        key: "patient_gender",
+        label: "Gender",
+        name: "patient_gender",
+        type: "select",
+        options: ["Male", "Female", "Other"]}
+      },
   },
 
   doctor: {
@@ -66,76 +75,11 @@ const approvalRequiredFields = {
 
   patient: {},
 
-  doctor: {
-    inputs_info: [
-      {
-        key: "initial_consultation_price",
-        label: "Initial Consultation Price",
-        name: "initial_consultation_price",
-        type: "number",
-        approval_required_from: ["finance", "admin"],
-      },
-      {
-        key: "followup_consultation_price",
-        label: "Follow-up Consultation Price",
-        name: "followup_consultation_price",
-        type: "number",
-        approval_required_from: ["finance", "admin"],
-      },
-      {
-        key: "years_of_exp",
-        label: "Years of Experience",
-        name: "years_of_exp",
-        type: "number",
-        approval_required_from: ["hr"],
-      },
-    ],
-  },
+  doctor: {},
 
-  surgeon: {
-    inputs_info: [
-      {
-        key: "initial_consultation_price",
-        label: "Initial Consultation Price",
-        name: "initial_consultation_price",
-        type: "number",
-        approval_required_from: ["finance", "admin"],
-      },
-      {
-        key: "followup_consultation_price",
-        label: "Follow-up Consultation Price",
-        name: "followup_consultation_price",
-        type: "number",
-        approval_required_from: ["finance", "admin"],
-      },
-      {
-        key: "surgery_price",
-        label: "Surgery Price",
-        name: "surgery_price",
-        type: "number",
-        approval_required_from: ["finance", "admin"],
-      },
-      {
-        key: "years_of_exp",
-        label: "Years of Experience",
-        name: "years_of_exp",
-        type: "number",
-        approval_required_from: ["hr"],
-      },
-    ],
-  },
+  surgeon: {},
 
-  nurse: {
-    inputs_info: [
-      {
-        key: "floor_number",
-        label: "Assigned Floor",
-        name: "floor_number",
-        type: "number",
-        approval_required_from: ["admin"],
-      },
-    ],
-  },
+  nurse: {},
 };
 
 

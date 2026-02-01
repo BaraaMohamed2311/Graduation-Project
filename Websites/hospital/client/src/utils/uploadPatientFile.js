@@ -1,6 +1,6 @@
 import userNotification from "./userNotification";
 
-export default function uploadPatientFileXHR(url, files, modifier_data, token, setProgress) {
+export default function uploadPatientFileXHR(url, files, modifier_data, token, setProgress , ) {
   const mimetypes = new Set([
     "application/pdf",
     "image/jpeg",

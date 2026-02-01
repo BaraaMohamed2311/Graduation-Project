@@ -77,7 +77,7 @@ class HospitalUserFactory {
         "Doctor": DoctorMethods.updateDoctorFullCore,
         "Surgeon": SurgeonMethods.updateSurgeonFullCore,
         "Nurse": NurseMethods.updateNurseFullCore,
-        "Patient": PatientMethods.updatePatietnFullCore,
+        "Patient": PatientMethods.updatePatientFullCore,
     };
 
     // ========================================
@@ -181,7 +181,7 @@ static async getSpecificData(user_id, user_title) {
     /**
      * Update user data (full/core update)
      */
-    static async updateFullCore(user_id, user_title, updating_string) {
+    static async updateFullCore(user_id, user_title, updating_string ) {
         this.#validateUserTitle(user_title);
         const method = this.#fullUpdateMethods[user_title];
         if (!method) return false;

@@ -9,7 +9,7 @@ import {FormFieldsMap} from "./FormFields.js";
 
 export default function Form({
     references, form_handler , formBtnState ,
-    formKind , isEditing , setIsEditing ,
+    formKind ,
      user_displayed , isLoadingBtn , fieldDefinitions}) {
 
     let {user_data} = useUserDataContext();
@@ -32,8 +32,6 @@ export default function Form({
             <Fields
         
                 references={references}
-                isEditing={isEditing}
-                setIsEditing={setIsEditing}
                 formBtnState={formBtnState}
                 user_displayed={user_displayed}
                 user_data={user_data}

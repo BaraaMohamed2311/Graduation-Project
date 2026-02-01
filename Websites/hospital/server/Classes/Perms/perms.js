@@ -91,7 +91,8 @@ class perms {
     }
 
     static async executeRemoveOther(other_user_id){
-        return await PatientMethods.deletePatientCoreData(other_user_id);
+        const queries = [ `DELETE FROM users WHERE user_id = ${other_user_id}`]
+            return await sqlTransaction(queries);
     }
 
 

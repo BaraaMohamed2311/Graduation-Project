@@ -73,6 +73,8 @@ export const useEmployeesCache = () => {
     }
   };
 
+   
+
    // Check if a specific page needs sync
   const checkPageSync = async ( max_version) => {
 
@@ -96,6 +98,6 @@ export const useEmployeesCache = () => {
     saveEmployeesToStore,
     isIndexedDBLoaded,
     setIsIndexedDBLoaded,
-    checkPageSync
+    checkPageSync,
   };
 };

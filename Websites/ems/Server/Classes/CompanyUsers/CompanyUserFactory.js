@@ -1,16 +1,8 @@
-const CEOMethods = require("../../Utils/methods/CEOMethods");
-const CloudEngineerMethods = require("../../Utils/methods/CloudEngineerMethods");
-const DesignerMethods = require("../../Utils/methods/DesignerMethods");
-const DeveloperMethods = require("../../Utils/methods/DeveloperMethods");
-const DevOpsEngineerMethods = require("../../Utils/methods/DevOpsEngineerMethods");
-const DoctorMethods = require("../../Utils/methods/DoctorMethods");
-const EngineerMethods = require("../../Utils/methods/EngineerMethods");
-const HRMethods = require("../../Utils/methods/HRMethods");
-const InternMethods = require("../../Utils/methods/InternMethods");
-const NurseMethods = require("../../Utils/methods/NurseMethods");
-const ScientistMethods = require("../../Utils/methods/ScientistMethods");
-const SurgeonMethods = require("../../Utils/methods/SurgeonMethods");
 
+const DefaultEmployeeMethods = require("../../Utils/methods/DefaultEmployeeMethods");
+const NurseMethods = require("../../Utils/methods/NurseMethods");
+const DoctorMethods = require("../../Utils/methods/DoctorMethods");
+const SurgeonMethods = require("../../Utils/methods/SurgeonMethods");
 /**
  * Factory class for mapping company employee titles to their respective method classes
  * Centralizes all employee-type-specific operations
@@ -35,138 +27,59 @@ class CompanyUserFactory {
     // Method Class Mapping
     // ========================================
     static #methodClassMap = {
-        "CEO": CEOMethods,
-        "Cloud Engineer": CloudEngineerMethods,
-        "Designer": DesignerMethods,
-        "Developer": DeveloperMethods,
-        "DevOps Engineer": DevOpsEngineerMethods,
         "Doctor": DoctorMethods,
-        "Engineer": EngineerMethods,
-        "HR": HRMethods,
-        "Intern": InternMethods,
-        "Nurse": NurseMethods,
-        "Scientist": ScientistMethods,
         "Surgeon": SurgeonMethods,
+        "Nurse": NurseMethods,
+        "DEFAULT": DefaultEmployeeMethods,
     };
 
     // ========================================
     // Specific Data Methods
     // ========================================
     static #specificDataMethods = {
-        "CEO": CEOMethods.getCEOSpecificData,
-        "Cloud Engineer": CloudEngineerMethods.getCloudEngineerSpecificData,
-        "Designer": DesignerMethods.getDesignerSpecificData,
-        "Developer": DeveloperMethods.getDeveloperSpecificData,
-        "DevOps Engineer": DevOpsEngineerMethods.getDevOpsEngineerSpecificData,
         "Doctor": DoctorMethods.getDoctorSpecificData,
-        "Engineer": EngineerMethods.getEngineerSpecificData,
-        "HR": HRMethods.getHRSpecificData,
-        "Intern": InternMethods.getInternSpecificData,
-        "Nurse": NurseMethods.getNurseSpecificData,
-        "Scientist": ScientistMethods.getScientistSpecificData,
         "Surgeon": SurgeonMethods.getSurgeonSpecificData,
+        "Nurse": NurseMethods.getNurseSpecificData,
+        "DEFAULT": DefaultEmployeeMethods.getDefaultEmployeeSpecificData,
     };
 
     // ========================================
     // Full Data Methods
     // ========================================
     static #fullDataMethods = {
-        "CEO": CEOMethods.getCEOFullData,
-        "Cloud Engineer": CloudEngineerMethods.getCloudEngineerFullData,
-        "Designer": DesignerMethods.getDesignerFullData,
-        "Developer": DeveloperMethods.getDeveloperFullData,
-        "DevOps Engineer": DevOpsEngineerMethods.getDevOpsEngineerFullData,
         "Doctor": DoctorMethods.getDoctorFullData,
-        "Engineer": EngineerMethods.getEngineerFullData,
-        "HR": HRMethods.getHRFullData,
-        "Intern": InternMethods.getInternFullData,
-        "Nurse": NurseMethods.getNurseFullData,
-        "Scientist": ScientistMethods.getScientistFullData,
         "Surgeon": SurgeonMethods.getSurgeonFullData,
+        "Nurse": NurseMethods.getNurseFullData,
+        "DEFAULT": DefaultEmployeeMethods.getDefaultEmployeeFullData,
     };
 
     // ========================================
     // All Full Data Methods (with pagination)
     // ========================================
     static #allFullDataMethods = {
-        "CEO": CEOMethods.getAllCEOsFullData,
-        "Cloud Engineer": CloudEngineerMethods.getAllCloudEngineersFullData,
-        "Designer": DesignerMethods.getAllDesignersFullData,
-        "Developer": DeveloperMethods.getAllDevelopersFullData,
-        "DevOps Engineer": DevOpsEngineerMethods.getAllDevOpsEngineersFullData,
         "Doctor": DoctorMethods.getAllDoctorsFullData,
-        "Engineer": EngineerMethods.getAllEngineersFullData,
-        "HR": HRMethods.getAllHRsFullData,
-        "Intern": InternMethods.getAllInternsFullData,
-        "Nurse": NurseMethods.getAllNursesFullData,
-        "Scientist": ScientistMethods.getAllScientistsFullData,
         "Surgeon": SurgeonMethods.getAllSurgeonsFullData,
+        "Nurse": NurseMethods.getAllNursesFullData,
+        "DEFAULT": DefaultEmployeeMethods.getAllDefaultEmployeesFullData,
     };
 
     // ========================================
     // Count Methods
     // ========================================
     static #countMethods = {
-        "CEO": CEOMethods.getAllCEOsCOUNT,
-        "Cloud Engineer": CloudEngineerMethods.getAllCloudEngineersCOUNT,
-        "Designer": DesignerMethods.getAllDesignersCOUNT,
-        "Developer": DeveloperMethods.getAllDevelopersCOUNT,
-        "DevOps Engineer": DevOpsEngineerMethods.getAllDevOpsEngineersCOUNT,
-        "Doctor": DoctorMethods.getAllDoctorsCOUNT,
-        "Engineer": EngineerMethods.getAllEngineersCOUNT,
-        "HR": HRMethods.getAllHRsCOUNT,
-        "Intern": InternMethods.getAllInternsCOUNT,
-        "Nurse": NurseMethods.getAllNursesCOUNT,
-        "Scientist": ScientistMethods.getAllScientistsCOUNT,
-        "Surgeon": SurgeonMethods.getAllSurgeonsCOUNT,
+        
+        "DEFAULT": DefaultEmployeeMethods.getAllDefaultEmployeesCOUNT,
     };
 
-    // ========================================
-    // Update Methods (Partial)
-    // ========================================
-    static #updateMethods = {
-        "CEO": CEOMethods.MapToUpdateCEOData,
-        "Cloud Engineer": CloudEngineerMethods.MapToUpdateCloudEngineerData,
-        "Designer": DesignerMethods.MapToUpdateDesignerData,
-        "Developer": DeveloperMethods.MapToUpdateDeveloperData,
-        "DevOps Engineer": DevOpsEngineerMethods.MapToUpdateDevOpsEngineerData,
-        "Doctor": DoctorMethods.MapToUpdateDoctorData,
-        "Engineer": EngineerMethods.MapToUpdateEngineerData,
-        "HR": HRMethods.MapToUpdateHRData,
-        "Intern": InternMethods.MapToUpdateInternData,
-        "Nurse": NurseMethods.MapToUpdateNurseData,
-        "Scientist": ScientistMethods.MapToUpdateScientistData,
-        "Surgeon": SurgeonMethods.MapToUpdateSurgeonData,
-    };
 
     // ========================================
     // Update Methods (Full/Core)
     // ========================================
     static #fullUpdateMethods = {
-        "CEO": CEOMethods.updateCEOFullCore,
-        "Cloud Engineer": CloudEngineerMethods.updateCloudEngineerFullCore,
-        "Designer": DesignerMethods.updateDesignerFullCore,
-        "Developer": DeveloperMethods.updateDeveloperFullCore,
-        "DevOps Engineer": DevOpsEngineerMethods.updateDevOpsEngineerFullCore,
         "Doctor": DoctorMethods.updateDoctorFullCore,
-        "Engineer": EngineerMethods.updateEngineerFullCore,
-        "HR": HRMethods.updateHRFullCore,
-        "Intern": InternMethods.updateInternFullCore,
-        "Nurse": NurseMethods.updateNurseFullCore,
-        "Scientist": ScientistMethods.updateScientistFullCore,
         "Surgeon": SurgeonMethods.updateSurgeonFullCore,
-    };
-
-    // ========================================
-    // Role Categories
-    // ========================================
-    static #roleCategories = {
-        leadership: ["CEO", "HR"],
-        technical: ["Cloud Engineer", "Developer", "DevOps Engineer", "Engineer"],
-        medical: ["Doctor", "Nurse", "Surgeon"],
-        creative: ["Designer"],
-        research: ["Scientist"],
-        trainee: ["Intern"]
+        "Nurse": NurseMethods.updateNurseFullCore,
+        "DEFAULT": DefaultEmployeeMethods.updateDefaultEmployeeFullCore,
     };
 
     // ========================================
@@ -192,47 +105,29 @@ class CompanyUserFactory {
     }
 
     /**
-     * Validate user title and throw error if invalid
+     * Get user title or return DEFAULT if not found
+     */
+    static #normalizeUserTitle(user_title) {
+        if (!user_title) return "DEFAULT";
+        
+        // Check if title exists in map
+        if (this.#methodClassMap[user_title]) {
+            return user_title;
+        }
+        
+        // Log unknown title for monitoring
+        console.warn(`Unknown user title: "${user_title}". Using DEFAULT handler.`);
+        return "DEFAULT";
+    }
 
+    /**
+     * Validate user title (removed - now we normalize instead)
      */
     static #validateUserTitle(user_title) {
-        if (!user_title) {
-            throw new Error("User title is required");
-        }
-        if (!this.#methodClassMap[user_title]) {
-            throw new Error(`Invalid user title: ${user_title}. Valid titles: ${Object.keys(this.#methodClassMap).join(', ')}`);
-        }
+        // This method is no longer needed but kept for backward compatibility
+        return this.#normalizeUserTitle(user_title);
     }
 
-    /**
-     * Get the category of a user title
-
-     */
-    static getUserCategory(user_title) {
-        for (const [category, titles] of Object.entries(this.#roleCategories)) {
-            if (titles.includes(user_title)) {
-                return category;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Check if a user title belongs to a specific category
-
-     */
-    static isInCategory(user_title, category) {
-        const categoryTitles = this.#roleCategories[category];
-        return categoryTitles ? categoryTitles.includes(user_title) : false;
-    }
-
-    /**
-     * Get all titles in a category
-
-     */
-    static getTitlesByCategory(category) {
-        return this.#roleCategories[category] || [];
-    }
 
     // ========================================
     // Get Method Class
@@ -255,8 +150,9 @@ class CompanyUserFactory {
  * Get specific data for a user
  */
 static async getSpecificData(user_id, user_title) {
-    this.#validateUserTitle(user_title);
-    const method = this.#specificDataMethods[user_title];
+    const normalizedTitle = this.#normalizeUserTitle(user_title);
+    const method = this.#specificDataMethods[normalizedTitle];
+
     if (!method || typeof method !== "function") return {}; // default empty object
     try {
         return (await method.call(this.#methodClassMap[user_title], user_id)) || {};
@@ -270,8 +166,10 @@ static async getSpecificData(user_id, user_title) {
      * Get full data for a user
      */
     static async getFullData(user_id, user_title) {
-        this.#validateUserTitle(user_title);
-        const method = this.#fullDataMethods[user_title];
+        console.log("CompanyUserFactory getFullData called", user_id, user_title)
+        const normalizedTitle = this.#normalizeUserTitle(user_title);
+        const method = this.#fullDataMethods[normalizedTitle];
+        console.log("normalizedTitle", normalizedTitle)
         if (!method || typeof method !== "function") return {}; // default empty object
         try {
             return (await method.call(this.#methodClassMap[user_title], user_id)) || {};
@@ -285,8 +183,8 @@ static async getSpecificData(user_id, user_title) {
      * Get all users of a type (with pagination)
      */
     static async getAllFullData(user_title, limit = 10, offset = 0, whereClause = '', perms_CONDITION = '') {
-        this.#validateUserTitle(user_title);
-        const method = this.#allFullDataMethods[user_title];
+        const normalizedTitle = this.#normalizeUserTitle(user_title);
+        const method = this.#allFullDataMethods[normalizedTitle];
         if (!method || typeof method !== "function") return []; // default empty array
         try {
             return (await method.call(this.#methodClassMap[user_title], limit, offset, whereClause, perms_CONDITION)) || [];
@@ -301,8 +199,8 @@ static async getSpecificData(user_id, user_title) {
 
      */
     static async getCount(user_title, whereClause = '', perms_CONDITION = '') {
-        this.#validateUserTitle(user_title);
-        const method = this.#countMethods[user_title];
+        const normalizedTitle = this.#normalizeUserTitle(user_title);
+        const method = this.#countMethods[normalizedTitle];
         if (!method) return 0;
         return await method.call(this.#methodClassMap[user_title], whereClause, perms_CONDITION);
     }
@@ -312,8 +210,8 @@ static async getSpecificData(user_id, user_title) {
 
      */
     static async updateData(user_id, user_title, data, actions) {
-        this.#validateUserTitle(user_title);
-        const method = this.#updateMethods[user_title];
+        const normalizedTitle = this.#normalizeUserTitle(user_title);
+        const method = this.#fullUpdateMethods[normalizedTitle];
         if (!method) return false;
         return await method.call(this.#methodClassMap[user_title], user_id, data, actions);
     }
@@ -323,46 +221,11 @@ static async getSpecificData(user_id, user_title) {
 
      */
     static async updateFullCore(user_id, user_title, updating_string) {
-        this.#validateUserTitle(user_title);
-        const method = this.#fullUpdateMethods[user_title];
+        console.log("CompanyUserFactory updateFullCore called")
+        const normalizedTitle = this.#normalizeUserTitle(user_title);
+        const method = this.#fullUpdateMethods[normalizedTitle];
         if (!method) return false;
         return await method.call(this.#methodClassMap[user_title], user_id, updating_string);
-    }
-
-    // ========================================
-    // Batch Operations by Category
-    // ========================================
-
-    /**
-     * Get all users in a category
-
-     */
-    static async getAllByCategory(category, limit = 10, offset = 0, whereClause = '') {
-        const titles = this.getTitlesByCategory(category);
-        if (!titles.length) return [];
-
-        const results = [];
-        for (const title of titles) {
-            const data = await this.getAllFullData(title, limit, offset, whereClause);
-            results.push(...data.map(item => ({ ...item, category })));
-        }
-        return results;
-    }
-
-    /**
-     * Get count of all users in a category
-
-     */
-    static async getCountByCategory(category, whereClause = '') {
-        const titles = this.getTitlesByCategory(category);
-        if (!titles.length) return 0;
-
-        let total = 0;
-        for (const title of titles) {
-            const count = await this.getCount(title, whereClause);
-            total += count;
-        }
-        return total;
     }
 
     // ========================================
@@ -376,15 +239,6 @@ static async getSpecificData(user_id, user_title) {
     static getAllValidTitles() {
         return Object.keys(this.#methodClassMap);
     }
-
-    /**
-     * Get all categories
-     * @returns {Array<string>}
-     */
-    static getAllCategories() {
-        return Object.keys(this.#roleCategories);
-    }
-
     /**
      * Check if a method exists for a user title
 
@@ -394,7 +248,6 @@ static async getSpecificData(user_id, user_title) {
             'specific': this.#specificDataMethods,
             'full': this.#fullDataMethods,
             'count': this.#countMethods,
-            'update': this.#updateMethods,
             'fullUpdate': this.#fullUpdateMethods
         };
         const map = maps[methodType];

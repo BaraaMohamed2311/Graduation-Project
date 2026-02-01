@@ -5,7 +5,7 @@ import { useState , useEffect ,useRef} from "react";
 import userNotification from "@/utils/userNotification";
 import statusNotification from "@/utils/statusNotification";
 
-export default function HealthState({user_id , modifierObj}) {
+export default function HealthState({user_id , modifierObj , isEditable=true}) {
     const [healthStatus, setHealthStatus] = useState(null);
   const {
     patient_allergic = [],
@@ -265,12 +265,12 @@ useEffect(() => {
             ))}
           </div>
         )}
-        <button
+        {isEditable && <button
                   onClick={() => setEditMode(true) }
                   className="grey-button"
                 >
                   Edit Health Status
-                </button>
+                </button>}
       </div>
     </div>
   );

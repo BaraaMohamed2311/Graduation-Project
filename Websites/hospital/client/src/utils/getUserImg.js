@@ -7,7 +7,7 @@ export default async function getUserImage(url, user_id, token, setBlobURL) {
   // 1. Try cached version first
   const cached = await getCachedUserImage(user_id);
   if (cached) {
-    setBlobURL(cached);
+    return setBlobURL(cached);
   }
 
   // 2. Fetch new image in background

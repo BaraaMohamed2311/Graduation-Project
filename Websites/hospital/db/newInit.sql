@@ -5,7 +5,7 @@
 -- CREATE TABLE users (
     -- user_id INT AUTO_INCREMENT PRIMARY KEY,
     -- user_email varchar(255) NOT NULL,
-    -- user_name varchar(255) NOT NULL,
+    -- user_name varchar(255) NOT NULL DEFAULT "Unknown",
 	-- user_password varchar(255) NOT NULL,
     -- user_type ENUM('patient', 'employee') NOT NULL,
     -- created_at TIMESTAMP DEFAULT NOW(),
@@ -13,10 +13,9 @@
     
 -- );
 
-CREATE TABLE table_version (
-    table_name VARCHAR(100) PRIMARY KEY,
-    current_version BIGINT NOT NULL
-);
+
+
+
 
 -- ==========================================
 -- Employees_Hospital (Bridge Table to store all employees_hospital ids in one place)

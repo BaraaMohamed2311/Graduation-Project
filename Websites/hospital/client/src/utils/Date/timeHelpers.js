@@ -31,6 +31,29 @@ export const calculateEndTime12Hour = (start12h, duration = 60) => {
     .padStart(2, "0")} ${newModifier}`;
 };
 
+// Calculate end time (always 1 hour after start time)
+// Input: "14:30" → Output: "15:30"
+export const calculateEndTime24Hour = (start24h, duration = 60) => {
+  // Split: "14:30" → ["14", "30"]
+  let [hours, minutes] = start24h.split(":").map(Number);
+
+  // Add duration (minutes)
+  let totalMinutes = hours * 60 + minutes + duration;
+
+  // Wrap around 24h
+  totalMinutes %= 24 * 60;
+
+  // Convert back to hours/minutes
+  let endHours = Math.floor(totalMinutes / 60);
+  let endMinutes = totalMinutes % 60;
+
+  // Return 24h format
+  return `${endHours.toString().padStart(2, "0")}:${endMinutes
+    .toString()
+    .padStart(2, "0")}`;
+};
+
+
 
 
 // Validate time format
