@@ -220,12 +220,12 @@ const stringifyFields = require("../Utils/stringifyFields.js");
             else if(userIsPatient){
                 isUpdated = await HospitalUsersMethods.MapUserToUpdateFunction(user_id , user_title , newUserData , actions)
             }
-            console.log("isUpdated",isUpdated)
+
             // --4. Check if update was successful and send response
             if (isUpdated && isUpdated.length > 0) {
             // Check if at least one action succeeded
             const allSucceeded = isUpdated.every(item => item.result === true);
-                console.log("allSucceeded",allSucceeded)
+
             return res.status(allSucceeded ? 200 : 207).json({
                 success: allSucceeded,
                 message: allSucceeded 
@@ -399,7 +399,7 @@ const stringifyFields = require("../Utils/stringifyFields.js");
                         isReseted = await executeMySqlQuery(`UPDATE employees SET user_password = ? WHERE emp_id = ?`,[hashedPassword , resetTokenForUser.emp_id])
                     }
                     else if(userIsPatient){
-                        isReseted = await executeMySqlQuery(`UPDATE patients SET user_password = ? WHERE patient_id = ?`,[hashedPassword , resetTokenForUser.emp_id])
+                        isReseted = await executeMySqlQuery(`UPDATE patients SET user_password = ? WHERE user_id = ?`,[hashedPassword , resetTokenForUser.emp_id])
                     }
 
                      

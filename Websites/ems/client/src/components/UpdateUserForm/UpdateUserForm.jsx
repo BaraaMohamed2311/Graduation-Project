@@ -19,7 +19,7 @@ export default function UpdateUserForm({
     let [formBtnState, setFormBtnState] = useState("Update");
     let [isLoadingBtn , setIsLoadingBtn ] = useState(false);
     let {inputsBoxsRef , checkBoxsRef , selectBoxsRef} = references;
-    console.log("fieldDefinitions in update form", fieldDefinitions);
+
         const { select_role_options, ...otherOptions } = fieldDefinitions.select_def || {};
     const { perms_check_box, ...otherCheckBoxes } = fieldDefinitions.check_box || {};
 
@@ -71,8 +71,7 @@ export default function UpdateUserForm({
         check_box: authorized_check_box
 };
 
-    
-    console.log("authorized authorized_select_def",authorizedFieldDefinitions)
+
 
     return (
         <>

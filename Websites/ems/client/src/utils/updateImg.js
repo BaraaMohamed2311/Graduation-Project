@@ -55,7 +55,7 @@ export default function updateImg(image_file ,user_id , setBlobURL , token){
 
     })
     .catch((err)=>{
-        console.log("Error Fetching Image", err)
+
         userNotification("error","Error Fetching Image")
     })
 

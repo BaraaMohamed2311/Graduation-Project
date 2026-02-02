@@ -10,12 +10,12 @@ async function ModifyOtherUserData(other_user_id, other_user_Role,other_user_tit
     // This function is used to modify data in the database
     // It will be implemented later
 
-    console.log("newOtherUserData.user_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.user_email",newOtherUserData.user_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.user_email)
+    
         // If email is updated make sure it's not in the system
         if(newOtherUserData.user_email && oldOtherUserEmail && oldOtherUserEmail !== newOtherUserData.user_email){
             // if email is changed we check if it exists in db
             const emailExists = await User.checkIfUserExistsByEmail(newOtherUserData.user_email);
-            console.log("emailExists", emailExists)
+
                 if(emailExists){
                     failing_messages.push({success:false , message: "That Email Already Exists"})
                 }
@@ -27,8 +27,7 @@ async function ModifyOtherUserData(other_user_id, other_user_Role,other_user_tit
         const entityType = other_user_title?.toLowerCase(); // e.g., 'doctor', 'nurse', 'patient'
 
         const updating_string = buildJoinedUpdate(newOtherUserData ,entityType);
-        console.log("newOtherUserData",newOtherUserData,updating_string)
-        console.log("updating_string",updating_string)
+
         if(modifierRole === "SuperAdmin"){
             const succeeded = await SuperAdmin.EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updating_string  )
             if(!succeeded){

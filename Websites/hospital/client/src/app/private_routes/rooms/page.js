@@ -90,7 +90,7 @@ function handleFilterOption(e, showNotif = true) {
   const roomValue = selectBoxsRef.current["room_number"]?.value;
   const floorValue = selectBoxsRef.current["floor_id"]?.value;
   const statusValue = selectBoxsRef.current["status"]?.value;
-  console.log(roomValue,floorValue,statusValue)
+
 
   let endpoint = `${process.env.APIKEY}/rooms`;
   const queryParams = new URLSearchParams();

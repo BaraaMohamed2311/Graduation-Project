@@ -13,7 +13,7 @@ class DoctorMethods {
     // ============================
 
     static async getAllDoctorsCOUNT(filtering_string = "", perms_CONDITION = ""){
-        console.log("filtering_string",filtering_string.length,perms_CONDITION)
+
         let query = "";
         // Optimize query construction based on presence of filters
         if(!filtering_string && !perms_CONDITION){
@@ -21,7 +21,7 @@ class DoctorMethods {
             }
         else if(filtering_string && !perms_CONDITION){
                     query = `
-                SELECT COUNT(DISTINCT d.doctor_id) as count 
+                SELECT COUNT(DISTINCT d.emp_id) as count 
                 FROM doctors d
                 JOIN employees e ON d.hosp_emp_id = e.emp_id
                 LEFT JOIN roles r ON d.hosp_emp_id = r.emp_id
@@ -30,7 +30,7 @@ class DoctorMethods {
         }
         else if(!filtering_string && perms_CONDITION){
             query = `
-                SELECT COUNT(DISTINCT d.doctor_id) as count 
+                SELECT COUNT(DISTINCT d.emp_id) as count 
                 FROM doctors d
                 JOIN employees e ON d.hosp_emp_id = e.emp_id
                 LEFT JOIN employee_perms ep ON d.hosp_emp_id = ep.emp_id
@@ -41,7 +41,7 @@ class DoctorMethods {
         }
         else{
             query = `
-                SELECT COUNT(DISTINCT d.doctor_id) as count 
+                SELECT COUNT(DISTINCT d.emp_id) as count 
                 FROM doctors d
                 JOIN employees e ON d.hosp_emp_id = e.emp_id
                 LEFT JOIN employee_perms ep ON d.hosp_emp_id = ep.emp_id
@@ -83,7 +83,7 @@ class DoctorMethods {
             eh.hosp_emp_id,
             
             -- from doctors (may be NULL)
-            ANY_VALUE(d.doctor_id) AS doctor_id,
+            ANY_VALUE(d.emp_id) AS emp_id,
             ANY_VALUE(d.initial_consultation_price) AS initial_consultation_price,
             ANY_VALUE(d.followup_consultation_price) AS followup_consultation_price,
             ANY_VALUE(d.years_of_exp) AS years_of_exp,
@@ -144,7 +144,7 @@ class DoctorMethods {
     }
 
 
-     static async getDoctorFullData(doctor_id){
+     static async getDoctorFullData(emp_id){
 
         
         const query = `
@@ -166,7 +166,7 @@ class DoctorMethods {
             eh.hosp_emp_id,
             
             -- from doctors (may be NULL)
-            d.doctor_id,
+            d.emp_id,
             d.initial_consultation_price,
             d.followup_consultation_price,
             d.years_of_exp,
@@ -221,8 +221,8 @@ class DoctorMethods {
         AND eh.emp_title = 'Doctor'
     `;
         
-        const result = await executeMySqlQuery(query,[doctor_id]);
-        console.log("Executing getDoctorFullData with doctor_id:", result);
+        const result = await executeMySqlQuery(query,[emp_id]);
+
         return result[0];
     }
 
@@ -295,7 +295,7 @@ class DoctorMethods {
     return result[0];
     }
 
-    static async getDoctorSpecificData(doctor_id){
+    static async getDoctorSpecificData(emp_id){
         
        const query = `
         SELECT 
@@ -317,7 +317,7 @@ class DoctorMethods {
             eh.hosp_emp_id,
             
             -- from doctors (may be NULL)
-            d.doctor_id,
+            d.emp_id,
             d.initial_consultation_price,
             d.followup_consultation_price,
             d.years_of_exp,
@@ -358,7 +358,7 @@ class DoctorMethods {
         AND eh.emp_title = 'Doctor'
     `;
     
-    const result = await executeMySqlQuery(query, [doctor_id]);
+    const result = await executeMySqlQuery(query, [emp_id]);
     return result[0];
     }
 
@@ -369,7 +369,7 @@ class DoctorMethods {
     //              Update
     // ============================
 
-    static async updateDoctorFullCore(doctor_id, updating_string) {
+    static async updateDoctorFullCore(emp_id, updating_string) {
     const parsedUpdates = parseUpdatingStringByTable(updating_string);
     const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
     const queries = [];
@@ -379,7 +379,7 @@ class DoctorMethods {
         queries.push(`
             UPDATE users
             SET ${parsedUpdates.users}
-            WHERE user_id = ${doctor_id} AND user_type = 'employee'
+            WHERE user_id = ${emp_id} AND user_type = 'employee'
         `);
     }
 
@@ -391,7 +391,7 @@ class DoctorMethods {
         );
         queries.push(`
             INSERT INTO employees (emp_id,${columns_field})
-            VALUES (${doctor_id},${values_field})
+            VALUES (${emp_id},${values_field})
             ON DUPLICATE KEY UPDATE
                 ${parsedUpdates.employees}
         `);
@@ -404,15 +404,15 @@ class DoctorMethods {
             Object.entries(parsedObjects.doctors) || {}
         );
         queries.push(`
-            INSERT INTO doctors (doctor_id, hosp_emp_id${columns_field ? ', ' + columns_field : ''})
+            INSERT INTO doctors (emp_id, hosp_emp_id${columns_field ? ', ' + columns_field : ''})
             SELECT
-                ${doctor_id},
-                ${doctor_id}
+                ${emp_id},
+                ${emp_id}
                 ${values_field ? ', ' + values_field : ''}
             FROM employees e
             JOIN users u
                 ON u.user_type = 'employee' AND u.user_id = e.emp_id
-            WHERE e.emp_id = ${doctor_id}
+            WHERE e.emp_id = ${emp_id}
             ON DUPLICATE KEY UPDATE
                 ${parsedUpdates.doctors}
         `);
@@ -436,8 +436,8 @@ class DoctorMethods {
 }
 
 
-        // No Need to use insertingObject here, as specific fields are only staff_id, patient_id, relation_type
-        static async updateDoctorPatient(doctor_id, patient_id, data ) {
+        // No Need to use insertingObject here, as specific fields are only staff_id, user_id, relation_type
+        static async updateDoctorPatient(emp_id, user_id, data ) {
             try{
                 // ===1. Filter data to only include fields relevant to doctor_patient table
                 const staff_patient_table_fields = Tables.staff_patient;
@@ -452,8 +452,8 @@ class DoctorMethods {
                 const fields = stringifyFields( "joined",Object.entries(fieldsToUpdate))
 
                     const query = `
-                        INSERT INTO staff_patient (staff_id, patient_id, relation_type)
-                        VALUES (${doctor_id}, ${patient_id}, 'Doctor')
+                        INSERT INTO staff_patient (staff_id, user_id, relation_type)
+                        VALUES (${emp_id}, ${user_id}, 'Doctor')
                         ON DUPLICATE KEY UPDATE
                         ${fields};
                         `;
@@ -477,7 +477,7 @@ class DoctorMethods {
 
 
 
-        static async replaceDoctorAvailability(doctor_id, data ) {
+        static async replaceDoctorAvailability(emp_id, data ) {
             // ===0. Extract days, start_time, end_time from array of availability it has a format of 'Monday: 09:00:00-13:00:00; Wednesday: 14:00:00-18:00:00'
             const shifts = data.availability_schedule.split("; ")
             const availabilities = [];
@@ -494,13 +494,13 @@ class DoctorMethods {
 
             const queries = [];
             // ===1. Delete Old Availabilities
-            queries.push(`DELETE FROM availability WHERE hosp_emp_id = ${doctor_id}`);
+            queries.push(`DELETE FROM availability WHERE hosp_emp_id = ${emp_id}`);
 
             // ===2. Insert New Ones 
             for (const availability of availabilities) {
                 queries.push(`
                 INSERT INTO availability (hosp_emp_id, day_of_week,start_time,end_time)
-                VALUES (${doctor_id},'${availability.day_of_week}','${availability.start_time}','${availability.end_time}')
+                VALUES (${emp_id},'${availability.day_of_week}','${availability.start_time}','${availability.end_time}')
                 `);
             }
 

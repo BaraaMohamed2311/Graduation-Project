@@ -1,3 +1,6 @@
+// WARNING: DO not include system-specific tables of other systems here
+// For example, do not add hospital_perms here in tables or aliases as it's related to hospital system and adding it will cause a conflict
+// Only tables that doesn't change across systems can be added
 const Tables = {
   // ==========================================
   // Core Users Table
@@ -38,11 +41,24 @@ const Tables = {
     "user_email"
   ],
 
+  roles: [
+    "emp_id",
+    "role_name"
+    ],
+  perms: [
+    "perm_id",
+    "perm_name"
+  ],
+  employee_perms: [
+    "perm_id", 
+    "emp_id"
+  ],
+
   // ==========================================
   // Medical Staff Tables
   // ==========================================
   doctors: [
-    "doctor_id",
+    "emp_id",
     "hosp_emp_id",
     "initial_consultation_price",
     "followup_consultation_price",
@@ -50,7 +66,7 @@ const Tables = {
   ],
 
   surgeons: [
-    "surgeon_id",
+    "emp_id",
     "hosp_emp_id",
     "initial_consultation_price",
     "followup_consultation_price",
@@ -59,7 +75,7 @@ const Tables = {
   ],
 
   nurses: [
-    "nurse_id",
+    "emp_id",
     "hosp_emp_id",
     "floor_number"
   ],
@@ -68,7 +84,7 @@ const Tables = {
   // Patient Related Tables
   // ==========================================
   patients: [
-    "patient_id",
+    "user_id",
     "patient_phone",
     "patient_address",
     "isAssignedToRoom",
@@ -83,28 +99,11 @@ const Tables = {
 
   staff_patient: [
     "staff_id",
-    "patient_id",
+    "user_id",
     "relation_type",
     "assigned_date"
   ],
 
-  // ==========================================
-  // Role & Permission Tables
-  // ==========================================
-  hospital_roles: [
-    "hosp_emp_id",
-    "role_name"
-  ],
-
-  hospital_perms: [
-    "perm_id",
-    "perm_name"
-  ],
-
-  hospital_emp_perms: [
-    "perm_id",
-    "hosp_emp_id"
-  ],
 
   // ==========================================
   // Scheduling & Availability Tables
@@ -122,7 +121,7 @@ const Tables = {
   consultations: [
     "consultation_id",
     "hosp_emp_id",
-    "patient_id",
+    "user_id",
     "availability_id",
     "consultation_date",
     "start_time",
@@ -144,7 +143,7 @@ const Tables = {
     "room_id",
     "room_number",
     "floor_id",
-    "patient_id",
+    "user_id",
     "isOccupied"
   ],
 
@@ -153,7 +152,7 @@ const Tables = {
   // ==========================================
   doctor_availability: [
     "availability_id",
-    "doctor_id",
+    "emp_id",
     "day_of_week",
     "start_time",
     "end_time",
@@ -171,12 +170,12 @@ const TableAliases = {
   doctors: 'd',
   surgeons: 's',
   nurses: 'n',  // ← ADD THIS
-  hospital_roles: 'hr',
+  roles: 'r',
   consultations: 'c',
   availability: 'a',
   staff_patient: 'sp',
-  hospital_perms: 'hp',
-  hospital_emp_perms: 'hep',
+  perms: 'p',
+  employee_perms: 'ep',
   floors: 'f',
   rooms: 'rm',
 };

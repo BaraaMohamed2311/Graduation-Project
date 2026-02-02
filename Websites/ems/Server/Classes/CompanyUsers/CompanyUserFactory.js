@@ -166,10 +166,10 @@ static async getSpecificData(user_id, user_title) {
      * Get full data for a user
      */
     static async getFullData(user_id, user_title) {
-        console.log("CompanyUserFactory getFullData called", user_id, user_title)
+
         const normalizedTitle = this.#normalizeUserTitle(user_title);
         const method = this.#fullDataMethods[normalizedTitle];
-        console.log("normalizedTitle", normalizedTitle)
+
         if (!method || typeof method !== "function") return {}; // default empty object
         try {
             return (await method.call(this.#methodClassMap[user_title], user_id)) || {};
@@ -221,7 +221,6 @@ static async getSpecificData(user_id, user_title) {
 
      */
     static async updateFullCore(user_id, user_title, updating_string) {
-        console.log("CompanyUserFactory updateFullCore called")
         const normalizedTitle = this.#normalizeUserTitle(user_title);
         const method = this.#fullUpdateMethods[normalizedTitle];
         if (!method) return false;

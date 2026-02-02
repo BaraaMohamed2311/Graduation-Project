@@ -51,12 +51,12 @@ useEffect(() => {
 //         Fetch Pages
 // ===========================================
 useEffect(() => {
-  console.log("isFiltered",isFiltered)
+
   if (isFiltered) return;
   if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
-    console.log("!fetched_patient_pages.has(currPage) || needsSync",fetched_patient_pages.has(currPage) , needsSync)
+
   if (!fetched_patient_pages.has(currPage) || needsSync) {
-    console.log("page not fetched")
+
     fetch(`${process.env.APIKEY}/list/patients?user_id=${user_data.user_id}&pagination=${currPage}&size=${sizeOfPage}`, {
       mode: "cors",
       headers: {
@@ -70,7 +70,7 @@ useEffect(() => {
       })
       .then((data) => {
         if (data?.success) {
-          console.log("success")
+
           setNumOfPages(data.numOfPages || 1);
           setCached_Patients((prev) => {
             const map = new Map(prev.map((emp) => [emp.user_id, emp])); 
@@ -104,7 +104,7 @@ useEffect(() => {
 // ===========================================
 
     function handleVisitBtn(patient){
-      console.log("Visiting patient",patient)
+
       router.replace(`/private_routes/patient/${patient.user_id}?currPage=${currPage}`)
     }
 
@@ -138,7 +138,7 @@ useEffect(() => {
 function handleFilterOption(e){
     if(e) e.preventDefault();
     // get filter inputs 
-    console.log("inputsBoxsRef.current",inputsBoxsRef.current)
+
     const EMAIL_REF = inputsBoxsRef.current["user_email"];
     const NAME_REF = inputsBoxsRef.current["user_name"];
     const Phone_REF = inputsBoxsRef.current["patient_phone"];

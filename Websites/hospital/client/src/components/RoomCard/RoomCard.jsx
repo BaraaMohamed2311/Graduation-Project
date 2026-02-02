@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 
 export default function RoomCard({ room }) {
   const router = useRouter();
-  console.log(room)
+
   const handleView = () => {
-    router.push(`/private_routes/room/${room.room_id}?patient_id=${room.patient_id}&room_number=${room.room_number}&floor_number=${room.floor_id}&isOccupied=${room.isOccupied}`);
+    router.push(`/private_routes/room/${room.room_id}?user_id=${room.user_id}&room_number=${room.room_number}&floor_number=${room.floor_id}&isOccupied=${room.isOccupied}`);
   };
 
   return (

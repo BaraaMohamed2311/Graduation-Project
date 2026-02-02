@@ -85,7 +85,7 @@ if (shouldSkipFetch) return;
 
   const queryString = stringifyFields("anded", Object.entries(filterEntries));
 
-  fetch(`${process.env.APIKEY}/list/${endpoint}?pagination=${currPage}&size=${sizeOfPage}&${queryString}`, {
+  fetch(`${process.env.APIKEY}/list/${endpoint}?pagination=${currPage}&size=${sizeOfPage}&user_id=${user_data.user_id}&${queryString}`, {
     mode: "cors",
     headers: {
       Authorization: `BEARER ${user_data.token}`,

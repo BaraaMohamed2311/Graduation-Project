@@ -12,7 +12,7 @@ export default function MailerPage() {
     const SendTo_REF = useRef();
     const Subject_REF = useRef();
     const TEXT_REF = useRef();
-    console.log("styles styles",styles)
+
     function handleSubmitEmail(e){
         e.preventDefault();
 

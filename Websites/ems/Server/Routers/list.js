@@ -120,8 +120,11 @@ router.get("/employees",jwtVerify,async (req,res)=>{
                     const modifierRole = await User.getUserRole(modifier_id);
                     const  modifierSetperms = await User.getSetUserperms(modifier_id);
                     const other_user_Role = await User.getUserRole(other_user_id );
-
-
+                    
+                    // check if user is authorized to modify salarry
+                    const is_authorized_modify_salary = modifierSetperms.has("Modify Salary");
+                    const excuded_fields = is_authorized_modify_salary ? EXCLUDE_UPDATE_FIELDS : EXCLUDE_UPDATE_FIELDS.push("emp_salary","emp_bonus","initial_consultation_price","surgery_price","followup_consultation_price");
+                    const safeData = excludeFields( newEmployeeData ,excuded_fields)
                     
                     //===6. Check if modifier have perm to update other users data & action is requested
                     if(permsRequestedSet.has("Modify Employee Data")){
@@ -178,7 +181,6 @@ router.get("/employees",jwtVerify,async (req,res)=>{
                     }
         }
         catch (err) {
-            consoleLog(`Error In Update Others Api Path  `, "error")
             console.log(err)
             res.status(500).json({
                 success:false,
@@ -347,9 +349,9 @@ router.post("/registered-approve/accept",jwtVerify,async (req,res)=>{
         // get last user id to increment it by 1
         // MAX() is more effiecient than ORDER BY DESC LIMIT 1
         const LastIdInTable = await executeMySqlQuery("SELECT MAX(user_id) AS user_id FROM users");
-        console.log("LastIdInTable", LastIdInTable)
+
         const registering_user_id = LastIdInTable[0].user_id + 1;
-        console.log("registering_user_id", registering_user_id)
+
         const { user_password , emp_title , emp_specialty } = registering_user_data[0];
 
 

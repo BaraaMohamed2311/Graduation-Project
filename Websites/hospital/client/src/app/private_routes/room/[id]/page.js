@@ -13,7 +13,7 @@ import { useUserDataContext } from "@/contexts/user_data";
 export default function RoomDetailsPage() {
 
 
-// ====1. Extract patient_id from query, room_id from params
+// ====1. Extract user_id from query, room_id from params
   const { id  } = useParams();
   const room_id = id;
   let search_params = useSearchParams();
@@ -23,18 +23,19 @@ export default function RoomDetailsPage() {
   const [isAssigningModalDisplayed, setIsAssigningModalDisplayed] = useState(false);
   let [isConfirmed , setIsConfirmed] = useState(false)
   const queryString = new URLSearchParams(search_params);
-  let {patient_id,...roomData} = Object.fromEntries(queryString.entries());
+  let {user_id,...roomData} = Object.fromEntries(queryString.entries());
   const inputsBoxsRef = useRef({})
   const {user_data} = useUserDataContext()
 
-// In RoomDetailsPage
-useEffect(() => {
-  console.log("selectedUser updated:", selectedUser);
-}, [selectedUser]);
+
 
   // Separate fetch function
 const fetchPatientDetails = async (patientId, roomId) => {
-  if (!roomId) return null;
+  if ([roomId, patientId].some(v => v == null || v === "undefined" || v === "null")) {
+    return null;
+  }
+
+
 
   try {
     const response = await fetch(`${process.env.APIKEY}/rooms/patient/${patientId}/details`,{
@@ -75,7 +76,7 @@ const fetchPatientDetails = async (patientId, roomId) => {
     if (!room_id) return;
 
     const loadPatientDetails = async () => {
-    const result = await fetchPatientDetails(patient_id, room_id);
+    const result = await fetchPatientDetails(user_id, room_id);
     if (result) {
       setPatient(result.patient);
       setGraphData(result.graphData);
@@ -83,7 +84,7 @@ const fetchPatientDetails = async (patientId, roomId) => {
   };
 
   loadPatientDetails();
-  }, [room_id, patient_id]);
+  }, [room_id, user_id]);
 
   function handleEmptyRoom() {
     fetch(`${process.env.APIKEY}/rooms/${room_id}/empty`, { method: "PUT", mode: "cors" , headers:{
@@ -124,7 +125,7 @@ const fetchPatientDetails = async (patientId, roomId) => {
       headers: { "Content-Type": "application/json" ,Authorization: `BEARER ${user_data.token}`},
       mode: "cors",
       body: JSON.stringify({ 
-        patient_id:selectedUser.patient_id, 
+        user_id:selectedUser.user_id, 
         floor_id: roomData.floor_number, 
         room_number: roomData.room_number 
       }),
@@ -141,7 +142,7 @@ const fetchPatientDetails = async (patientId, roomId) => {
     userNotification("success", "Patient assigned successfully");
 
     // Then grab patient's data (only if assignment was successful)
-    const result = await fetchPatientDetails(patient_id, room_id);
+    const result = await fetchPatientDetails(user_id, room_id);
     if (result) {
       setPatient(result.patient);
       setGraphData(result.graphData);
@@ -155,7 +156,7 @@ const fetchPatientDetails = async (patientId, roomId) => {
 // Only send confirm request when it isConfirmed and selectedUser is updated to new user
 useEffect(()=>{
   if(!isConfirmed) return;
-  if(!selectedUser || !selectedUser.patient_id) return;
+  if(!selectedUser || !selectedUser.user_id) return;
   handleConfirmBtn()
 },[selectedUser,isConfirmed])
 

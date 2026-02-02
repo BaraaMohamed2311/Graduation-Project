@@ -20,7 +20,7 @@ class NurseMethods {
     }
     else if(whereClause && !perms_CONDITION){
         query = `
-            SELECT COUNT(DISTINCT n.nurse_id) as count 
+            SELECT COUNT(DISTINCT n.emp_id) as count 
             FROM nurses n
             JOIN employees e ON n.hosp_emp_id = e.emp_id
             LEFT JOIN hospital_roles hr ON n.hosp_emp_id = hr.hosp_emp_id
@@ -29,7 +29,7 @@ class NurseMethods {
     }
     else if(!whereClause && perms_CONDITION){
         query = `
-            SELECT COUNT(DISTINCT n.nurse_id) as count 
+            SELECT COUNT(DISTINCT n.emp_id) as count 
             FROM nurses n
             JOIN employees e ON n.hosp_emp_id = e.emp_id
             LEFT JOIN hospital_emp_perms hep ON n.hosp_emp_id = hep.hosp_emp_id
@@ -39,7 +39,7 @@ class NurseMethods {
     }
     else{
         query = `
-            SELECT COUNT(DISTINCT n.nurse_id) as count 
+            SELECT COUNT(DISTINCT n.emp_id) as count 
             FROM nurses n
             JOIN employees e ON n.hosp_emp_id = e.emp_id
             LEFT JOIN hospital_emp_perms hep ON n.hosp_emp_id = hep.hosp_emp_id
@@ -76,7 +76,7 @@ class NurseMethods {
             eh.hosp_emp_id,
             
             -- from nurses (may be NULL)
-            ANY_VALUE(n.nurse_id) AS nurse_id,
+            ANY_VALUE(n.emp_id) AS emp_id,
             ANY_VALUE(n.floor_number) AS floor_number,
             
             -- from hospital_perms via hospital_emp_perms
@@ -133,7 +133,7 @@ class NurseMethods {
     return result;
     }
 
-    static async getNurseFullData(nurse_id){
+    static async getNurseFullData(emp_id){
          const query = `
         SELECT 
             -- from users
@@ -151,7 +151,7 @@ class NurseMethods {
             eh.hosp_emp_id,
             
             -- from nurses (may be NULL)
-            n.nurse_id,
+            n.emp_id,
             n.floor_number,
             
             -- from hospital_perms via hospital_emp_perms (subquery)
@@ -204,7 +204,7 @@ class NurseMethods {
         AND eh.emp_title = 'Nurse'
     `;
 
-    const result = await executeMySqlQuery(query, [nurse_id]);
+    const result = await executeMySqlQuery(query, [emp_id]);
     return result[0];
     }
 
@@ -266,7 +266,7 @@ class NurseMethods {
     return result;
     }
 
-    static async getNurseSpecificData(nurse_id){
+    static async getNurseSpecificData(emp_id){
         const query = `
         SELECT 
             -- from users
@@ -324,7 +324,7 @@ class NurseMethods {
         AND eh.emp_title = 'Nurse'
     `;
     
-    const result = await executeMySqlQuery(query, [nurse_id]);
+    const result = await executeMySqlQuery(query, [emp_id]);
     return result[0];
     }
     // ============================
@@ -332,8 +332,8 @@ class NurseMethods {
     // ============================
 
     // Updated updateNurseFullCore function
-static async updateNurseFullCore(nurse_id, updating_string){
-    console.log("updateNurseFullCore", nurse_id, updating_string);
+static async updateNurseFullCore(emp_id, updating_string){
+
     
     // Parse updating_string by table (returns strings) mapped to tables
     const parsedUpdates = parseUpdatingStringByTable(updating_string);
@@ -347,7 +347,7 @@ static async updateNurseFullCore(nurse_id, updating_string){
         queries.push(`
             UPDATE users
             SET ${parsedUpdates.users}
-            WHERE user_id = ${nurse_id} AND user_type = 'employee'
+            WHERE user_id = ${emp_id} AND user_type = 'employee'
         `);
     }
     
@@ -356,7 +356,7 @@ static async updateNurseFullCore(nurse_id, updating_string){
         const {columns_field, values_field} = stringifyFields("seperate",Object.entries(parsedObjects.employees) || {});
         queries.push(`
             INSERT INTO employees (emp_id,${columns_field})
-            VALUES (${nurse_id},${values_field})
+            VALUES (${emp_id},${values_field})
             ON DUPLICATE KEY UPDATE
                 ${parsedUpdates.employees}
         `);
@@ -366,8 +366,8 @@ static async updateNurseFullCore(nurse_id, updating_string){
     if (parsedUpdates.nurses) {
         const {columns_field, values_field} = stringifyFields("seperate",Object.entries(parsedObjects.nurses) || {});
         queries.push(`
-            INSERT INTO nurses (nurse_id,hosp_emp_id,${columns_field})
-            VALUES (${nurse_id},${nurse_id},${values_field})
+            INSERT INTO nurses (emp_id,hosp_emp_id,${columns_field})
+            VALUES (${emp_id},${emp_id},${values_field})
             ON DUPLICATE KEY UPDATE
                 ${parsedUpdates.nurses}
         `);

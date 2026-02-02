@@ -6,8 +6,7 @@ const stringifyFields = require("./stringifyFields");
 // ------------------------------
 function buildJoinedUpdate(newUpdateData, entityType = null) {
   if (!newUpdateData || typeof newUpdateData !== "object") return "";
-  console.log("newUpdateData", newUpdateData, entityType);
-  
+
   // 1. Group filters by table
   const tableGroups = {};
 

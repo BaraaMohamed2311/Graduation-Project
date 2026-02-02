@@ -38,19 +38,19 @@ class HospitalUsersMethods {
     /**
      * Check if a patient belongs to a staff member
      */
-    static async patientBelongsToStaff(staff_id, patient_id) { 
+    static async patientBelongsToStaff(staff_id, user_id) { 
         const query = `
             SELECT EXISTS (
                 SELECT 1
                 FROM staff_patient sp
                 JOIN patients p 
-                    ON sp.patient_id = p.patient_id
+                    ON sp.user_id = p.user_id
                 WHERE sp.staff_id = ? 
-                AND sp.patient_id = ? AND relation_type = 'Doctor'
+                AND sp.user_id = ? AND relation_type = 'Doctor'
             ) AS patient_exists;
         `;
 
-        const result = await executeMySqlQuery(query, [staff_id, patient_id]);
+        const result = await executeMySqlQuery(query, [staff_id, user_id]);
         return !!result[0].patient_exists;
     }
 
@@ -68,6 +68,7 @@ static async getAllHospitalEmployeesCOUNT(filtering_string = null, emp_perms = n
         FROM users u
         INNER JOIN employees e ON u.user_id = e.emp_id
         INNER JOIN employees_hospital eh ON e.emp_id = eh.emp_id
+        INNER JOIN hospital_roles hr ON hr.hosp_emp_id = u.user_id
 
         -- Only join what's needed for filtering and permissions
         ${emp_perms ? `
@@ -157,9 +158,9 @@ static async getAllHospitalEmployeesFullData(limit = 10, offset = 0, filtering_s
         INNER JOIN employees_hospital eh ON e.emp_id = eh.emp_id
 
         -- Title-specific joins
-        LEFT JOIN doctors d ON eh.hosp_emp_id = d.doctor_id
-        LEFT JOIN surgeons s ON eh.hosp_emp_id = s.surgeon_id
-        LEFT JOIN nurses n ON eh.hosp_emp_id = n.nurse_id
+        LEFT JOIN doctors d ON eh.hosp_emp_id = d.emp_id
+        LEFT JOIN surgeons s ON eh.hosp_emp_id = s.emp_id
+        LEFT JOIN nurses n ON eh.hosp_emp_id = n.emp_id
 
         -- Permissions and roles
         LEFT JOIN hospital_emp_perms hep ON eh.hosp_emp_id = hep.hosp_emp_id

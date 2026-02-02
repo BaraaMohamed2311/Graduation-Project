@@ -54,7 +54,7 @@ const ConsultationScheduler = ({ onBookingSubmit, availabilityData }) => {
 
   const handleDateSelect = (day) => {
     if (isDateSelectable(day) && isDateAvailable(day.date, parsed_availability)) {
-      console.log("Selected Date:", day.date ,  );
+
       setSelectedDate(day.date);
       // get corresponding start time using day's index in availability
       setStartTime(parsed_availability[day.date.getDay()].start) 
@@ -72,7 +72,7 @@ const ConsultationScheduler = ({ onBookingSubmit, availabilityData }) => {
       console.warn('No booking handler provided');
       return;
     }
-    console.log("selectedDate",selectedDate)
+
 
       // ==1. first get current date and time in UTC 
       const now = new Date();
@@ -114,11 +114,11 @@ const ConsultationScheduler = ({ onBookingSubmit, availabilityData }) => {
   // Get calendar days and only available time slots for selected date
 
     const days = getDaysInMonth(currentDate);
-    console.log("selectedDate, parsed_availability",selectedDate, parsed_availability)
+
     const availableTimeSlots = getAvailableTimeSlots(getDayIndexInWeek(selectedDate), parsed_availability);
     const canBook = canSubmitBooking(selectedDate, isSubmitting);
 
-    console.log("startTime,endTime",startTime,endTime)
+
 
   return (
     <div className={styles.consultationScheduler}>
@@ -191,7 +191,7 @@ const ConsultationScheduler = ({ onBookingSubmit, availabilityData }) => {
       {selectedDate && (
         <div className={styles.timeSelection}>
           <h3>Select Start Time for {formatDateDisplay(selectedDate)}</h3>
-          {console.log("availableTimeSlots",availableTimeSlots)}
+
           {availableTimeSlots.length > 0 ? (
             <>
             { /* Set both start and endtime states to avoid recalling functions many times */}

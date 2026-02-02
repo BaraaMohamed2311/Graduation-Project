@@ -110,14 +110,13 @@ router.get("/get-consultation/:user_id/:consultation_id",jwtVerify,async (req,re
       
    }
    else if(userType === "employee"){
-      other_user_id = consultationDetails.patient_id;
+      other_user_id = consultationDetails.user_id;
    }
    
    const otherUserTitle = await User.getUserTitleByID(other_user_id)
-   console.log("other_user_id",other_user_id,"otherUserTitle",otherUserTitle,"userType",userType)
+
    const otherUserDetails = await HospitalUsersMethods.MapUserToGETFullDataFunction(other_user_id,otherUserTitle);
    
-   console.log("otherUserDetails",otherUserDetails)
 
    
 
@@ -168,7 +167,7 @@ router.get("/get-all-consultations",jwtVerify,async (req,res)=>{
                 }
     
             const restFilters = rest; // other normal filters
-                console.log("restFilters",restFilters,"orderBy",orderBy)
+
             const filtering_string = Object.keys(restFilters).length > 0 ? padBoth(JoinFiltering(Object.entries(restFilters)),1) : "";
             const orderByClause = createOrderByClause(orderBy);
     
@@ -229,7 +228,7 @@ router.post("/book-consultation",jwtVerify,async (req,res)=>{
        
         const {
             hosp_emp_id,       // Doctor or Surgeon ID (from employees_hospital)
-            patient_id,  // The selected availability slot
+            user_id,  // The selected availability slot
             consultation_date,
             start_time,
             end_time,
@@ -239,7 +238,7 @@ router.post("/book-consultation",jwtVerify,async (req,res)=>{
 
         // ===1. Validate Input
 
-        if (!hosp_emp_id || !patient_id  || !consultation_date || !start_time || !consultation_type || !bookedAt) {
+        if (!hosp_emp_id || !user_id  || !consultation_date || !start_time || !consultation_type || !bookedAt) {
             return res.status(400).json({
                 success: false,
                 message: "Missing required booking details."
@@ -248,7 +247,7 @@ router.post("/book-consultation",jwtVerify,async (req,res)=>{
 
 
         // === Ceck if consultation_date is in the past
-        console.log("isDayInPast",isDayInPast(bookedAt, consultation_date))
+
         if(isDayInPast(bookedAt,consultation_date)){
             return res.status(400).json({
                 success: false,
@@ -279,8 +278,8 @@ router.post("/book-consultation",jwtVerify,async (req,res)=>{
         }
       
         // ===3. Check if new patient exists 
-        const userExists = await User.checkIfUserExistsById(patient_id);
-        const userType = await User.getUserTypeById(patient_id);
+        const userExists = await User.checkIfUserExistsById(user_id);
+        const userType = await User.getUserTypeById(user_id);
 
         const userIsEmployee = userType === 'employee';
 
@@ -292,7 +291,7 @@ router.post("/book-consultation",jwtVerify,async (req,res)=>{
         }
 
         // check that patient has no booked consultion before
-        const patietn_has_incomplete_consultation = await ConsultationMethods.patientHasOtherConsultationWithEmp(patient_id,hosp_emp_id)
+        const patietn_has_incomplete_consultation = await ConsultationMethods.patientHasOtherConsultationWithEmp(user_id,hosp_emp_id)
         if(patietn_has_incomplete_consultation){
           return res.status(400).json({
                 success: false,
@@ -302,8 +301,8 @@ router.post("/book-consultation",jwtVerify,async (req,res)=>{
       
 
         // === Check if patient already booked it
-        const isPatientAvailable = await PatientMethods.isPatientAvailable(patient_id,consultation_date,start_time);
-        console.log("isPatientAvailable",isPatientAvailable)
+        const isPatientAvailable = await PatientMethods.isPatientAvailable(user_id,consultation_date,start_time);
+
         if(!isPatientAvailable){
             return res.status(400).json({
                 success: false,
@@ -318,12 +317,12 @@ router.post("/book-consultation",jwtVerify,async (req,res)=>{
         const dayOfWeekIndex = dayOfWeek.getDay(); // 0 (Sun) to 6 (Sat)
         const availability = await ConsultationMethods.getAvailabilityDay(hosp_emp_id,dayOfWeekIndex); // Not used in this context
         if(!availability) return res.status(404).json({success:false,message:"Not Available on that date"})
-        console.log("Availability for the day:", availability);
+
 
         // ===4. Check consultation_status 
 
         const consultation_slot = await ConsultationMethods.getEmployeeConsultationSlot(hosp_emp_id,consultation_date,start_time);
-        console.log("isSlotAvailable for the day:", consultation_slot);
+
 
 
         const isConsultionAvailable = await ConsultationMethods.isConsultionAvailable(availability,consultation_slot);
@@ -339,8 +338,8 @@ router.post("/book-consultation",jwtVerify,async (req,res)=>{
         // =============================
         // ====6. Create Consultation Entry
         // =============================
-        const isConsultationBooked = await ConsultationMethods.bookConsultationAppointment(hosp_emp_id, patient_id,availability.availability_id,consultation_date,start_time,end_time,consultation_type)
-        console.log("Appointment Creation Status:", isConsultationBooked);
+        const isConsultationBooked = await ConsultationMethods.bookConsultationAppointment(hosp_emp_id, user_id,availability.availability_id,consultation_date,start_time,end_time,consultation_type)
+
         if(!isConsultationBooked){
             return res.status(400).json({
                 success: false,
@@ -401,7 +400,7 @@ router.put("/update-consultation-status",jwtVerify,async (req,res)=>{
         });
         }
         // Check if consultation is updateable
-        console.log(existingAppointment)
+
         if(existingAppointment.consultation_status !== "Available" && existingAppointment.consultation_status !== "Scheduled"){
             return res.status(404).json({
             success: false,
@@ -438,10 +437,10 @@ router.put("/update-consultation-status",jwtVerify,async (req,res)=>{
 // =================================
 router.put("/update-consultation-patient",jwtVerify,async (req,res)=>{
         try {
-        const { consultation_id, patient_id } = req.body;
+        const { consultation_id, user_id } = req.body;
 
         // ===1. Validate inputs
-        if (!consultation_id || !patient_id) {
+        if (!consultation_id || !user_id) {
         return res.status(400).json({
             success: false,
             message: "Bad Request",
@@ -462,7 +461,7 @@ router.put("/update-consultation-patient",jwtVerify,async (req,res)=>{
 
 
         // ===3. Check if new patient exists 
-        const userExists = await User.checkIfUserExistsById(patient_id);
+        const userExists = await User.checkIfUserExistsById(user_id);
         
         if(!userExists){
             return res.status(404).json({
@@ -472,7 +471,7 @@ router.put("/update-consultation-patient",jwtVerify,async (req,res)=>{
         }
 
         // ===4. Update appointment patient id
-        const result = await ConsultationMethods.updateConsultationPatient(consultation_id, patient_id);
+        const result = await ConsultationMethods.updateConsultationPatient(consultation_id, user_id);
 
         if (result) {
         res.status(200).json({
@@ -498,10 +497,10 @@ router.put("/update-consultation-patient",jwtVerify,async (req,res)=>{
 // =================================
 router.put("/reschedule-appointment",jwtVerify,async (req,res)=>{
         try {
-        const { hosp_emp_id,patient_id,consultation_id, new_consultation_date , new_start_time,new_end_time } = req.body;
+        const { hosp_emp_id,user_id,consultation_id, new_consultation_date , new_start_time,new_end_time } = req.body;
 
         // ===1. Validate inputs
-        if (!consultation_id || !new_consultation_date || !new_start_time || !patient_id) {
+        if (!consultation_id || !new_consultation_date || !new_start_time || !user_id) {
         return res.status(400).json({
             success: false,
             message: "Bad Request",
@@ -517,7 +516,7 @@ router.put("/reschedule-appointment",jwtVerify,async (req,res)=>{
         }
 
         // === Check if patient already booked it
-        const isPatientAvailable = await PatientMethods.isPatientAvailable(patient_id,new_consultation_date,new_start_time);
+        const isPatientAvailable = await PatientMethods.isPatientAvailable(user_id,new_consultation_date,new_start_time);
 
         if(!isPatientAvailable){
             return res.status(400).json({
@@ -542,12 +541,12 @@ router.put("/reschedule-appointment",jwtVerify,async (req,res)=>{
         const dayOfWeek  = new Date(new_consultation_date);
         const dayOfWeekIndex = dayOfWeek.getDay(); // 0 (Sun) to 6 (Sat)
         const availability = await ConsultationMethods.getAvailabilityDay(hosp_emp_id,dayOfWeekIndex); // Not used in this context
-        console.log("Availability for the day:", availability);
+
 
         // ===4. Check consultation_status 
 
         const consultation_slot = await ConsultationMethods.getEmployeeConsultationSlot(hosp_emp_id,new_consultation_date,new_start_time);
-        console.log("isSlotAvailable for the day:", consultation_slot);
+
 
 
         const isConsultionAvailable = await ConsultationMethods.isConsultionAvailable(availability,consultation_slot);
@@ -610,7 +609,7 @@ router.delete("/delete-appointment",jwtVerify,async (req,res)=>{
         }
 
         // ===3. Does user relate to that appointment as a patient or employee
-        if(existingAppointment.hosp_emp_id !== parseInt(user_id) && existingAppointment.patient_id !== parseInt(user_id)){
+        if(existingAppointment.hosp_emp_id !== parseInt(user_id) && existingAppointment.user_id !== parseInt(user_id)){
             return res.status(403).json({
                 success: false,
                 message: "You are not authorized to delete this appointment.",

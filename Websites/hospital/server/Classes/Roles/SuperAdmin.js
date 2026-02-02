@@ -57,7 +57,7 @@ class SuperAdmin extends User {
     // this updates any data field in employees table
 
     static async EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updating_string  ){
-            console.log("Superadnin EditOtherUserData",other_user_id, other_user_title, updating_string)
+
         return new Promise(async (resolve , reject )=>{
             try{
                 

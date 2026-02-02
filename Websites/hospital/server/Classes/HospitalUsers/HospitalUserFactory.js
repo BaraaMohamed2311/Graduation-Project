@@ -210,15 +210,15 @@ static async getSpecificData(user_id, user_title) {
     /**
      * Update doctor-patient relationship
      */
-    static async updateDoctorPatient(doctor_id, patient_id, data) {
-        return await DoctorMethods.updateDoctorPatient(doctor_id, patient_id, data);
+    static async updateDoctorPatient(emp_id, user_id, data) {
+        return await DoctorMethods.updateDoctorPatient(emp_id, user_id, data);
     }
 
     /**
      * Replace doctor availability schedule
      */
-    static async replaceDoctorAvailability(doctor_id, data) {
-        return await DoctorMethods.replaceDoctorAvailability(doctor_id, data);
+    static async replaceDoctorAvailability(emp_id, data) {
+        return await DoctorMethods.replaceDoctorAvailability(emp_id, data);
     }
 
     /**
@@ -238,8 +238,8 @@ static async getSpecificData(user_id, user_title) {
     /**
      * Delete patient and cascade related data
      */
-    static async deletePatient(patient_id) {
-        return await PatientMethods.cascadeDeletePatientData(patient_id);
+    static async deletePatient(user_id) {
+        return await PatientMethods.cascadeDeletePatientData(user_id);
     }
 }
 

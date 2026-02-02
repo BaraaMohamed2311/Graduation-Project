@@ -25,7 +25,7 @@ function EmployeesListPage() {
   let [numOfPages , setNumOfPages] = useState(1);
   let [needsSync , setNeedsSync] = useState(false);
 
-console.log("filteredResults",filteredResults)
+
 
   // Refrences
   const inputsBoxsRef= useRef({});
@@ -50,12 +50,12 @@ useEffect(() => {
   //         Fetch Pages
   // ===========================================
   useEffect(() => {
-    console.log("isFiltered",isFiltered , isIndexedDBLoaded)
+
     if (isFiltered) return;
     if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
   
     if (!fetched_employee_pages.has(currPage) || needsSync) {
-      console.log("page not fetched")
+
       fetch(`${process.env.APIKEY}/list/employees?user_id=${user_data.user_id}&pagination=${currPage}&size=${sizeOfPage}`, {
         mode: "cors",
         headers: {
@@ -69,7 +69,7 @@ useEffect(() => {
         })
         .then((data) => {
           if (data?.success) {
-            console.log("success")
+
             setNumOfPages(data.numOfPages || 1);
             setCached_Employees((prev) => {
               const map = new Map(prev.map((emp) => [emp.user_id, emp])); 
@@ -114,7 +114,7 @@ useEffect(() => {
     const ByspecialtyREF = selectBoxsRef.current["emp_specialty"];
     const ByRoleREF = selectBoxsRef.current["role_name"];
     const ByPermsREF = selectBoxsRef.current["emp_perms"];
-    console.log("reset",selectBoxsRef.current["emp_specialty"].value);
+
     setIsFiltered(false) // set to false to render cached employees with no filters
     setFilteredResults([]); //to remove all
     setCurrPage(1);

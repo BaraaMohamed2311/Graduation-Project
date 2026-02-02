@@ -16,7 +16,7 @@ export default function Form({
      const Fields = FormFieldsMap[formKind] || (() => null);
      
     const shared_inputs_meta = fieldDefinitions?.inputs_info
-    console.log("fieldDefinitions",fieldDefinitions)
+
     return (
         <form className={formKind === "update_form" ? styles.sided_form :""} method="post" onSubmit={form_handler}>
             

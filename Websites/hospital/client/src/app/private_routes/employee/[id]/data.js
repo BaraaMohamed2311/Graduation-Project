@@ -17,17 +17,30 @@ let inputs_info = [
         
 
     }
-    ,
-    {
-
-        label:"Rate",
-        type:"Number",
-        name:"emp_rate",
-        
-
-    }
+    
     
 ];
+
+
+// Title-specific fields mapping
+const title_specific_fields = {
+    "Doctor": [],
+    "Surgeon": [],
+    "Nurse": [
+        {
+            label: "Floor Number",
+            type: "number",
+            name: "floor_number",
+        }
+    ],
+    // Add more titles as needed
+};
+
+// Helper function to get all fields for a specific title
+export const getFieldsForTitle = (title) => {
+    const specificFields = title_specific_fields[title] || [];
+    return [...inputs_info, ...specificFields];
+};
 
 
 let select_role_options ={
@@ -123,4 +136,4 @@ let check_box = {
 
 let select_def = {select_role_options }
 
-export  {inputs_info , select_def  , check_box}
+export  {inputs_info , select_def  , check_box , title_specific_fields}

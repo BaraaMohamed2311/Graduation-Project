@@ -391,7 +391,7 @@ CREATE TABLE employees_hospital (
 -- ==========================================
 DROP TABLE IF EXISTS doctors;
 CREATE TABLE doctors (
-    doctor_id INT PRIMARY KEY,
+    emp_id INT PRIMARY KEY,
     hosp_emp_id INT UNIQUE NOT NULL,
     initial_consultation_price INT NOT NULL DEFAULT 0,
     followup_consultation_price INT NOT NULL DEFAULT 0,
@@ -406,7 +406,7 @@ CREATE TABLE doctors (
 -- ==========================================
 DROP TABLE IF EXISTS surgeons;
 CREATE TABLE surgeons (
-    surgeon_id INT PRIMARY KEY,
+    emp_id INT PRIMARY KEY,
     hosp_emp_id INT UNIQUE NOT NULL,
     initial_consultation_price INT NOT NULL DEFAULT 0,
     followup_consultation_price INT NOT NULL DEFAULT 0,
@@ -422,7 +422,7 @@ CREATE TABLE surgeons (
 -- ==========================================
 DROP TABLE IF EXISTS nurses;
 CREATE TABLE nurses (
-    nurse_id INT PRIMARY KEY,
+    emp_id INT PRIMARY KEY,
     hosp_emp_id INT UNIQUE NOT NULL,  
     floor_number INT NOT NULL DEFAULT -1,
     FOREIGN KEY (hosp_emp_id) REFERENCES employees_hospital(hosp_emp_id)
@@ -434,7 +434,7 @@ CREATE TABLE nurses (
 -- Patients table
 DROP TABLE IF EXISTS patients;
 CREATE TABLE patients (
-    patient_id INT AUTO_INCREMENT PRIMARY KEY,     -- unique patient ID
+    user_id INT AUTO_INCREMENT PRIMARY KEY,     -- unique patient ID
     patient_name VARCHAR(100) NOT NULL,
     patient_email varchar(50) DEFAULT NULL,
 	patient_password varchar(255) DEFAULT NULL,
@@ -456,14 +456,14 @@ CREATE TABLE patients (
 -- Join table (many-to-many relationship between doctors and patients)
 DROP TABLE IF EXISTS doctor_patient;
 CREATE TABLE doctor_patient (
-    doctor_id INT NOT NULL,
-    patient_id INT NOT NULL,
+    emp_id INT NOT NULL,
+    user_id INT NOT NULL,
     assigned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- when doctor started treating patient
-    PRIMARY KEY (doctor_id, patient_id),              -- composite PK
-    FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id)
+    PRIMARY KEY (emp_id, user_id),              -- composite PK
+    FOREIGN KEY (emp_id) REFERENCES doctors(emp_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    FOREIGN KEY (user_id) REFERENCES patients(user_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -578,10 +578,10 @@ CREATE TABLE rooms (
     room_id INT AUTO_INCREMENT PRIMARY KEY,
     room_number INT NOT NULL,
     floor_id INT NOT NULL,
-    patient_id INT DEFAULT NULL,
+    user_id INT DEFAULT NULL,
     isOccupied BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (floor_id) REFERENCES floors(floor_id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id) REFERENCES patients(user_id) ON DELETE SET NULL,
     UNIQUE (room_number, floor_id) -- prevent duplicate room numbers on the same floor
 );
 
@@ -662,7 +662,7 @@ INSERT INTO employees_hospital (hosp_emp_id, emp_id, emp_title) VALUES
 
 
 
-INSERT INTO doctors (doctor_id, hosp_emp_id, initial_consultation_price, followup_consultation_price, years_of_exp) VALUES
+INSERT INTO doctors (emp_id, hosp_emp_id, initial_consultation_price, followup_consultation_price, years_of_exp) VALUES
 (1016, 1016, 1200, 800, 12),
 (1045, 1045, 1500, 900, 18),
 (1065, 1065, 700, 500, 7),
@@ -685,7 +685,7 @@ INSERT INTO doctors (doctor_id, hosp_emp_id, initial_consultation_price, followu
 
 
 
-INSERT INTO surgeons (surgeon_id, hosp_emp_id, initial_consultation_price, followup_consultation_price, years_of_exp, surgery_price) VALUES
+INSERT INTO surgeons (emp_id, hosp_emp_id, initial_consultation_price, followup_consultation_price, years_of_exp, surgery_price) VALUES
 (1004, 1004, 1500, 1200, 18, 25000),
 (1029, 1029, 1700, 1400, 22, 40000),
 (1046, 1046, 1300, 1000, 12, 15000),
@@ -701,7 +701,7 @@ INSERT INTO surgeons (surgeon_id, hosp_emp_id, initial_consultation_price, follo
 (1180, 1180, 1700, 1400, 21, 35000),
 (1190, 1190, 1400, 1100, 13, 20000);
 
-INSERT INTO nurses (nurse_id, hosp_emp_id, floor_number) VALUES
+INSERT INTO nurses (emp_id, hosp_emp_id, floor_number) VALUES
 (1003, 1003, 3),
 (1024, 1024, 2),
 (1034, 1034, 2),
@@ -902,7 +902,7 @@ INSERT INTO hospital_roles (hosp_emp_id, role_name) VALUES
 (1196, 'Admin');
 
 -- patients
-INSERT INTO `patients` (patient_id, patient_name, patient_email, patient_password, patient_phone, patient_address, isAssignedToRoom, floor_number, date_of_birth, next_check_date, patient_gender, emergency_contact) VALUES
+INSERT INTO `patients` (user_id, patient_name, patient_email, patient_password, patient_phone, patient_address, isAssignedToRoom, floor_number, date_of_birth, next_check_date, patient_gender, emergency_contact) VALUES
 (1,'Ahmed El-Sayed','ahmed.el-sayed9672@gmail.com','$2b$12$fdO6tfPx7ScGN08jbdtSIeyAWkC3G9yZWcqbI1kLxkTEOO4wBTF2e','01597240455','Maadi, Cairo',FALSE,-1,'1983-03-10','2025-10-02','Male','Nourhan Adel - 01230597742'),
 (2,'Nada Fahmy','nada.fahmy472@gmail.com','$2b$12$yLCreYUqdVr76QCigEga/enAXG/zjNP6pX/T9kUcY9jzW/tp/h6zq','01296722388','Heliopolis, Cairo',TRUE,6,'1959-08-03','2025-10-17','Male','Heba Said - 01172775502'),
 (3,'Mona Hassan','mona.hassan507@gmail.com','$2b$12$CnHqcKtP3KkVsOZfhQkJ9uTaFC0aFB/4T2pfaPBhdx8jmg6XGqbsi','01127877754','Mansoura, Dakahlia',TRUE,3,'1980-09-03','2025-10-17','Female','Heba Said - 01573388042'),
@@ -955,7 +955,7 @@ INSERT INTO `patients` (patient_id, patient_name, patient_email, patient_passwor
 (50,'Heba Said','heba.said1173@gmail.com','$2b$12$hj56JyT4z3ZcMcqUsmVt/OFvxK/4cuj35FyYj.sZshCrqZmzqHBE6','01522221393','6th of October City, Giza',FALSE,-1,'1974-12-05','2025-09-27','Female','Nourhan Adel - 01584215862');
 
 
-INSERT INTO doctor_patient (doctor_id, patient_id) VALUES
+INSERT INTO doctor_patient (emp_id, user_id) VALUES
 -- Doctor 1016
 (1016, 1),
 (1016, 2),
@@ -1061,7 +1061,7 @@ VALUES (1), (2), (3), (4), (5);
 
 -- Insert 3 rooms per floor (floor_id corresponds to the inserted floors above)
 -- Floors assumed to exist: floor_id 1..5
-INSERT INTO rooms (room_number, floor_id, patient_id, isOccupied) VALUES
+INSERT INTO rooms (room_number, floor_id, user_id, isOccupied) VALUES
 (1, 1, NULL, FALSE),
 (2, 1, NULL, FALSE),
 (3, 1, NULL, FALSE),
@@ -1084,54 +1084,54 @@ INSERT INTO rooms (room_number, floor_id, patient_id, isOccupied) VALUES
 
 
 -- Floor 1
-UPDATE rooms SET patient_id = 25, isOccupied = TRUE WHERE room_number = 1 AND floor_id = 1;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 1, floor_number = 1 WHERE patient_id = 25;
+UPDATE rooms SET user_id = 25, isOccupied = TRUE WHERE room_number = 1 AND floor_id = 1;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 1, floor_number = 1 WHERE user_id = 25;
 
-UPDATE rooms SET patient_id = 19, isOccupied = TRUE WHERE room_number = 2 AND floor_id = 1;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 2, floor_number = 1 WHERE patient_id = 19;
+UPDATE rooms SET user_id = 19, isOccupied = TRUE WHERE room_number = 2 AND floor_id = 1;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 2, floor_number = 1 WHERE user_id = 19;
 
-UPDATE rooms SET patient_id = 6, isOccupied = TRUE WHERE room_number = 3 AND floor_id = 1;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 3, floor_number = 1 WHERE patient_id = 6;
+UPDATE rooms SET user_id = 6, isOccupied = TRUE WHERE room_number = 3 AND floor_id = 1;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 3, floor_number = 1 WHERE user_id = 6;
 
 -- Floor 2
-UPDATE rooms SET patient_id = 12, isOccupied = TRUE WHERE room_number = 1 AND floor_id = 2;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 1, floor_number = 2 WHERE patient_id = 12;
+UPDATE rooms SET user_id = 12, isOccupied = TRUE WHERE room_number = 1 AND floor_id = 2;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 1, floor_number = 2 WHERE user_id = 12;
 
-UPDATE rooms SET patient_id = 41, isOccupied = TRUE WHERE room_number = 2 AND floor_id = 2;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 2, floor_number = 2 WHERE patient_id = 41;
+UPDATE rooms SET user_id = 41, isOccupied = TRUE WHERE room_number = 2 AND floor_id = 2;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 2, floor_number = 2 WHERE user_id = 41;
 
-UPDATE rooms SET patient_id = 45, isOccupied = TRUE WHERE room_number = 3 AND floor_id = 2;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 3, floor_number = 2 WHERE patient_id = 45;
+UPDATE rooms SET user_id = 45, isOccupied = TRUE WHERE room_number = 3 AND floor_id = 2;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 3, floor_number = 2 WHERE user_id = 45;
 
 -- Floor 3
-UPDATE rooms SET patient_id = 3, isOccupied = TRUE WHERE room_number = 1 AND floor_id = 3;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 1, floor_number = 3 WHERE patient_id = 3;
+UPDATE rooms SET user_id = 3, isOccupied = TRUE WHERE room_number = 1 AND floor_id = 3;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 1, floor_number = 3 WHERE user_id = 3;
 
-UPDATE rooms SET patient_id = 5, isOccupied = TRUE WHERE room_number = 2 AND floor_id = 3;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 2, floor_number = 3 WHERE patient_id = 5;
+UPDATE rooms SET user_id = 5, isOccupied = TRUE WHERE room_number = 2 AND floor_id = 3;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 2, floor_number = 3 WHERE user_id = 5;
 
-UPDATE rooms SET patient_id = 10, isOccupied = TRUE WHERE room_number = 3 AND floor_id = 3;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 3, floor_number = 3 WHERE patient_id = 10;
+UPDATE rooms SET user_id = 10, isOccupied = TRUE WHERE room_number = 3 AND floor_id = 3;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 3, floor_number = 3 WHERE user_id = 10;
 
 -- Floor 4
-UPDATE rooms SET patient_id = 23, isOccupied = TRUE WHERE room_number = 1 AND floor_id = 4;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 1, floor_number = 4 WHERE patient_id = 23;
+UPDATE rooms SET user_id = 23, isOccupied = TRUE WHERE room_number = 1 AND floor_id = 4;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 1, floor_number = 4 WHERE user_id = 23;
 
-UPDATE rooms SET patient_id = 36, isOccupied = TRUE WHERE room_number = 2 AND floor_id = 4;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 2, floor_number = 4 WHERE patient_id = 36;
+UPDATE rooms SET user_id = 36, isOccupied = TRUE WHERE room_number = 2 AND floor_id = 4;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 2, floor_number = 4 WHERE user_id = 36;
 
-UPDATE rooms SET patient_id = 46, isOccupied = TRUE WHERE room_number = 3 AND floor_id = 4;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 3, floor_number = 4 WHERE patient_id = 46;
+UPDATE rooms SET user_id = 46, isOccupied = TRUE WHERE room_number = 3 AND floor_id = 4;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 3, floor_number = 4 WHERE user_id = 46;
 
 -- Floor 5
-UPDATE rooms SET patient_id = 4, isOccupied = TRUE WHERE room_number = 1 AND floor_id = 5;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 1, floor_number = 5 WHERE patient_id = 4;
+UPDATE rooms SET user_id = 4, isOccupied = TRUE WHERE room_number = 1 AND floor_id = 5;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 1, floor_number = 5 WHERE user_id = 4;
 
-UPDATE rooms SET patient_id = 11, isOccupied = TRUE WHERE room_number = 2 AND floor_id = 5;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 2, floor_number = 5 WHERE patient_id = 11;
+UPDATE rooms SET user_id = 11, isOccupied = TRUE WHERE room_number = 2 AND floor_id = 5;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 2, floor_number = 5 WHERE user_id = 11;
 
-UPDATE rooms SET patient_id = 22, isOccupied = TRUE WHERE room_number = 3 AND floor_id = 5;
-UPDATE patients SET isAssignedToRoom = TRUE, room_number = 3, floor_number = 5 WHERE patient_id = 22;
+UPDATE rooms SET user_id = 22, isOccupied = TRUE WHERE room_number = 3 AND floor_id = 5;
+UPDATE patients SET isAssignedToRoom = TRUE, room_number = 3, floor_number = 5 WHERE user_id = 22;
 
 -- ========================================
 -- Inserting perms to users

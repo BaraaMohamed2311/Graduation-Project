@@ -56,8 +56,7 @@ class AvailabilityMethods {
 
 
 static async updateAvailability(hosp_emp_id, availabilityString) {
-        console.log("Updating availability for hosp_emp_id:", hosp_emp_id);
-        console.log("New availability string:", availabilityString);
+
         const availabilityEntries = availabilityString
             .split(';')
             .map(entry => entry.trim())

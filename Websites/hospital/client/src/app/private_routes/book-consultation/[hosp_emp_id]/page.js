@@ -30,7 +30,7 @@ function BookConsultationPage() {
         .then((data) => {
             if (data?.success) {
                 setAvailabilityData(data.body);
-                console.log("Availability Data:", data.body);
+
             } else {
                 userNotification("error", data.message);
             }
@@ -42,8 +42,6 @@ function BookConsultationPage() {
 
 
     function onBookingSubmit(bookingData) {
-        console.log("Booking Data Submitted:", bookingData);
-
 
         fetch(`${process.env.APIKEY}/booking/book-consultation`, {
             method: "POST",
@@ -54,7 +52,7 @@ function BookConsultationPage() {
             },
             body: JSON.stringify({
                 hosp_emp_id,       // Doctor or Surgeon ID (from employees_hospital)
-                patient_id: user_data.user_id,  // The selected availability slot
+                user_id: user_data.user_id,  // The selected availability slot
                 consultation_date:bookingData.date_time ,
                 start_time:bookingData.startTime,
                 end_time:bookingData.endTime,

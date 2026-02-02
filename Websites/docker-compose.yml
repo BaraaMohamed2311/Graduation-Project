@@ -1,5 +1,3 @@
-version: '3.8'
-
 
 # EMS containers & Hospital containers are separated by different networks
 # EMS and Hospital servers are connected to the same database network to access centralized database
@@ -8,14 +6,18 @@ services:
 # So host can resolve services names "ems_server" & "ems_client" 
   nginx:
     depends_on:
-      - ems_server
+      - hospital_client
+      - hospital_server
       - ems_client
+      - ems_server
+
     restart: on-failure
     build:
       dockerfile: Dockerfile.dev
       context: ./nginx
     ports:
-      - "3050:80"
+      - "3050:3050"
+      - "3051:3051"
       
 
     networks:
@@ -36,7 +38,7 @@ services:
       - 5500:5500
 
     networks:
-      - grad-net
+      - ems-net
       - db-net
 
 
@@ -61,11 +63,11 @@ services:
   # server does envirmonet checking at server.js code
   hospital_server:
     build: 
-      context: ./ems/Server
+      context: ./hospital/server
       dockerfile: Dockerfile.backend
       args:
         - NODE_ENV=${NODE_ENV:-development} # defined in .env
-    container_name: ems_server
+    container_name: hospital_server
 
     ports:
       - 8888:8888
@@ -80,12 +82,12 @@ services:
 # client has to be provided with enviroment or by default it will build development env
   hospital_client:
     build: 
-      context: ./ems/client
+      context: ./hospital/client
       dockerfile: Dockerfile.frontend
       target: ${NODE_ENV:-development} # defined in .env
       args:
         - NODE_ENV=${NODE_ENV}
-    container_name: ems_client
+    container_name: hospital_client
 
     ports:
       - 3001:3000

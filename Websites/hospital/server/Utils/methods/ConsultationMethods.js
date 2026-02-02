@@ -17,14 +17,14 @@ class ConsultationMethods {
         return result[0]?.consultations_count
     }
 
-    static async getPATConsultationsCOUNT(patient_id){
+    static async getPATConsultationsCOUNT(user_id){
         const query = `
         SELECT 
              COUNT(*) AS consultations_count
             FROM consultations
-            WHERE patient_id = ?`
+            WHERE user_id = ?`
 
-        const result = await executeMySqlQuery(query,[patient_id]);
+        const result = await executeMySqlQuery(query,[user_id]);
 
         return result[0]?.consultations_count
     }
@@ -68,7 +68,7 @@ class ConsultationMethods {
             return result;
         }
 
-    static async getPatientAppointments(patient_id, limit = null, offset = null, filtering_string = null, orderByClause = null) {
+    static async getPatientAppointments(user_id, limit = null, offset = null, filtering_string = null, orderByClause = null) {
     
             let query = `
                 SELECT 
@@ -76,10 +76,10 @@ class ConsultationMethods {
                     DATE_FORMAT(start_time, '%H:%i') AS start_time,
                     DATE_FORMAT(end_time, '%H:%i') AS end_time
                 FROM consultations
-                WHERE patient_id = ?
+                WHERE user_id = ?
             `;
             
-            const params = [patient_id];
+            const params = [user_id];
             
             // Add filtering_string with AND if provided
             if (filtering_string && filtering_string.trim()) {
@@ -122,18 +122,18 @@ class ConsultationMethods {
         
     }
 
-    static async getPatientAppointment(patient_id) {
+    static async getPatientAppointment(user_id) {
         let query = `
            SELECT 
             *,
             DATE_FORMAT(start_time, '%H:%i') AS start_time,
             DATE_FORMAT(end_time, '%H:%i')   AS end_time
             FROM consultations
-            WHERE patient_id = ?
+            WHERE user_id = ?
         `;
 
 
-        const result = await executeMySqlQuery(query, [patient_id]);
+        const result = await executeMySqlQuery(query, [user_id]);
         return result[0];
     }
 
@@ -171,7 +171,7 @@ class ConsultationMethods {
 
 
 
-    static async getConsultationSlot(hosp_emp_id,patient_id,consultation_date,start_time) {
+    static async getConsultationSlot(hosp_emp_id,user_id,consultation_date,start_time) {
         let query = `
            SELECT 
              *,
@@ -187,9 +187,9 @@ class ConsultationMethods {
             params.push(hosp_emp_id);
         }
 
-        if(patient_id){
-            query += ` AND patient_id = ? `;
-            params.push(patient_id);
+        if(user_id){
+            query += ` AND user_id = ? `;
+            params.push(user_id);
         }
         
         const result = await executeMySqlQuery(query, params);
@@ -254,13 +254,13 @@ class ConsultationMethods {
             // Request's start and end slots
             const dateISO = new Date(requested_consultion_date).toISOString();
             const dateOnly = dateISO.split("T")[0];
-            console.log("availability",availability,"requested_start_Slot",requested_start_Slot,"requested_end_Slot",requested_end_Slot,"dateOnly",dateOnly)
+
             const reqStart = new Date(`${dateOnly}T${requested_start_Slot}`);
             const reqEnd = new Date(`${dateOnly}T${requested_end_Slot}`);
             // Shift's availability hours
             const avStart = new Date(`${dateOnly}T${availability.start_time}`);
             const avEnd = new Date(`${dateOnly}T${availability.end_time}`);
-            console.log("reqStart",reqStart,"reqEnd",reqEnd,"avStart",avStart,"avEnd",avEnd)
+
             // Check if the requested times are inside the available window
             if (reqStart >= avStart && reqEnd <= avEnd) {
                 return true;
@@ -282,7 +282,7 @@ class ConsultationMethods {
             if (!consultation_slot) return true;
 
             const isSlotWithinShift = await this.isSlotWithinAvailability(availability,consultation_slot.start_time,consultation_slot.end_time,consultation_slot.consultation_date);
-            console.log("isSlotWithinShift",isSlotWithinShift)
+
             if( !isSlotWithinShift) return false;
 
         // ====2.Now if Slot Consultion is free
@@ -294,12 +294,12 @@ class ConsultationMethods {
             
     }
 
-    static async patientHasOtherConsultationWithEmp(patient_id,hosp_emp_id){
+    static async patientHasOtherConsultationWithEmp(user_id,hosp_emp_id){
         const query = `SELECT 
              *
-            from consultations WHERE patient_id = ? AND hosp_emp_id = ? AND consultation_status = 'Scheduled'`
+            from consultations WHERE user_id = ? AND hosp_emp_id = ? AND consultation_status = 'Scheduled'`
 
-        const result = await executeMySqlQuery(query,[patient_id,hosp_emp_id]);
+        const result = await executeMySqlQuery(query,[user_id,hosp_emp_id]);
 
         return result.length > 0 
     }
@@ -309,7 +309,7 @@ class ConsultationMethods {
     //   Insert new Booking
     // ========================================
 
-    static async bookConsultationAppointment(hosp_emp_id, patient_id,availability_id,consultation_date,start_time,end_time,consultation_type) {
+    static async bookConsultationAppointment(hosp_emp_id, user_id,availability_id,consultation_date,start_time,end_time,consultation_type) {
         try{
 
             if(start_time === end_time){
@@ -332,11 +332,11 @@ class ConsultationMethods {
 
 
         const query = `
-            INSERT INTO consultations  (hosp_emp_id ,patient_id,availability_id,consultation_date,start_time,end_time,consultation_status,consultation_type)
+            INSERT INTO consultations  (hosp_emp_id ,user_id,availability_id,consultation_date,start_time,end_time,consultation_status,consultation_type)
             VALUES (?, ?, ?, ?, ?,?,?,?)
         `;
 
-        const result = await executeMySqlQuery(query, [hosp_emp_id, patient_id,availability_id,consultation_date,start_time,end_time,"Scheduled",consultation_type]);
+        const result = await executeMySqlQuery(query, [hosp_emp_id, user_id,availability_id,consultation_date,start_time,end_time,"Scheduled",consultation_type]);
         return result.affectedRows > 0;;
         }
         catch(err){
@@ -372,16 +372,16 @@ class ConsultationMethods {
     }
 
 
-    static async updateConsultationPatient(consultation_id, patient_id) {
+    static async updateConsultationPatient(consultation_id, user_id) {
         try{
             const query = `
            UPDATE consultations
             SET 
-            patient_id = ?
+            user_id = ?
             WHERE consultation_id = ? 
         `;
 
-        const result = await executeMySqlQuery(query, [patient_id,consultation_id]);
+        const result = await executeMySqlQuery(query, [user_id,consultation_id]);
         return result.affectedRows > 0;;
         }
         catch(err){
@@ -445,10 +445,10 @@ static async deleteEmpConsultation(hosp_emp_id , consultation_date) {
 
     }
     // deletes all consultations on specific day
-    static async deletePatAllConsultation(patient_id , consultation_date) {
+    static async deletePatAllConsultation(user_id , consultation_date) {
 
-            const query = `DELETE FROM consultations WHERE patient_id = ? AND consultation_date = ?`;
-            const result = await executeMySqlQuery(query, [patient_id,consultation_date]);
+            const query = `DELETE FROM consultations WHERE user_id = ? AND consultation_date = ?`;
+            const result = await executeMySqlQuery(query, [user_id,consultation_date]);
             return result.affectedRows > 0;
 
     }

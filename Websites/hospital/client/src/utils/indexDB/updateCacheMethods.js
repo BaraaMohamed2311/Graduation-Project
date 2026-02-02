@@ -4,7 +4,7 @@ import { openIndxDB } from "./openIndxDB.js";
 // ===================================
 
 export async function putIndexDB(storeName, newDataArray) {
-  console.log("caching new data ", newDataArray)
+
   if (!Array.isArray(newDataArray)) {
     throw new Error("appendToIndexDB expects an array of objects");
   }
@@ -24,7 +24,6 @@ export async function putIndexDB(storeName, newDataArray) {
 
     // use put to add or update records (if key exists, it updates), to prevent duplicates
       newDataArray.forEach((obj) => {
-        console.log(obj)
         store.put(obj);
       })
 

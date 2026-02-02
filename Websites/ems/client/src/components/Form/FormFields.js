@@ -10,9 +10,7 @@ import { global_mapped_specialities } from "@/global_data";
 // ================================
 
 function DynamicSelect({ selectOption, userDisplayed, references, onChange, styles }) {
-    console.log("selectOption",selectOption)
 
-    console.log("userDisplayed:", userDisplayed ,selectOption?.name ); // Add this
     if (!selectOption || !references || !references.selectBoxsRef) return null;
 
     return (
@@ -43,7 +41,7 @@ function EmployeeSelectFields({ select_def, user_displayed, references, styles }
             name: "emp_specialty",
         }) : null;
     }, [selectedTitleValue]);
-    console.log("specialitiesForTitle", specialitiesForTitle);
+
     return (
         <>
             {/* Title select */}
@@ -80,9 +78,6 @@ function EmployeeSelectFields({ select_def, user_displayed, references, styles }
 // ================================
 function RenderOtherSelects({ select_def, exclude = [], user_displayed, references, styles }) {
 
-    Object.entries(select_def || {})
-        .filter(([key]) => !exclude.includes(key))
-        .map(([key, selectOption]) =>console.log("RenderOtherSelects",key, selectOption));
 
     return  Object.entries(select_def || {})
         .filter(([key]) => !exclude.includes(key))
@@ -127,15 +122,18 @@ export default function UpdateUserFormFields({
                 styles={styles}
             />
 
-            {/* Check Box Permissions */}
-            {check_box && Object.keys(check_box).map(key=>(
+            {/* Check Boxs */}
+            {Object.keys(check_box).length > 0 && Object.entries(check_box).map(([key , arrOfInputDefs])=>(
                 <Inputs
-                    inputs_info={check_box[key]}
+                    key={key}
+                    inputs_info={arrOfInputDefs} // bcuz components need an array to loop on
                     defaultValues={user_displayed}
                     references={references.checkBoxsRef}
                     formKind={"check_inputs_wrapper"}
                 />
-            ))}
+            ))
+                
+            }
 
 
         </>
@@ -167,15 +165,7 @@ function RegisterFormFields({
                 styles={styles}
             />
 
-            {/* Check Box Permissions */}
-            {check_box && Object.keys(check_box).map(key=>(
-                <Inputs
-                    inputs_info={check_box[key]}
-                    defaultValues={user_displayed}
-                    references={references.checkBoxsRef}
-                    formKind={"check_inputs_wrapper"}
-                />
-            ))}
+            
 
         </>
     );

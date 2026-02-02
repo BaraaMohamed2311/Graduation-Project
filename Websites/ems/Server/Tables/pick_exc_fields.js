@@ -10,13 +10,16 @@ const SELF_UPDATE_FIELDS = [
 ];
 
 const EXCLUDE_UPDATE_FIELDS = [
-
+  "emp_id",
+  "user_id",
+  "staff_id",
+  "hosp_emp_id"
 ];
 
 function pickAllowedFields(source, allowed) {
   const forbiddenFields = Object.keys(source).filter(key => !allowed.includes(key));
   if (forbiddenFields.length > 0) {
-    throw new Error(`Attempted to update forbidden fields: ${forbiddenFields.join(", ")}`);
+    console.warn(`Attempted to update forbidden fields: ${forbiddenFields.join(", ")}`);
   }
   return Object.fromEntries(
     Object.entries(source).filter(([key]) => allowed.includes(key))
@@ -26,7 +29,7 @@ function pickAllowedFields(source, allowed) {
 function excludeFields(source, excluded) {
   const forbiddenFields = Object.keys(source).filter(key => excluded.includes(key));
   if (forbiddenFields.length > 0) {
-    throw new Error(`Attempted to update excluded fields: ${forbiddenFields.join(", ")}`);
+    console.warn(`Attempted to update excluded fields: ${forbiddenFields.join(", ")}`);
   }
   return Object.fromEntries(
     Object.entries(source).filter(([key]) => !excluded.includes(key))

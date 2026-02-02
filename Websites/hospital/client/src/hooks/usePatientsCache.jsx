@@ -89,11 +89,11 @@ export const usePatientsCache = () => {
   };
 
   // Save mypatients to IndexedDB
-  const deletePatientFromStore = async (patient_id) => {
+  const deletePatientFromStore = async (user_id) => {
     try {
       // delete specific employee by id from IndexedDB and from state
-        await deleteRecordById("patients", patient_id);
-        setCached_Patients((prev) => prev.filter(p => p.user_id !== patient_id));
+        await deleteRecordById("patients", user_id);
+        setCached_Patients((prev) => prev.filter(p => p.user_id !== user_id));
 
     } catch (err) {
       console.error("Failed to delete patient to IndexedDB:", err);

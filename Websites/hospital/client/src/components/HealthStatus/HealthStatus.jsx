@@ -111,7 +111,7 @@ useEffect(() => {
         placeholder="Add allergy"
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.target.value.trim()) {
-            console.log("Entered value",e.target.value.trim())
+
             const newValue = e.target.value.trim(); // save value before clearing
             setFormData(prev => ({
               ...prev,

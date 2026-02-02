@@ -18,7 +18,7 @@ class perms {
     // ================ Actual Execution of Perms ================= //
 
     static async executeChangeOtherUserData(other_user_id, other_user_title, updating_string){
-        console.log("executeChangeOtherUserData",other_user_id, other_user_title, updating_string)
+
         return await HospitalUsersMethods.MapUserToFullUpdateFunction(other_user_id, other_user_title, updating_string)
     }
 
@@ -33,7 +33,7 @@ class perms {
         const permsHash =  await perms.getAllpermsInTable(); // fetch map hash of perms and their ids
         const ArrayOfNewPerms = newpermsSet ? Array.from(newpermsSet) : []
         const StringOfNewperms = ArrayOfNewPerms.length > 0 ? ArrayOfNewPerms.join(", ") : "None"
-        console.log("StringOfNewperms", newpermsSet , oldUserpermsSet)
+
         /******************* Stage 1 = Delete All Old Perms *******************/
         if(!oldUserpermsSet.has("None")){
             let deletepermsIDS = [];
@@ -101,7 +101,7 @@ class perms {
         
     }
 
-    static async executeDeletePatient(patient_id){
+    static async executeDeletePatient(user_id){
         
         
     }

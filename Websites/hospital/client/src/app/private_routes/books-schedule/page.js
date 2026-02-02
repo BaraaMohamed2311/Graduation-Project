@@ -96,11 +96,11 @@ function handleFilterOption(e, showNotif = true) {
   const consultation_date = selectBoxsRef.current["consultation_date"]?.value;
   let filterEntries = {consultation_type,consultation_status}
   if (consultation_date) filterEntries["orderBy_consultation_date"] = consultation_date;
-  console.log(filterEntries);
+
 
   // we use stringifyFields function to exclude null values and do not add as query also join them
     const filter_queries = stringifyFields("anded",Object.entries(filterEntries))
-console.log("filter_queries",filter_queries)
+
   let endpoint = `${process.env.APIKEY}/booking/get-all-consultations?user_id=${user_data.user_id}&user_email=${user_data.user_email}&pagination=${currPage}&size=${sizeOfPage}&${filter_queries}`;
  
 
@@ -169,6 +169,7 @@ function handlePagination(e){
         {consultations && consultations.length > 0 && consultations.map((consultation_data)=>{
           return (
             <ConsultationCard 
+            key={consultation_data.consultation_id}
             handleViewConsultation={handleViewConsultation}
             consultation_data={consultation_data}
             setConsultations={setConsultations}

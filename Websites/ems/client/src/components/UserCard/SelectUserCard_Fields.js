@@ -8,7 +8,7 @@ function PatientCard({ selectedUser }){
           </div>
           <div className={styles.infoRow}>
             <span className={styles.label}>ID:</span>
-            <span className={styles.value}>{selectedUser.patient_id}</span>
+            <span className={styles.value}>{selectedUser.user_id}</span>
           </div>
           <div className={styles.infoRow}>
             <span className={styles.label}>Email:</span>

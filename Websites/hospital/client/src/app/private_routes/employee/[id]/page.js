@@ -8,7 +8,7 @@ import { useEmployeesCache } from "@/hooks/useEmployeesCache";
 import private_routes from "../../page";
 import { useUserDataContext } from "@/contexts/user_data";
 import UpdateUserForm from "@/components/UpdateUserForm/UpdateUserForm";
-import {inputs_info , select_def  , check_box} from "./data"
+import {inputs_info , select_def  , check_box , getFieldsForTitle} from "./data"
 import updateUserFetch from "@/utils/updateUserFetch"
 import AvailabilitySelector from "@/components/AvailabilitySelector/AvailabilitySelector";
 import EditableSection from "@/components/EditableSection/EditableSection";
@@ -41,8 +41,14 @@ const originalEmployee = cached_employees?.find(
       emp_perms: new Set(originalEmployee?.emp_perms?.split(", ") ?? ["None"])
     };
   }, [originalEmployee]);
-  console.log("employee",employee)
-    
+
+  // Get fields based on employee title
+  const allInputFields = useMemo(() => {
+    if (!employee?.emp_title) return inputs_info;
+    return getFieldsForTitle(employee.emp_title);
+  }, [employee?.emp_title]);
+
+  
      // Define references at page level
   const inputsBoxsRef = useRef({});
   const checkBoxsRef = useRef({});
@@ -75,7 +81,7 @@ const originalEmployee = cached_employees?.find(
       if (data && data.success && data.body) {
         setCached_Employees((prev) => {
   const updated = [...prev, data.body];
-  console.log("Updated cached_employees:", updated);
+
   return updated;
 });
         userNotification("success", "Employee loaded successfully");
@@ -95,7 +101,7 @@ const originalEmployee = cached_employees?.find(
         e.preventDefault();
         // get updated user data and actions that were made
         let {updatedEmployeeData , actionString} = checkActionsMade();
-        console.log("updatedEmployeeData , actionString",updatedEmployeeData , actionString)
+
 
         const reqBody = {
                       modifier_id: user_data.user_id,
@@ -114,14 +120,14 @@ const originalEmployee = cached_employees?.find(
 
         let actions = [];
         let updatedEmployeeData = {};
-        console.log("checkActionsMade",employee.emp_perms)
+
         const employee_displayed_perms = employee.emp_perms;
 
     // ====================================================== Modify Data ======================================================
 
        // === 1. Check for changes in general input fields
 
-        inputs_info.forEach((input_info) => {
+        allInputFields.forEach((input_info) => {
           //  Check If any inputBox is empty 
           if ( (inputsBoxsRef.current[input_info.name] && !inputsBoxsRef.current[input_info.name].value) ){
             userNotification("error", "Input fields cannot be empty");
@@ -176,13 +182,13 @@ const originalEmployee = cached_employees?.find(
                 actions.push("Modify Employee Perms");
             }
         }
-        console.log("Updated Permissions:", updated_emp_perms);
+
         updatedEmployeeData.other_user_new_perms = updated_emp_perms.join(", ");
 
       
         // Join actions array to form the action string
         let actionString = actions.join("-");
-        console.log("actionString",actionString)
+
         return {
           updatedEmployeeData,
           actionString,
@@ -216,7 +222,7 @@ const originalEmployee = cached_employees?.find(
               return res.json()
           })
           .then(async (data)=>{
-              console.log("data after updating employee")
+
                   if(data && data.success){
                       
                       
@@ -232,7 +238,7 @@ const originalEmployee = cached_employees?.find(
           });
     }
 
-console.log("employee", employee);
+
 
    // SpecificContentFields when employee is defined
    const SpecificContentFields = MapToEmployeeDetails[employee?.emp_title] || (() => <></>)
@@ -303,7 +309,7 @@ console.log("employee", employee);
                   modifier_data={user_data}
                   references={references}
                   update_handler={update_handler}
-                  fieldDefinitions={{select_def, inputs_info, check_box}}
+                  fieldDefinitions={{select_def, inputs_info : allInputFields, check_box}}
                   token={user_data.token}
                 />
               </EditableSection>

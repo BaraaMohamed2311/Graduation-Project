@@ -28,7 +28,7 @@ export default function LoginPage() {
     // if empty do not send response
     const EMAIL_REF = inputsBoxsRef.current["Email"];
     const PASSWORD_REF = inputsBoxsRef.current["Password"];
-    console.log("inputsBoxsRef", inputsBoxsRef.current["Email"].value);
+
     if(EMAIL_REF.value === "" || PASSWORD_REF.value === "") return userNotification("error","Fields Cannot Be Empty")
 
       // remove sotored data if user wants to log with new account so if pre stored is not null & different clear localStorage

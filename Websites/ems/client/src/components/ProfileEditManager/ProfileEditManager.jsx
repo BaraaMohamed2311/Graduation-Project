@@ -46,7 +46,7 @@ const mergeFieldDefinitions = (shared = {}, role = {}) => ({
 });
 
 function patchUserData(e, url, fieldDefinitions) {
-  console.log("Final fetch");
+
   e.preventDefault();
 
   let updatedData;
@@ -57,7 +57,7 @@ function patchUserData(e, url, fieldDefinitions) {
       userData
     );
   
-console.log("Final updatedData", updatedData);
+
   if (Object.keys(updatedData).length === 0) {
     userNotification("error", "No changes detected");
     return;
@@ -116,7 +116,7 @@ console.log("Final updatedData", updatedData);
       updatedData[field.name] = ref.value;
     }
   });
-  console.log("after inputs updatedData", updatedData);
+
   // ======================================================
   // 2️⃣ Select fields
   // ======================================================
@@ -136,7 +136,7 @@ console.log("Final updatedData", updatedData);
       }
     });
   }
-console.log("after select updatedData", updatedData);
+
   // ======================================================
   // 3️⃣ Checkbox fields
   // ======================================================
@@ -150,7 +150,7 @@ console.log("after select updatedData", updatedData);
       }
     });
   }
-  console.log("Updated Data to be sent:", updatedData);
+
   return updatedData;
 }
 
@@ -169,7 +169,7 @@ const showSelfEditBtn = hasRenderableFields(selfFields);
 const showApprovalEditBtn = hasRenderableFields(approvalFields);
 
 
-console.log("Show Self Edit Button:", selfFields , approvalFields);
+
 
   return (
     <>

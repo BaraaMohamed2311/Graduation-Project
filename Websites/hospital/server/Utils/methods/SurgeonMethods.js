@@ -18,7 +18,7 @@ class SurgeonMethods {
     }
     else if(whereClause && !perms_CONDITION){
         query = `
-            SELECT COUNT(DISTINCT s.surgeon_id) as count 
+            SELECT COUNT(DISTINCT s.emp_id) as count 
             FROM surgeons s
             JOIN employees e ON s.hosp_emp_id = e.emp_id
             LEFT JOIN hospital_roles hr ON s.hosp_emp_id = hr.hosp_emp_id
@@ -27,7 +27,7 @@ class SurgeonMethods {
     }
     else if(!whereClause && perms_CONDITION){
         query = `
-            SELECT COUNT(DISTINCT s.surgeon_id) as count 
+            SELECT COUNT(DISTINCT s.emp_id) as count 
             FROM surgeons s
             JOIN employees e ON s.hosp_emp_id = e.emp_id
             LEFT JOIN hospital_emp_perms hep ON s.hosp_emp_id = hep.hosp_emp_id
@@ -37,7 +37,7 @@ class SurgeonMethods {
     }
     else{
         query = `
-            SELECT COUNT(DISTINCT s.surgeon_id) as count 
+            SELECT COUNT(DISTINCT s.emp_id) as count 
             FROM surgeons s
             JOIN employees e ON s.hosp_emp_id = e.emp_id
             LEFT JOIN hospital_emp_perms hep ON s.hosp_emp_id = hep.hosp_emp_id
@@ -72,7 +72,7 @@ class SurgeonMethods {
             eh.hosp_emp_id,
             
             -- from surgeons (may be NULL)
-            ANY_VALUE(s.surgeon_id) AS surgeon_id,
+            ANY_VALUE(s.emp_id) AS emp_id,
             ANY_VALUE(s.initial_consultation_price) AS initial_consultation_price,
             ANY_VALUE(s.followup_consultation_price) AS followup_consultation_price,
             ANY_VALUE(s.surgery_price) AS surgery_price,
@@ -133,7 +133,7 @@ class SurgeonMethods {
     return result;
     }
 
-    static async getSurgeonFullData(surgeon_id){
+    static async getSurgeonFullData(emp_id){
         const query = `
         SELECT 
             -- from users
@@ -151,7 +151,7 @@ class SurgeonMethods {
             eh.hosp_emp_id,
             
             -- from surgeons (may be NULL)
-            s.surgeon_id,
+            s.emp_id,
             s.initial_consultation_price,
             s.followup_consultation_price,
             s.surgery_price,
@@ -207,7 +207,7 @@ class SurgeonMethods {
         AND eh.emp_title = 'Surgeon'
     `;
     
-    const result = await executeMySqlQuery(query, [surgeon_id]);
+    const result = await executeMySqlQuery(query, [emp_id]);
     return result[0];
     }
 
@@ -229,7 +229,7 @@ class SurgeonMethods {
             eh.hosp_emp_id,
             
             -- from surgeons (may be NULL)
-            s.surgeon_id,
+            s.emp_id,
             s.initial_consultation_price,
             s.followup_consultation_price,
             s.surgery_price,
@@ -293,7 +293,7 @@ class SurgeonMethods {
             eh.hosp_emp_id,
             
             -- from surgeons (may be NULL)
-            s.surgeon_id,
+            s.emp_id,
             s.initial_consultation_price,
             s.followup_consultation_price,
             s.surgery_price,
@@ -334,7 +334,7 @@ class SurgeonMethods {
         AND eh.emp_title = 'Surgeon'
     `;
     
-    const result = await executeMySqlQuery(query, [surgeon_id]);
+    const result = await executeMySqlQuery(query, [emp_id]);
     return result[0];
     }
 
@@ -345,7 +345,7 @@ class SurgeonMethods {
     // ============================
     //              Update
     // ============================
-    static async updateSurgeonFullCore(surgeon_id, updating_string) {
+    static async updateSurgeonFullCore(emp_id, updating_string) {
     // Parse updating string by table
     const parsedUpdates = parseUpdatingStringByTable(updating_string);
     const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
@@ -356,7 +356,7 @@ class SurgeonMethods {
         queries.push(`
             UPDATE users
             SET ${parsedUpdates.users}
-            WHERE user_id = ${surgeon_id} AND user_type = 'employee'
+            WHERE user_id = ${emp_id} AND user_type = 'employee'
         `);
     }
 
@@ -368,7 +368,7 @@ class SurgeonMethods {
         );
         queries.push(`
             INSERT INTO employees (emp_id,${columns_field})
-            VALUES (${surgeon_id},${values_field})
+            VALUES (${emp_id},${values_field})
             ON DUPLICATE KEY UPDATE
                 ${parsedUpdates.employees}
         `);
@@ -381,15 +381,15 @@ class SurgeonMethods {
             Object.entries(parsedObjects.surgeons) || {}
         );
         queries.push(`
-            INSERT INTO surgeons (surgeon_id, hosp_emp_id${columns_field ? ', ' + columns_field : ''})
+            INSERT INTO surgeons (emp_id, hosp_emp_id${columns_field ? ', ' + columns_field : ''})
             SELECT
-                ${surgeon_id},
+                ${emp_id},
                 e.emp_id
                 ${values_field ? ', ' + values_field : ''}
             FROM employees e
             JOIN users u
                 ON u.user_type = 'employee' AND u.user_id = e.emp_id
-            WHERE e.emp_id = ${surgeon_id}
+            WHERE e.emp_id = ${emp_id}
             ON DUPLICATE KEY UPDATE
                 ${parsedUpdates.surgeons}
         `);

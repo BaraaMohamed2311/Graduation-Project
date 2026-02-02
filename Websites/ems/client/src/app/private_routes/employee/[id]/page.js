@@ -29,7 +29,7 @@ function EmployeeDetailsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const router = useRouter();
-  console.log("select_def EmployeeDetailsPage",select_def)
+
   
    // Efficiently find the employee from cache
 const originalEmployee = cached_employees?.find(
@@ -45,7 +45,7 @@ const originalEmployee = cached_employees?.find(
       emp_perms: new Set(originalEmployee?.emp_perms?.split(", ") ?? ["None"])
     };
   }, [originalEmployee]);
-  console.log("employee",employee)
+
 
   // Get fields based on employee title
   const allInputFields = useMemo(() => {
@@ -53,7 +53,7 @@ const originalEmployee = cached_employees?.find(
     return getFieldsForTitle(employee.emp_title);
   }, [employee?.emp_title]);
 
-  console.log("allInputFields",allInputFields , employee?.emp_title)
+
     
      // Define references at page level
   const inputsBoxsRef = useRef({});
@@ -89,7 +89,7 @@ const originalEmployee = cached_employees?.find(
       if (data && data.success && data.body) {
         setCached_Employees((prev) => {
   const updated = [...prev, data.body];
-  console.log("Updated cached_employees:", updated);
+
   return updated;
 });
         userNotification("success", "Employee loaded successfully");
@@ -110,7 +110,7 @@ const originalEmployee = cached_employees?.find(
         e.preventDefault();
         // get updated user data and actions that were made
         let {updatedEmployeeData , actionString} = checkActionsMade();
-        console.log("updatedEmployeeData , actionString",updatedEmployeeData , actionString)
+
 
         const reqBody = {
                       modifier_id: user_data.user_id,
@@ -129,7 +129,7 @@ const originalEmployee = cached_employees?.find(
 
         let actions = [];
         let updatedEmployeeData = {};
-        console.log("checkActionsMade",employee.emp_perms)
+
         const employee_displayed_perms = employee.emp_perms;
 
     // ====================================================== Modify Data ======================================================
@@ -192,13 +192,13 @@ const originalEmployee = cached_employees?.find(
                 actions.push("Modify Employee Perms");
             }
         }
-        console.log("Updated Permissions:", updated_emp_perms);
+
         updatedEmployeeData.other_user_new_perms = updated_emp_perms.join(", ");
 
       
         // Join actions array to form the action string
         let actionString = actions.join("-");
-        console.log("actionString",actionString)
+
         return {
           updatedEmployeeData,
           actionString,
@@ -244,8 +244,7 @@ const originalEmployee = cached_employees?.find(
     }
   }
      
-    console.log("originalEmployee",originalEmployee)
-    console.log("isIndexedDBLoaded",isIndexedDBLoaded)
+
 // Update your early returns:
 
 const SpecificContentFields = MapToEmployeeDetails[employee?.emp_title] || (() => <></>)
@@ -258,7 +257,7 @@ if (!employee) return <p>Loading employee...</p>; // Better loading message
   const isAuthorizedToEdit = user_data.emp_perms && user_data.emp_perms.has("Modify Employee Data");
   const isAuthorizedToSeeSalary = user_data.emp_perms && (user_data.emp_perms.has("Modify Salary") || user_data.emp_perms.has("Display Salary"));
   const isAuthorizedToEditSalary = user_data.emp_perms && user_data.emp_perms.has("Modify Salary");
-  console.log("user_data.emp_perms",user_data.emp_perms)
+
 
   return (
     <main className={styles["page-main"]}>

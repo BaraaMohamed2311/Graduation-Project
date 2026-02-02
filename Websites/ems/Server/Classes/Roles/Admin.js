@@ -14,7 +14,7 @@ class Admin extends User {
     }
     // other user must be admin or less role, cannot be superAdmin
     static  EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updating_string  ){
-    console.log("adnin EditOtherUserData",other_user_id, other_user_title, updating_string )
+
         return new Promise(async (resolve , reject )=>{
             try{
                

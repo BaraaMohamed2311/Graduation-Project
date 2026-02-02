@@ -153,7 +153,7 @@ const AvailabilitySelector = ({ onSubmit, initialAvailability = "" }) => {
 
 
       const availabilityString = buildAvailabilityString();
-      console.log('Sending availability:', availabilityString);
+
       
       await onSubmit(availabilityString);
       setIsSubmitting(false);
@@ -168,8 +168,9 @@ const AvailabilitySelector = ({ onSubmit, initialAvailability = "" }) => {
     <div className={styles.availabilitySelector}>
       <h2>Set Your Availability</h2>
       <p className={styles.instructions}>
-        Select the days you're available and set your working hours (times shown in your local timezone)
+        Select the days you&apos;re available and set your working hours (times shown in your local timezone)
       </p>
+
 
       {/* Days Grid */}
       <div className={styles.daysGrid}>

@@ -113,12 +113,12 @@ CREATE TABLE employees_hospital (
 
 DROP TABLE IF EXISTS doctors;
 CREATE TABLE doctors (
-    doctor_id INT PRIMARY KEY,
+    emp_id INT PRIMARY KEY,
     hosp_emp_id INT UNIQUE NOT NULL,
     initial_consultation_price INT NOT NULL DEFAULT 0,
     followup_consultation_price INT NOT NULL DEFAULT 0,
     years_of_exp INT NOT NULL DEFAULT 0,
-    FOREIGN KEY (doctor_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (emp_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (hosp_emp_id) REFERENCES employees_hospital(hosp_emp_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -129,13 +129,13 @@ CREATE TABLE doctors (
 
 DROP TABLE IF EXISTS surgeons;
 CREATE TABLE surgeons (
-    surgeon_id INT PRIMARY KEY,
+    emp_id INT PRIMARY KEY,
     hosp_emp_id INT UNIQUE NOT NULL,
     initial_consultation_price INT NOT NULL DEFAULT 0,
     followup_consultation_price INT NOT NULL DEFAULT 0,
     surgery_price INT NOT NULL DEFAULT 0,
     years_of_exp INT NOT NULL DEFAULT 0,
-    FOREIGN KEY (surgeon_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (emp_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (hosp_emp_id) REFERENCES employees_hospital(hosp_emp_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -146,10 +146,10 @@ CREATE TABLE surgeons (
 
 DROP TABLE IF EXISTS nurses;
 CREATE TABLE nurses (
-    nurse_id INT PRIMARY KEY,
+    emp_id INT PRIMARY KEY,
     hosp_emp_id INT UNIQUE NOT NULL,  
     floor_number INT NOT NULL DEFAULT -1,
-    FOREIGN KEY (nurse_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (emp_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (hosp_emp_id) REFERENCES employees_hospital(hosp_emp_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -161,7 +161,7 @@ CREATE TABLE nurses (
 
 DROP TABLE IF EXISTS patients;
 CREATE TABLE patients (
-    patient_id INT PRIMARY KEY,     -- unique patient ID
+    user_id INT PRIMARY KEY,     -- unique patient ID
     patient_phone VARCHAR(20) ,
     patient_address VARCHAR(255),
     isAssignedToRoom BOOLEAN DEFAULT FALSE,  
@@ -172,7 +172,7 @@ CREATE TABLE patients (
     patient_gender ENUM('Male', 'Female', 'Other'),
     emergency_contact VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 
@@ -185,17 +185,17 @@ CREATE TABLE patients (
 DROP TABLE IF EXISTS staff_patient;
 CREATE TABLE staff_patient (
     staff_id INT NOT NULL,     
-    patient_id INT NOT NULL,
+    user_id INT NOT NULL,
     relation_type ENUM('Doctor', 'Surgeon', 'Nurse', 'Employee') NOT NULL,
     assigned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    PRIMARY KEY (staff_id, patient_id, relation_type),
+    PRIMARY KEY (staff_id, user_id, relation_type),
 
     FOREIGN KEY (staff_id) REFERENCES employees_hospital(emp_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
 
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    FOREIGN KEY (user_id) REFERENCES patients(user_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -235,7 +235,7 @@ DROP TABLE IF EXISTS consultations;
 CREATE TABLE consultations (
     consultation_id INT AUTO_INCREMENT PRIMARY KEY,
     hosp_emp_id INT NOT NULL,                       -- unified reference for doctor/surgeon
-    patient_id INT NULL,                            -- patient assigned (if any)
+    user_id INT NULL,                            -- patient assigned (if any)
     availability_id INT NOT NULL,                   -- link to shift slot
     consultation_date DATETIME NOT NULL,
     start_time TIME NOT NULL,
@@ -248,7 +248,7 @@ CREATE TABLE consultations (
         ON DELETE CASCADE
         ON UPDATE CASCADE,
 
-    FOREIGN KEY (patient_id)
+    FOREIGN KEY (user_id)
         REFERENCES users(user_id) -- Refrences users not patients as we want any logged in user to be able to book a consultion
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -334,10 +334,10 @@ CREATE TABLE rooms (
     room_id INT AUTO_INCREMENT PRIMARY KEY,
     room_number INT NOT NULL,
     floor_id INT NOT NULL,
-    patient_id INT DEFAULT NULL,
+    user_id INT DEFAULT NULL,
     isOccupied BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (floor_id) REFERENCES floors(floor_id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
     UNIQUE (room_number, floor_id) -- prevent duplicate room numbers on the same floor
 );
 

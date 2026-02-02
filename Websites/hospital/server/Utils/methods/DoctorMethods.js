@@ -13,7 +13,7 @@ class DoctorMethods {
     // ============================
 
     static async getAllDoctorsCOUNT(filtering_string = "", perms_CONDITION = ""){
-        console.log("filtering_string",filtering_string.length,perms_CONDITION)
+
         let query = "";
         // Optimize query construction based on presence of filters
         if(!filtering_string && !perms_CONDITION){
@@ -21,7 +21,7 @@ class DoctorMethods {
             }
         else if(filtering_string && !perms_CONDITION){
                     query = `
-                SELECT COUNT(DISTINCT d.doctor_id) as count 
+                SELECT COUNT(DISTINCT d.emp_id) as count 
                 FROM doctors d
                 JOIN employees e ON d.hosp_emp_id = e.emp_id
                 LEFT JOIN hospital_roles hr ON d.hosp_emp_id = hr.hosp_emp_id
@@ -30,7 +30,7 @@ class DoctorMethods {
         }
         else if(!filtering_string && perms_CONDITION){
             query = `
-                SELECT COUNT(DISTINCT d.doctor_id) as count 
+                SELECT COUNT(DISTINCT d.emp_id) as count 
                 FROM doctors d
                 JOIN employees e ON d.hosp_emp_id = e.emp_id
                 LEFT JOIN hospital_emp_perms hep ON d.hosp_emp_id = hep.hosp_emp_id
@@ -41,7 +41,7 @@ class DoctorMethods {
         }
         else{
             query = `
-                SELECT COUNT(DISTINCT d.doctor_id) as count 
+                SELECT COUNT(DISTINCT d.emp_id) as count 
                 FROM doctors d
                 JOIN employees e ON d.hosp_emp_id = e.emp_id
                 LEFT JOIN hospital_emp_perms hep ON d.hosp_emp_id = hep.hosp_emp_id
@@ -81,7 +81,7 @@ class DoctorMethods {
             eh.hosp_emp_id,
             
             -- from doctors (may be NULL)
-            ANY_VALUE(d.doctor_id) AS doctor_id,
+            ANY_VALUE(d.emp_id) AS emp_id,
             ANY_VALUE(d.initial_consultation_price) AS initial_consultation_price,
             ANY_VALUE(d.followup_consultation_price) AS followup_consultation_price,
             ANY_VALUE(d.years_of_exp) AS years_of_exp,
@@ -142,7 +142,7 @@ class DoctorMethods {
     }
 
 
-     static async getDoctorFullData(doctor_id){
+     static async getDoctorFullData(emp_id){
 
         
         const query = `
@@ -162,7 +162,7 @@ class DoctorMethods {
             eh.hosp_emp_id,
             
             -- from doctors (may be NULL)
-            d.doctor_id,
+            d.emp_id,
             d.initial_consultation_price,
             d.followup_consultation_price,
             d.years_of_exp,
@@ -217,7 +217,7 @@ class DoctorMethods {
         AND eh.emp_title = 'Doctor'
     `;
 
-        const result = await executeMySqlQuery(query,[doctor_id]);
+        const result = await executeMySqlQuery(query,[emp_id]);
         
         return result[0];
     }
@@ -289,7 +289,7 @@ class DoctorMethods {
     return result[0];
     }
 
-    static async getDoctorSpecificData(doctor_id){
+    static async getDoctorSpecificData(emp_id){
         
         const query = `
         SELECT 
@@ -311,7 +311,7 @@ class DoctorMethods {
             eh.hosp_emp_id,
             
             -- from doctors (may be NULL)
-            d.doctor_id,
+            d.emp_id,
             d.initial_consultation_price,
             d.followup_consultation_price,
             d.years_of_exp,
@@ -352,7 +352,7 @@ class DoctorMethods {
         AND eh.emp_title = 'Doctor'
     `;
     
-    const result = await executeMySqlQuery(query, [doctor_id]);
+    const result = await executeMySqlQuery(query, [emp_id]);
     return result[0];
     }
 
@@ -365,7 +365,7 @@ class DoctorMethods {
                         u.user_email,
                         u.user_name,
                         -- from patients
-                        p.patient_id AS user_id,
+                        p.user_id AS user_id,
                         p.patient_phone,
                         p.patient_address,
                         p.isAssignedToRoom,
@@ -377,8 +377,8 @@ class DoctorMethods {
                         p.created_at,
                         sp.assigned_date
                     FROM staff_patient sp
-                    JOIN patients p ON sp.patient_id = p.patient_id
-                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
+                    JOIN patients p ON sp.user_id = p.user_id
+                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.user_id
                     WHERE sp.staff_id = ? AND relation_type = 'Doctor';
                     `;
             const result = await executeMySqlQuery(query,[staff_id]);
@@ -393,7 +393,7 @@ class DoctorMethods {
                         u.user_name,
 
                         -- from patients
-                        p.patient_id AS user_id,
+                        p.user_id AS user_id,
                         p.patient_phone,
                         p.patient_address,
                         p.isAssignedToRoom,
@@ -405,8 +405,8 @@ class DoctorMethods {
                         p.created_at,
                         sp.assigned_date
                     FROM staff_patient sp
-                    JOIN patients p ON sp.patient_id = p.patient_id
-                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
+                    JOIN patients p ON sp.user_id = p.user_id
+                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.user_id
                     WHERE sp.staff_id = ?  AND relation_type = 'Doctor'
                     `;
             if(filtering_string){
@@ -423,10 +423,10 @@ class DoctorMethods {
 
     static async getDoctorAllPatientsCOUNT(staff_id){
         const query = `SELECT 
-                        COUNT(p.patient_id) as count
+                        COUNT(p.user_id) as count
                     FROM staff_patient sp
                     JOIN patients p 
-                        ON sp.patient_id = p.patient_id
+                        ON sp.user_id = p.user_id
                     WHERE sp.staff_id = ?  AND relation_type = 'Doctor';
                     `;
             const result = await executeMySqlQuery(query,[staff_id]);
@@ -440,7 +440,7 @@ class DoctorMethods {
     //              Update
     // ============================
 
-    static async updateDoctorFullCore(doctor_id, updating_string) {
+    static async updateDoctorFullCore(emp_id, updating_string) {
     const parsedUpdates = parseUpdatingStringByTable(updating_string);
     const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
     const queries = [];
@@ -450,7 +450,7 @@ class DoctorMethods {
         queries.push(`
             UPDATE users
             SET ${parsedUpdates.users}
-            WHERE user_id = ${doctor_id} AND user_type = 'employee'
+            WHERE user_id = ${emp_id} AND user_type = 'employee'
         `);
     }
 
@@ -462,7 +462,7 @@ class DoctorMethods {
         );
         queries.push(`
             INSERT INTO employees (emp_id,${columns_field})
-            VALUES (${doctor_id},${values_field})
+            VALUES (${emp_id},${values_field})
             ON DUPLICATE KEY UPDATE
                 ${parsedUpdates.employees}
         `);
@@ -475,15 +475,15 @@ class DoctorMethods {
             Object.entries(parsedObjects.doctors) || {}
         );
         queries.push(`
-            INSERT INTO doctors (doctor_id, hosp_emp_id${columns_field ? ', ' + columns_field : ''})
+            INSERT INTO doctors (emp_id, hosp_emp_id${columns_field ? ', ' + columns_field : ''})
             SELECT
-                ${doctor_id},
-                ${doctor_id}
+                ${emp_id},
+                ${emp_id}
                 ${values_field ? ', ' + values_field : ''}
             FROM employees e
             JOIN users u
                 ON u.user_type = 'employee' AND u.user_id = e.emp_id
-            WHERE e.emp_id = ${doctor_id}
+            WHERE e.emp_id = ${emp_id}
             ON DUPLICATE KEY UPDATE
                 ${parsedUpdates.doctors}
         `);

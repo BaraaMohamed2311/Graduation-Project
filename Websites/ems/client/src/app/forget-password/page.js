@@ -17,7 +17,7 @@ export default function ForgetPasswordPage() {
     event.preventDefault();
     // sending request 
     // if empty do not send response
-    console.log("inputsBoxsRef.current",inputsBoxsRef.current);
+    
     fetch(`${process.env.APIKEY}/user/forget-password`, 
           {
           method:"POST",

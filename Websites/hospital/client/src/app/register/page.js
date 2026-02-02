@@ -29,8 +29,6 @@ export default function RegisterPage() {
     });
     
 
-    console.log("requestBody",requestBody);
-
 
     fetch(`${process.env.APIKEY}/user/register`, 
           {

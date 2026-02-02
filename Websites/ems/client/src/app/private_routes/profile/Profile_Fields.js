@@ -11,7 +11,7 @@ import { selfEditableFields , approvalRequiredFields } from "./data";
 // ===================================================
 
 const AvailabilityList = ({availability_schedule})=>{
-  console.log("Availability Schedule:", availability_schedule);
+
   return (<>
   {/* Availability Schedule */}
 
@@ -56,7 +56,7 @@ const PermsList = ({permissions})=>{
 //            Doctor
 const DoctorProfile = ({ user_data, permissions }) => {
   const inputsBoxsRef = useRef({})
-  console.log("Permissions List:", permissions);
+
   return (
     <>
       <div className={"user-info"}>

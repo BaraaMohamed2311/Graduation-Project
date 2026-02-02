@@ -24,7 +24,7 @@ async function ModifyOtherUserData(other_user_id, other_user_Role,other_user_tit
         // inserting object for (col1,col2) values (val1,val2) on first time insert
         const entityType = other_user_title?.toLowerCase();
         const updating_string = buildJoinedUpdate(newOtherUserData,entityType);
-        console.log("newOtherUserData",newOtherUserData,updating_string)
+
         if(modifierRole === "SuperAdmin"){
             const succeeded = await SuperAdmin.EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updating_string  )
             if(!succeeded){

@@ -13,12 +13,11 @@ export const useEmployeesCache = () => {
   useEffect(() => {
   (async () => {
     try {
-      console.log("Trying to load IndexedDB");
+
       const storedEmployees = await getAllFromStore("employees");
-      console.log("Loaded employees:", storedEmployees);
       setCached_Employees(storedEmployees);
       setIsIndexedDBLoaded(true);
-      console.log("Flag set to true");
+
     } catch (err) {
       console.error("Failed to load employees from IndexedDB:", err);
     }
@@ -80,7 +79,7 @@ export const useEmployeesCache = () => {
     try {
       const response = await fetch(`${process.env.APIKEY}/sync/employees?max_version=${max_version}`);
       const data = await response.json();
-      console.log(data.needsSync);
+
 
       return {needsSync : data.needsSync , latest_version:data.latest_version}; 
     } catch (err) {

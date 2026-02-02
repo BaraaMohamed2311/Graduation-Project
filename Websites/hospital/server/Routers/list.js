@@ -30,7 +30,7 @@ const Patient_health_status = require("../Models/Patient_health_status.js");
 const AvailabilityMethods = require("../Utils/methods/AvailabilityMethods.js");
 const AuditLogs = require("../Utils/methods/AuditLogs.js");
 const { excludeFields , EXCLUDE_UPDATE_FIELDS} = require("../Tables/pick_exc_fields.js");
-
+const extractUserFromToken = require("../Utils/extractUserFromToken.js")
 // ==================================================================
 
 //              Get Routes
@@ -48,21 +48,21 @@ router.get("/employees",jwtVerify,async (req,res)=>{
         if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
-        const Modifier_role = await User.getUserRole(user_id);
-
+        const tokenFields = extractUserFromToken(req);
+        const Modifier_role = await User.getUserRole(tokenFields.user_id);
+        
         if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
         // perms have there separate filtiring conditing using "HAVING" not "WHERE"
         const filtering_string = Object.keys(restFilters).length > 0 || filter_role_name ? padBoth(buildJoinedFilters({ role_name: filter_role_name,  ...restFilters}),1) :null;
 
-        console.log("filtering_string",filtering_string,filter_role_name,Object.keys(restFilters))
 
         // get cached count 
         const EmployeesCount = await cacheCountNodeCache("totalNumOfEmployees",HospitalUsersMethods.getAllHospitalEmployeesCOUNT,filtering_string)
         const numOfPages = Math.max(1, Math.ceil( EmployeesCount / size));
 
         const users = await HospitalUsersMethods.getAllHospitalEmployeesFullData(parseInt(size), parseInt((pagination - 1) * size ),filtering_string,filter_emp_perm);
-        console.log("EmployeesCount",EmployeesCount)
+
 
       if( users && users.length > 0){
         res.status(200).json({success : true , body:users, message:"Successfully Fetched Data",numOfPages: numOfPages})
@@ -93,7 +93,8 @@ router.get("/doctors",jwtVerify,async (req,res)=>{
         //Bad Request if modifier id or others doesn't exist
         if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
         // Ceck if list page can be accessible
-        const Modifier_role = await User.getUserRole(user_id);
+        const tokenFields = extractUserFromToken(req);
+        const Modifier_role = await User.getUserRole(tokenFields.user_id);
 
         if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
@@ -159,7 +160,8 @@ router.get("/surgeons",jwtVerify,async (req,res)=>{
         //Bad Request if modifier id or others doesn't exist
         if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
         // Ceck if list page can be accessible
-        const Modifier_role = await User.getUserRole(user_id);
+        const tokenFields = extractUserFromToken(req);
+        const Modifier_role = await User.getUserRole(tokenFields.user_id);
 
         if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
@@ -226,12 +228,13 @@ router.get("/surgeons",jwtVerify,async (req,res)=>{
 router.get("/patients",jwtVerify,async (req,res)=>{
     try{
         const { pagination, size,isFiltered , user_id, ...restFilters } = req.query;
-        console.log("/patients")
+
         //Bad Request if modifier id or others doesn't exist
 
         if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
         // Ceck if list page can be accessible
-        const Modifier_role = await User.getUserRole(user_id);
+        const tokenFields = extractUserFromToken(req);
+        const Modifier_role = await User.getUserRole(tokenFields.user_id);
 
         if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
@@ -248,8 +251,6 @@ router.get("/patients",jwtVerify,async (req,res)=>{
         
 
 
-
-        console.log("Patients Reest CONDITIONS",filtering_string)
         const my_rangedpatients = await PatientMethods.getAllPatientsSpecificData(parseInt(size),parseInt((pagination - 1) * size ),filtering_string);
         // =====================================
         // Send Response
@@ -283,7 +284,8 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
         //Bad Request if modifier id or others doesn't exist
         if(!pagination || !size || !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
         // Ceck if list page can be accessible
-        const Modifier_role = await User.getUserRole(user_id);
+        const tokenFields = extractUserFromToken(req);
+        const Modifier_role = await User.getUserRole(tokenFields.user_id);
 
         if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
@@ -497,10 +499,10 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
                     const  modifierSetperms = await User.getSetUserperms(modifier_id);
                     const other_user_Role = await User.getUserRole(other_user_id );
 
-                    console.log("modifierSetperms",modifierSetperms)
+
                     // Check Authorization using perms
                     const isAuthorized = modifierSetperms.has("Modify Availability") 
-                    console.log("isAuthorized",isAuthorized)
+
                     // Check that user can modify patients that do not belong to him
                     if(!isAuthorized) return res.status(403).json({success:false,message:"Permission Is Required For This Action"});
                     
@@ -575,10 +577,10 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
 
                     // ===4. Get Required Roles and Permissions for execution
                     const  modifierSetperms = await User.getSetUserperms(modifier_id);
-                    console.log("modifierSetperms",modifierSetperms)
+
                     // Check Authorization using perms
                     const isAuthorized = modifierSetperms.has("Modify Other Patient") && modifierSetperms.has("Access Other Patients");
-                    console.log("isAuthorized",isAuthorized)
+
                     // Check that user can modify patients that do not belong to him
                     if(!isAuthorized) return res.status(403).json({success:false,messages:[{success:false ,message:"Permission Is Required For This Action"}]});
 
@@ -588,7 +590,7 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
                     if(permsRequestedSet.has("Modify Other Patient")){
                             // build the updating string for query
                             const updating_string = buildJoinedUpdate(newPatientData);
-                            console.log("updating_string",updating_string)
+
                             // Since patient is treated as NormalUser we execute perm directly 
                             isUpdated = await perms.executeChangeOtherUserData(other_user_id,other_user_title,updating_string);
                             
@@ -664,7 +666,7 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
 
                     //  ===5. Check patient belongs to staff
                     const belongsToModifier = await HospitalUsersMethods.patientBelongsToStaff(modifier_id,other_user_id);
-                    console.log("belongsToModifier",belongsToModifier)
+
                     if(!belongsToModifier) return res.status(403).json({success:false,messages:[{success:false,message:"This Isn't Your Patient"}]});
 
 
@@ -760,7 +762,7 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
 
                     //  ===5. Check patient belongs to staff | default is true
                     const belongsToModifier = my ? await HospitalUsersMethods.patientBelongsToStaff(modifier_id,other_user_id) : true;
-                    console.log("belongsToModifier",belongsToModifier)
+
                     if(!belongsToModifier) return res.status(403).json({success:false,message:"This Isn't Your Patient"});
 
 

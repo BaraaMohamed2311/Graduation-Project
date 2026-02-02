@@ -43,7 +43,7 @@ static async getUserEmailByID(user_id) {
     // LIMIT 1 stopps at first found row
     const query = `SELECT user_email FROM users WHERE user_id = ? LIMIT 1`;
     const result = await executeMySqlQuery(query, [user_id]);
-    console.log("result from getUserEmailByID", result);
+
     return result[0]?.user_email || null;
 }
 
@@ -78,7 +78,7 @@ static async getUserEmailByID(user_id) {
                 SELECT user_email FROM employees WHERE emp_id = ? LIMIT 1
             `;
             const query_patients = `
-                SELECT patient_email FROM patients WHERE patient_id = ? LIMIT 1
+                SELECT patient_email FROM patients WHERE user_id = ? LIMIT 1
             `;
             const result_from_employees = await executeMySqlQuery(query_employees,[user_id]);
             const result_from_patients = await executeMySqlQuery(query_patients,[user_id]);
@@ -144,7 +144,7 @@ static async getUserEmailByID(user_id) {
             `;
 
             const result = await executeMySqlQuery(query,[hosp_emp_id]);
-            console.log("result and query from getUserRole",result[0]?.role_name)
+
             return result[0]?.role_name; 
 
     }

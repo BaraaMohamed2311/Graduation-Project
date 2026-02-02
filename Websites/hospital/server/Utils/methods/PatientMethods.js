@@ -8,7 +8,7 @@ class PatientMethods {
     // ============================
     //              GET
     // ============================
-    static async getPatientFullData(patient_id){
+    static async getPatientFullData(user_id){
         const query = `SELECT 
                             -- from users
                             u.user_email,
@@ -16,7 +16,7 @@ class PatientMethods {
                             u.user_name,
 
                             -- from patients
-                            p.patient_id AS user_id,    
+                            p.user_id AS user_id,    
                             p.patient_phone,
                             p.patient_address,
                             p.isAssignedToRoom,  
@@ -27,15 +27,15 @@ class PatientMethods {
                             p.patient_gender,
                             p.emergency_contact
                         FROM patients p
-                        JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
-                        WHERE p.patient_id = ${patient_id}`;
+                        JOIN users u ON u.user_type = 'patient' AND u.user_id = p.user_id
+                        WHERE p.user_id = ${user_id}`;
                         
         const result = await executeMySqlQuery(query);
 
         return result[0];
     }
 
-    static async getPatientSpecificData(patient_id){
+    static async getPatientSpecificData(user_id){
         const query = `SELECT 
                             -- from users
                             u.user_email,
@@ -43,7 +43,7 @@ class PatientMethods {
                             u.user_name,
 
                             -- from patients
-                            p.patient_id AS user_id,    
+                            p.user_id AS user_id,    
                             p.patient_phone,
                             p.patient_address,
                             p.isAssignedToRoom,  
@@ -54,17 +54,17 @@ class PatientMethods {
                             p.patient_gender,
                             p.emergency_contact
                         FROM patients p
-                        JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
-                        WHERE p.patient_id = ${patient_id}`;
+                        JOIN users u ON u.user_type = 'patient' AND u.user_id = p.user_id
+                        WHERE p.user_id = ${user_id}`;
                         
         const result = await executeMySqlQuery(query);
-        console.log(query,result)
+
         return result[0];
     }
 
     static async getOnePatientDataByFilters(filter_fields){
         if(!filter_fields) return null;
-        const query = `SELECT * FROM patients p JOIN users u ON p.patient_id = u.user_id  WHERE  ${filter_fields}`;
+        const query = `SELECT * FROM patients p JOIN users u ON p.user_id = u.user_id  WHERE  ${filter_fields}`;
         const result = await executeMySqlQuery(query);
         return result[0];
     }
@@ -77,7 +77,7 @@ class PatientMethods {
 
 
     static async getAllPatientsCOUNT(whereClause = ""){
-        let query = `SELECT COUNT(*) as count FROM patients p JOIN users u ON p.patient_id = u.user_id`;
+        let query = `SELECT COUNT(*) as count FROM patients p JOIN users u ON p.user_id = u.user_id`;
         if (whereClause) {
             query += whereClause;
         }
@@ -92,7 +92,7 @@ class PatientMethods {
                         u.user_name,
 
                         -- from patients
-                        p.patient_id AS user_id,    
+                        p.user_id AS user_id,    
                         p.patient_phone,
                         p.patient_address,
                         p.isAssignedToRoom,  
@@ -103,14 +103,14 @@ class PatientMethods {
                         p.patient_gender,
                         p.emergency_contact  
                     FROM patients p 
-                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.patient_id
+                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.user_id
                     `;
 
         if (filtering_string) { 
                 query += " WHERE " + filtering_string;
             }
         // Then ORDER BY To match sync function
-        query += " ORDER BY p.patient_id ";
+        query += " ORDER BY p.user_id ";
 
         if(limit >0 &&  offset > -1) {
             query += ` LIMIT ${limit} OFFSET ${offset} `
@@ -124,7 +124,7 @@ class PatientMethods {
     // ==========================================
 
         static async getListedDoctorDataForPaitent(limit, offset,filtering_string , orderByClause) {
-            console.log("filtering_string", filtering_string , filtering_string.length)
+
             let query = `
                 SELECT
                     -- from users
@@ -136,7 +136,7 @@ class PatientMethods {
                     e.emp_specialty AS user_specialty,
 
                     -- from doctors
-                    d.doctor_id AS user_id, 
+                    d.emp_id AS user_id, 
                     d.hosp_emp_id,
                     d.initial_consultation_price,
                     d.followup_consultation_price,
@@ -149,9 +149,9 @@ class PatientMethods {
                     ) AS availability_schedule
                 FROM doctors d
                 JOIN employees e ON d.hosp_emp_id = e.emp_id
-                JOIN users u ON u.user_type = 'employee' AND u.user_id = d.doctor_id
+                JOIN users u ON u.user_type = 'employee' AND u.user_id = d.emp_id
                 LEFT JOIN availability a 
-                    ON d.doctor_id = a.hosp_emp_id
+                    ON d.emp_id = a.hosp_emp_id
             `;
 
             const params = [];
@@ -161,7 +161,7 @@ class PatientMethods {
 
             query += `
                 GROUP BY 
-                    d.doctor_id,
+                    d.emp_id,
                     d.hosp_emp_id,
                     d.initial_consultation_price,
                     d.followup_consultation_price,
@@ -180,7 +180,7 @@ class PatientMethods {
         }
 
         static async getListedSurgeonDataForPaitent(limit, offset , filtering_string ,orderByClause) {
-            console.log(limit, offset , filtering_string ,orderByClause)
+
             let query = `
                 SELECT 
                     -- from users
@@ -192,7 +192,7 @@ class PatientMethods {
                     e.emp_specialty AS user_specialty,
                     
                     -- from surgeons
-                    s.surgeon_id AS user_id, 
+                    s.emp_id AS user_id, 
                     s.hosp_emp_id,
                     s.initial_consultation_price,
                     s.followup_consultation_price,
@@ -208,9 +208,9 @@ class PatientMethods {
                     
                 FROM surgeons s
                 JOIN employees e ON s.hosp_emp_id = e.emp_id
-                JOIN users u ON u.user_type = 'employee' AND u.user_id = s.surgeon_id
+                JOIN users u ON u.user_type = 'employee' AND u.user_id = s.emp_id
                 LEFT JOIN availability a 
-                    ON s.surgeon_id = a.hosp_emp_id
+                    ON s.emp_id = a.hosp_emp_id
             `;
 
             const params = [];
@@ -220,7 +220,7 @@ class PatientMethods {
 
             query += `
                 GROUP BY 
-                    s.surgeon_id,
+                    s.emp_id,
                     s.hosp_emp_id,
                     s.initial_consultation_price,
                     s.followup_consultation_price,
@@ -242,34 +242,34 @@ class PatientMethods {
     // Get Patient Consultions
     // ==========================================
 
-    static async getPatientConsultions(patient_id){
+    static async getPatientConsultions(user_id){
         const query = `SELECT *
         FROM consultations
-        WHERE patient_id = ?   
+        WHERE user_id = ?   
         ORDER BY consultation_date, start_time;
         `
 
-        const result = await executeMySqlQuery(query,[patient_id]);
+        const result = await executeMySqlQuery(query,[user_id]);
         return result || [];
     }
 
-    static async getPatientConsultionByDate(patient_id,consultation_date){
+    static async getPatientConsultionByDate(user_id,consultation_date){
         const query = `SELECT *
         FROM consultations
-        WHERE patient_id = ? AND consultation_date= ?  
+        WHERE user_id = ? AND consultation_date= ?  
         ORDER BY consultation_date, start_time;
         `
 
-        const result = await executeMySqlQuery(query,[patient_id,consultation_date]);
+        const result = await executeMySqlQuery(query,[user_id,consultation_date]);
         return result[0];
     }
 
-    static async isPatientAvailable(patient_id,consultation_date,start_time){
+    static async isPatientAvailable(user_id,consultation_date,start_time){
 
 
-        const query = "SELECT * FROM consultations WHERE patient_id = ? AND consultation_date= ? AND  start_time = ?";
+        const query = "SELECT * FROM consultations WHERE user_id = ? AND consultation_date= ? AND  start_time = ?";
 
-        const result = await executeMySqlQuery(query,[patient_id,consultation_date,start_time]);
+        const result = await executeMySqlQuery(query,[user_id,consultation_date,start_time]);
         // Since not having a consultation record in the table means he is available
 
         if(!result || result.length === 0 ) return true;
@@ -282,17 +282,17 @@ class PatientMethods {
     //              Update
     // ============================
 
-    static async updatePatientFullCore(patient_id, updating_string) {
+    static async updatePatientFullCore(user_id, updating_string) {
     const parsedUpdates = parseUpdatingStringByTable(updating_string);
     const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
     const queries = [];
-    console.log("executing PatientMethods.updatePatientFullCore result:");
+
     // 1. Ensure user exists
     if (parsedUpdates.users) {
         queries.push(`
             UPDATE users
             SET ${parsedUpdates.users}
-            WHERE user_id = ${patient_id} AND user_type = 'patient'
+            WHERE user_id = ${user_id} AND user_type = 'patient'
         `);
     }
 
@@ -303,12 +303,12 @@ class PatientMethods {
             Object.entries(parsedObjects.patients) || {}
         );
         queries.push(`
-            INSERT INTO patients (patient_id${columns_field ? ', ' + columns_field : ''})
+            INSERT INTO patients (user_id${columns_field ? ', ' + columns_field : ''})
             SELECT
-                ${patient_id}
+                ${user_id}
                 ${values_field ? ', ' + values_field : ''}
             FROM users u
-            WHERE u.user_type = 'patient' AND u.user_id = ${patient_id}
+            WHERE u.user_type = 'patient' AND u.user_id = ${user_id}
             ON DUPLICATE KEY UPDATE
                 ${parsedUpdates.patients}
         `);
@@ -322,7 +322,7 @@ class PatientMethods {
     `);
 
     const result = await sqlTransaction(queries);
-    console.log("PatientMethods.updatePatientFullCore result:", result);
+
     // Check if user update affected any rows (to know if user exists)
     if (parsedUpdates.users && !result) {
         throw new Error('User not found. Please register the user first.');
@@ -359,12 +359,12 @@ static async cascadeDeletePatientData(user_id) {
     //              Booking
     // ============================
 
-    static async bookAppointment(doctor_id, patient_id,availability_id,consultation_date,start_time,end_time) {
+    static async bookAppointment(emp_id, user_id,availability_id,consultation_date,start_time,end_time) {
         const query = `
-            INSERT INTO consultations  (hosp_emp_id ,patient_id,availability_id,consultation_date,start_time,end_time)
+            INSERT INTO consultations  (hosp_emp_id ,user_id,availability_id,consultation_date,start_time,end_time)
             VALUES (?, ?, ?, ?, ?)
         `;
-        const params = [doctor_id, patient_id,availability_id,consultation_date,start_time,end_time];
+        const params = [emp_id, user_id,availability_id,consultation_date,start_time,end_time];
         const result = await executeMySqlQuery(query, params);
         return result;
     }
@@ -376,7 +376,7 @@ static async cascadeDeletePatientData(user_id) {
             WHERE hosp_emp_id = ?
             AND consultation_date = ?
             AND start_time = ?
-            AND patient_id = ?
+            AND user_id = ?
         `;
         const params = [];
         const result = await executeMySqlQuery(query, params);

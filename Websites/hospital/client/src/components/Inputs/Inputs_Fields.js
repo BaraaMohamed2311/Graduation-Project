@@ -30,7 +30,7 @@ const InputMaps = {
 function LabeledInput({inputs_info  , formKind , defaultValues , references } ){
 
     const wrapperClass = inputsWrapperClassMap[formKind] || inputsWrapperClassMap.default;
-console.log("triggered LabeledInput")
+
   return (
     <div className={wrapperClass}>
       {inputs_info && inputs_info.length > 0 && inputs_info.map((input) => {
@@ -49,7 +49,7 @@ console.log("triggered LabeledInput")
 function NormalInput({inputs_info  , formKind , defaultValues , references } ){
 
     const wrapperClass = inputsWrapperClassMap[formKind] || inputsWrapperClassMap.default;
-console.log("triggered")
+
   return (
     <div className={wrapperClass}>
       {inputs_info && inputs_info.length > 0 && inputs_info.map((input) => {
@@ -81,7 +81,7 @@ function  BasicInput({ input, references, defaultValues }) {
     )
 }
 function DateInput({ input, references, defaultValues }) {
-    console.log(defaultValues?.[input.name])
+
     const defaultDate = defaultValues?.[input.name]
           ? defaultValues[input.name].split("T")[0] // convert ISO string to YYYY-MM-DD
           : "";
@@ -107,7 +107,7 @@ function CheckBoxInput({input , references , defaultValues  }){
   ? defaultValues.emp_perms
   : null;
     
-    console.log("permsSet ",permsSet)
+
     return (
         <div className={styles.check_input_wrapper}>
             {/* if employee_displayed exists then check if he had that perm by set of perms he has*/}

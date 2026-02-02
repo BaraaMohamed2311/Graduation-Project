@@ -70,7 +70,7 @@ export default function RegisterPage() {
           }
         })
         .catch(err=>{
-          console.log("Error Login",err);
+
           setFormBtnState("Try Again");
           userNotification("error" , data.message)
         })

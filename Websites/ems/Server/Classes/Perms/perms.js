@@ -18,7 +18,6 @@ class perms {
     }
 
     static async executeChangeOtherUserData(other_user_id, other_user_title, updating_string){
-        console.log("executeChangeOtherUserData",other_user_id, other_user_title, updating_string)
         return await CompanyUsersMethods.MapUserToFullUpdateFunction(other_user_id, other_user_title, updating_string)
     }
 
@@ -60,7 +59,7 @@ class perms {
         })
 
         if(addingpermsQuery.length > 0)
-            console.log("Inserting perms" ,await executeMySqlQuery("INSERT INTO employee_perms (emp_id , perm_id) VALUES" + addingpermsQuery.join(",") ,"Error Updating User perms"));
+            await executeMySqlQuery("INSERT INTO employee_perms (emp_id , perm_id) VALUES" + addingpermsQuery.join(",") ,"Error Updating User perms");
     }
 
     // need other_user_Role as parameter 
@@ -70,7 +69,7 @@ class perms {
                         (condition 2): If user was having another role then it was added and we just update
                         (condition 3): If user was having another role and new role is NormalUser then it has to be deleted so (condition 1) stays valid, and free up space
                     */
-                        console.log("execue other_user_new_role",other_user_new_role)
+
                         if(other_user_Role === "NormalUser" && other_user_new_role !== "NormalUser"){
                             const query = `INSERT INTO roles (emp_id  , role_name) VALUES (?,?)`
                             await executeMySqlQuery(query ,[emp_id  , other_user_new_role]);

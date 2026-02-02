@@ -15,13 +15,13 @@ class RoomsMethods {
     }
 
     static async getEmptyRoomsCOUNT(){
-        const query = `SELECT COUNT(*) as count FROM rooms WHERE patient_id IS NULL AND isOccupied = FALSE `;
+        const query = `SELECT COUNT(*) as count FROM rooms WHERE user_id IS NULL AND isOccupied = FALSE `;
         const result = await executeMySqlQuery(query);
         return result[0]?.count;
     }
 
     static async getOccupiedRoomsCOUNT(){
-        const query = `SELECT COUNT(*) as count FROM rooms WHERE patient_id IS NOT NULL AND isOccupied = TRUE `;
+        const query = `SELECT COUNT(*) as count FROM rooms WHERE user_id IS NOT NULL AND isOccupied = TRUE `;
         const result = await executeMySqlQuery(query);
         return result[0]?.count;
     }
@@ -41,14 +41,14 @@ class RoomsMethods {
             query += ` limit ? offset ?`
             params.push(limit, offset);
         }
-        console.log(query)
+
         
         const result = await executeMySqlQuery(query,params);
         return result;
     }
 
     static async getEmptyRooms(limit=null,offset=null){
-        let query = `SELECT * FROM rooms WHERE patient_id IS NULL AND isOccupied = FALSE `;
+        let query = `SELECT * FROM rooms WHERE user_id IS NULL AND isOccupied = FALSE `;
         const params = [];
         if(limit > 0 && offset != null ) {
             query += `limit ? offset ?`
@@ -62,7 +62,7 @@ class RoomsMethods {
     }
 
     static async getOccupiedRooms(limit=null,offset=null){
-        let query = `SELECT * FROM rooms WHERE patient_id IS NOT NULL AND isOccupied = TRUE `;
+        let query = `SELECT * FROM rooms WHERE user_id IS NOT NULL AND isOccupied = TRUE `;
         const params = [];
         if(limit > 0 && offset != null ) {
             query += `limit ? offset ?`
@@ -93,9 +93,9 @@ class RoomsMethods {
         return result;
     }
 
-    static async getRoomByPatient(patient_id){
-        const query = `SELECT * FROM rooms WHERE patient_id = ?`;
-        const result = await executeMySqlQuery(query,[patient_id]);
+    static async getRoomByPatient(user_id){
+        const query = `SELECT * FROM rooms WHERE user_id = ?`;
+        const result = await executeMySqlQuery(query,[user_id]);
         return result[0];
     }
 
@@ -136,23 +136,23 @@ class RoomsMethods {
     
 
     
-    static async getPatientInRoom(patient_id){
+    static async getPatientInRoom(user_id){
 
-        return await PatientMethods.getPatientSpecificData(patient_id);
+        return await PatientMethods.getPatientSpecificData(user_id);
     }
     // ============================
     //              Update
     // ============================
-    static async assignPatientToRoom(patient_id,room_id) {
+    static async assignPatientToRoom(user_id,room_id) {
         try{
             const query = `
                 UPDATE rooms
                 SET 
                     isOccupied = TRUE,
-                    patient_id = ?
+                    user_id = ?
                 WHERE room_id = ?;
             `;
-            await executeMySqlQuery(query,[patient_id,room_id]);
+            await executeMySqlQuery(query,[user_id,room_id]);
             return true;
         }
         catch(err){
@@ -168,7 +168,7 @@ class RoomsMethods {
                 const query = `
             UPDATE rooms
             SET isOccupied = FALSE,
-                patient_id = NULL
+                user_id = NULL
             WHERE room_id = ?;
         `;
             await executeMySqlQuery(query,[room_id]);

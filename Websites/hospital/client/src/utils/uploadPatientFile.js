@@ -8,7 +8,7 @@ export default function uploadPatientFileXHR(url, files, modifier_data, token, s
     "application/dicom",
     "text/plain",
   ]);
-  console.log("files here",files)
+
   const maxSizeInBytes = 20 * 1024 * 1024; // 20MB
   const fileArray = Array.isArray(files) ? files : Array.from(files);
 

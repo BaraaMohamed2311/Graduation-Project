@@ -16,21 +16,20 @@ function SelectUser({ list_url,handleConfirmBtn,inputs_info,selectsElementsData,
   const {user_data} = useUserDataContext();
   
 
-  console.log("references in SelectUser:", references,inputs_info);
 
 function fetchUser(e)  {
   if(e) e.preventDefault();
 
 
       // Build individual parameter sets first to check if any filters exist
-      console.log("chheee",inputs_info, references?.inputsBoxsRef)
+
       const inputParams = buildQueryParams(inputs_info, references?.inputsBoxsRef);
       const selectParams = buildQueryParams(selectsElementsData, references?.selectsBoxsRef);
 
       // Check if any filters were actually provided
       const hasInputFilters = Array.from(inputParams.entries()).length > 0;
       const hasSelectFilters = Array.from(selectParams.entries()).length > 0;
-      console.log(inputParams.entries(),selectParams.entries())
+
       if (!hasInputFilters && !hasSelectFilters) {
           return userNotification("error", "Please provide at least one filter option");
       }
@@ -42,7 +41,7 @@ function fetchUser(e)  {
       selectParams.forEach((value, key) => queryParams.append(key, value));
 
       // Append Current Logged In user Data
-      queryParams.append("user_id",user_data.user_id)
+      queryParams.append("modifier_id",user_data.user_id)
       const queryString = queryParams.toString();
 
       
@@ -61,9 +60,9 @@ function fetchUser(e)  {
       return res.json();
     })
     .then((data) => {
-      console.log("data from fetch",data)
+
       if (data?.success) {
-        console.log("setSelectedUser",data.body)
+
         setSelectedUser(data.body);
         setNumOfPages(data.numOfPages || 1);
       } else {
@@ -71,7 +70,7 @@ function fetchUser(e)  {
         setSelectedUser(null);
       }
     })
-    .catch((err) => {userNotification("error", "Network error");console.log("err",err)});
+    .catch((err) => {userNotification("error", "Network error");});
 };
 
 

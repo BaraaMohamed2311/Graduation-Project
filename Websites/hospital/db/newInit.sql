@@ -39,12 +39,12 @@ CREATE TABLE employees_hospital (
 
 DROP TABLE IF EXISTS doctors;
 CREATE TABLE doctors (
-    doctor_id INT PRIMARY KEY,
+    emp_id INT PRIMARY KEY,
     hosp_emp_id INT UNIQUE NOT NULL,
     initial_consultation_price INT NOT NULL DEFAULT 0,
     followup_consultation_price INT NOT NULL DEFAULT 0,
     years_of_exp INT NOT NULL DEFAULT 0,
-    FOREIGN KEY (doctor_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (emp_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (hosp_emp_id) REFERENCES employees_hospital(hosp_emp_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -55,13 +55,13 @@ CREATE TABLE doctors (
 
 DROP TABLE IF EXISTS surgeons;
 CREATE TABLE surgeons (
-    surgeon_id INT PRIMARY KEY,
+    emp_id INT PRIMARY KEY,
     hosp_emp_id INT UNIQUE NOT NULL,
     initial_consultation_price INT NOT NULL DEFAULT 0,
     followup_consultation_price INT NOT NULL DEFAULT 0,
     surgery_price INT NOT NULL DEFAULT 0,
     years_of_exp INT NOT NULL DEFAULT 0,
-    FOREIGN KEY (surgeon_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (emp_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (hosp_emp_id) REFERENCES employees_hospital(hosp_emp_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -72,10 +72,10 @@ CREATE TABLE surgeons (
 
 DROP TABLE IF EXISTS nurses;
 CREATE TABLE nurses (
-    nurse_id INT PRIMARY KEY,
+    emp_id INT PRIMARY KEY,
     hosp_emp_id INT UNIQUE NOT NULL,  
     floor_number INT NOT NULL DEFAULT -1,
-    FOREIGN KEY (nurse_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (emp_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (hosp_emp_id) REFERENCES employees_hospital(hosp_emp_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -87,7 +87,7 @@ CREATE TABLE nurses (
 
 DROP TABLE IF EXISTS patients;
 CREATE TABLE patients (
-    patient_id INT PRIMARY KEY,     -- unique patient ID
+    user_id INT PRIMARY KEY,     -- unique patient ID
     patient_phone VARCHAR(20) ,
     patient_address VARCHAR(255),
     isAssignedToRoom BOOLEAN DEFAULT FALSE,  
@@ -98,7 +98,7 @@ CREATE TABLE patients (
     patient_gender ENUM('Male', 'Female', 'Other'),
     emergency_contact VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 
@@ -111,17 +111,17 @@ CREATE TABLE patients (
 DROP TABLE IF EXISTS staff_patient;
 CREATE TABLE staff_patient (
     staff_id INT NOT NULL,     
-    patient_id INT NOT NULL,
+    user_id INT NOT NULL,
     relation_type ENUM('Doctor', 'Surgeon', 'Nurse', 'Employee') NOT NULL,
     assigned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    PRIMARY KEY (staff_id, patient_id, relation_type),
+    PRIMARY KEY (staff_id, user_id, relation_type),
 
     FOREIGN KEY (staff_id) REFERENCES employees_hospital(emp_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
 
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    FOREIGN KEY (user_id) REFERENCES patients(user_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -163,7 +163,7 @@ DROP TABLE IF EXISTS consultations;
 CREATE TABLE consultations (
     consultation_id INT AUTO_INCREMENT PRIMARY KEY,
     hosp_emp_id INT NOT NULL,                       -- unified reference for doctor/surgeon
-    patient_id INT NULL,                            -- patient assigned (if any)
+    user_id INT NULL,                            -- patient assigned (if any)
     availability_id INT NOT NULL,                   -- link to shift slot
     consultation_date DATETIME NOT NULL,
     start_time TIME NOT NULL,
@@ -176,7 +176,7 @@ CREATE TABLE consultations (
         ON DELETE CASCADE
         ON UPDATE CASCADE,
 
-    FOREIGN KEY (patient_id)
+    FOREIGN KEY (user_id)
         REFERENCES users(user_id) -- Refrences users not patients as we want any logged in user to be able to book a consultion
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -265,10 +265,10 @@ CREATE TABLE rooms (
     room_id INT AUTO_INCREMENT PRIMARY KEY,
     room_number INT NOT NULL,
     floor_id INT NOT NULL,
-    patient_id INT DEFAULT NULL,
+    user_id INT DEFAULT NULL,
     isOccupied BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (floor_id) REFERENCES floors(floor_id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
     UNIQUE (room_number, floor_id) -- prevent duplicate room numbers on the same floor
 );
 
@@ -299,7 +299,7 @@ INSERT INTO table_version(table_name, current_version) VALUES
 INSERT INTO floors (floor_number)
 VALUES (1), (2), (3), (4), (5);
 
-INSERT INTO rooms (room_number, floor_id, patient_id, isOccupied) VALUES
+INSERT INTO rooms (room_number, floor_id, user_id, isOccupied) VALUES
 (1, 1, NULL, FALSE),
 (2, 1, NULL, FALSE),
 (3, 1, NULL, FALSE),
@@ -580,61 +580,61 @@ INSERT INTO `` (`user_id`,`user_email`,`user_name`,`user_password`,`user_type`,`
 -- ==============================================
 
 
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (256,'000000000000','Mahala, Alex',0,-1,-1,'2003-01-10','2025-10-02','Female','Nourhan Adel - 01230597742','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (257,'01127877754','Mansoura, Dakahlia',1,1,3,'1980-09-03','2025-10-17','Female','Heba Said - 01573388042','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (258,'01009852410','Shobra, Cairo',1,1,5,'1960-04-05','2025-10-17','Male','Khaled Naguib - 01531325539','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (259,'01230889100','Port Said, Egypt',1,2,3,'1950-07-08','2025-10-05','Male','Hana Saad - 01099078430','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (260,'01524465071','Nasr City, Cairo',1,3,1,'2003-09-21','2025-10-15','Female','Salma Ibrahim - 01272550336','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (261,'01016902922','Maadi, Cairo',0,-1,-1,'1955-12-08','2025-10-18','Male','Tarek Ismail - 01000954574','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (262,'01107687690','Maadi, Cairo',0,-1,-1,'2007-09-25','2025-10-16','Female','Youssef Ali - 01207836765','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (263,'01286728653','Heliopolis, Cairo',0,-1,-1,'1965-03-29','2025-10-02','Female','Ziad Fouad - 01594934682','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (264,'01054628239','6th of October City, Giza',1,3,3,'1985-05-27','2025-10-16','Male','Ahmed El-Sayed - 01513989704','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (265,'01570878870','Nasr City, Cairo',1,2,5,'1985-05-08','2025-10-10','Female','Mahmoud Tarek - 01270243875','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (266,'01088895993','Alexandria, Roushdy',1,1,2,'1951-12-11','2025-09-26','Male','Mariam Kamal - 01240043837','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (267,'01567917897','Heliopolis, Cairo',0,-1,-1,'1989-11-18','2025-10-10','Female','Nourhan Adel - 01040976564','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (268,'01127093919','Maadi, Cairo',0,-1,-1,'1989-09-22','2025-10-12','Female','Nourhan Adel - 01016860887','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (269,'01199572175','Alexandria, Roushdy',0,-1,-1,'1956-01-13','2025-10-18','Male','Heba Said - 01261647175','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (270,'000000000000','Nasr City, Cairo',0,-1,-1,'1950-06-18','2025-09-23','Female','Nada Fahmy - 01166559178','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (271,'01564052201','6th of October City, Giza',0,-1,-1,'1992-06-06','2025-10-19','Female','Salma Ibrahim - 01029320607','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (272,'01568344942','Zagazig, Sharqia',0,-1,-1,'1979-06-08','2025-10-02','Male','Mona Hassan - 01095902939','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (273,'01094521989','Alexandria, Roushdy',1,2,1,'1978-02-03','2025-09-27','Male','Hana Saad - 01537397973','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (274,'01298695016','Dokki, Giza',0,-1,-1,'1965-01-31','2025-09-25','Female','Ahmed El-Sayed - 01265080767','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (275,'01253889002','Alexandria, Roushdy',0,-1,-1,'1957-04-03','2025-09-30','Male','Mai Kamal - 01590529259','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (276,'01054268659','Zagazig, Sharqia',1,1,4,'1977-03-18','2025-10-07','Female','Omar Farouk - 01523417195','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (277,'01261482476','Shobra, Cairo',0,-1,-1,'1966-08-06','2025-10-04','Female','Ziad Fouad - 01547155686','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (278,'01223657526','Dokki, Giza',1,1,1,'2010-03-08','2025-09-22','Male','Ziad Fouad - 01184722921','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (279,'01599247727','Port Said, Egypt',0,-1,-1,'1986-05-01','2025-09-27','Female','Mariam Kamal - 01213134579','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (280,'01166895602','Shobra, Cairo',0,-1,-1,'2012-04-25','2025-10-20','Male','Ahmed El-Sayed - 01546267855','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (281,'01588906911','Nasr City, Cairo',0,-1,-1,'2008-02-04','2025-10-01','Male','Ramy Amin - 01168517634','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (282,'01055250955','Zagazig, Sharqia',0,-1,-1,'1962-07-12','2025-10-16','Male','Mariam Kamal - 01516224669','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (283,'01541925545','Port Said, Egypt',0,-1,-1,'1999-02-17','2025-10-11','Male','Salma Ibrahim - 01200984372','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (284,'01594433445','6th of October City, Giza',0,-1,-1,'2014-03-03','2025-10-02','Female','Fatma Hassan - 01533572255','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (285,'01145083777','Maadi, Cairo',0,-1,-1,'1968-05-20','2025-09-22','Female','Amr Halim - 01564129068','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (286,'01035187230','Nasr City, Cairo',0,-1,-1,'2011-09-28','2025-10-13','Female','Hana Saad - 01192514162','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (287,'01165223471','Heliopolis, Cairo',0,-1,-1,'1952-03-03','2025-10-16','Female','Ramy Amin - 01256966214','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (288,'01136257968','Dokki, Giza',0,-1,-1,'1959-10-23','2025-09-24','Male','Karim Mostafa - 01186718761','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (289,'01086036592','Shobra, Cairo',1,2,4,'1996-04-23','2025-10-01','Male','Omar Farouk - 01531387105','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (290,'01093589436','Heliopolis, Cairo',0,-1,-1,'1952-10-18','2025-10-05','Male','Amr Halim - 01029300099','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (291,'01163818426','Maadi, Cairo',0,-1,-1,'1963-03-30','2025-10-20','Male','Youssef Ali - 01074146984','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (292,'01187223682','Nasr City, Cairo',0,-1,-1,'1951-01-29','2025-10-10','Female','Salma Ibrahim - 01094327098','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (293,'01014248159','Zagazig, Sharqia',0,-1,-1,'1952-01-21','2025-10-05','Female','Mahmoud Tarek - 01118774492','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (294,'01117403221','Maadi, Cairo',1,2,2,'1991-01-26','2025-09-23','Female','Nada Fahmy - 01528129834','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (295,'01265208117','6th of October City, Giza',0,3,1,'1966-08-31','2025-10-06','Male','Nada Fahmy - 01068093996','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (296,'01149909893','Nasr City, Cairo',0,-1,-1,'2005-09-03','2025-09-25','Female','Ramy Amin - 01561736976','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (297,'01542025037','Alexandria, Roushdy',0,-1,-1,'1987-04-22','2025-09-26','Male','Hana Saad - 01042940684','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (298,'01273972503','Mansoura, Dakahlia',1,3,2,'1989-10-01','2025-10-04','Male','Hana Saad - 01226614775','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (299,'01164588795','Zagazig, Sharqia',1,3,4,'1950-12-20','2025-09-27','Female','Tarek Ismail - 01158949382','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (300,'01220989849','Maadi, Cairo',0,-1,-1,'2015-08-22','2025-10-21','Female','Tarek Ismail - 01140834935','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (301,'01181806846','Maadi, Cairo',0,-1,-1,'1986-07-06','2025-09-26','Male','Tarek Ismail - 01551572022','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (302,'01572723340','Zagazig, Sharqia',0,-1,-1,'1997-02-05','2025-10-09','Female','Mai Kamal - 01213123725','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (303,'01522221393','6th of October City, Giza',0,-1,-1,'1974-12-05','2025-09-27','Female','Nourhan Adel - 01584215862','2025-09-21 16:08:32');
-INSERT INTO `` (`patient_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (304,'01597240455','Maadi, Cairo',0,-1,-1,'1983-03-10','2025-10-02','Male','Nourhan Adel - 01230597742','2025-09-21 18:51:15');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (256,'000000000000','Mahala, Alex',0,-1,-1,'2003-01-10','2025-10-02','Female','Nourhan Adel - 01230597742','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (257,'01127877754','Mansoura, Dakahlia',1,1,3,'1980-09-03','2025-10-17','Female','Heba Said - 01573388042','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (258,'01009852410','Shobra, Cairo',1,1,5,'1960-04-05','2025-10-17','Male','Khaled Naguib - 01531325539','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (259,'01230889100','Port Said, Egypt',1,2,3,'1950-07-08','2025-10-05','Male','Hana Saad - 01099078430','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (260,'01524465071','Nasr City, Cairo',1,3,1,'2003-09-21','2025-10-15','Female','Salma Ibrahim - 01272550336','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (261,'01016902922','Maadi, Cairo',0,-1,-1,'1955-12-08','2025-10-18','Male','Tarek Ismail - 01000954574','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (262,'01107687690','Maadi, Cairo',0,-1,-1,'2007-09-25','2025-10-16','Female','Youssef Ali - 01207836765','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (263,'01286728653','Heliopolis, Cairo',0,-1,-1,'1965-03-29','2025-10-02','Female','Ziad Fouad - 01594934682','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (264,'01054628239','6th of October City, Giza',1,3,3,'1985-05-27','2025-10-16','Male','Ahmed El-Sayed - 01513989704','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (265,'01570878870','Nasr City, Cairo',1,2,5,'1985-05-08','2025-10-10','Female','Mahmoud Tarek - 01270243875','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (266,'01088895993','Alexandria, Roushdy',1,1,2,'1951-12-11','2025-09-26','Male','Mariam Kamal - 01240043837','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (267,'01567917897','Heliopolis, Cairo',0,-1,-1,'1989-11-18','2025-10-10','Female','Nourhan Adel - 01040976564','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (268,'01127093919','Maadi, Cairo',0,-1,-1,'1989-09-22','2025-10-12','Female','Nourhan Adel - 01016860887','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (269,'01199572175','Alexandria, Roushdy',0,-1,-1,'1956-01-13','2025-10-18','Male','Heba Said - 01261647175','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (270,'000000000000','Nasr City, Cairo',0,-1,-1,'1950-06-18','2025-09-23','Female','Nada Fahmy - 01166559178','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (271,'01564052201','6th of October City, Giza',0,-1,-1,'1992-06-06','2025-10-19','Female','Salma Ibrahim - 01029320607','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (272,'01568344942','Zagazig, Sharqia',0,-1,-1,'1979-06-08','2025-10-02','Male','Mona Hassan - 01095902939','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (273,'01094521989','Alexandria, Roushdy',1,2,1,'1978-02-03','2025-09-27','Male','Hana Saad - 01537397973','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (274,'01298695016','Dokki, Giza',0,-1,-1,'1965-01-31','2025-09-25','Female','Ahmed El-Sayed - 01265080767','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (275,'01253889002','Alexandria, Roushdy',0,-1,-1,'1957-04-03','2025-09-30','Male','Mai Kamal - 01590529259','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (276,'01054268659','Zagazig, Sharqia',1,1,4,'1977-03-18','2025-10-07','Female','Omar Farouk - 01523417195','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (277,'01261482476','Shobra, Cairo',0,-1,-1,'1966-08-06','2025-10-04','Female','Ziad Fouad - 01547155686','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (278,'01223657526','Dokki, Giza',1,1,1,'2010-03-08','2025-09-22','Male','Ziad Fouad - 01184722921','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (279,'01599247727','Port Said, Egypt',0,-1,-1,'1986-05-01','2025-09-27','Female','Mariam Kamal - 01213134579','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (280,'01166895602','Shobra, Cairo',0,-1,-1,'2012-04-25','2025-10-20','Male','Ahmed El-Sayed - 01546267855','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (281,'01588906911','Nasr City, Cairo',0,-1,-1,'2008-02-04','2025-10-01','Male','Ramy Amin - 01168517634','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (282,'01055250955','Zagazig, Sharqia',0,-1,-1,'1962-07-12','2025-10-16','Male','Mariam Kamal - 01516224669','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (283,'01541925545','Port Said, Egypt',0,-1,-1,'1999-02-17','2025-10-11','Male','Salma Ibrahim - 01200984372','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (284,'01594433445','6th of October City, Giza',0,-1,-1,'2014-03-03','2025-10-02','Female','Fatma Hassan - 01533572255','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (285,'01145083777','Maadi, Cairo',0,-1,-1,'1968-05-20','2025-09-22','Female','Amr Halim - 01564129068','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (286,'01035187230','Nasr City, Cairo',0,-1,-1,'2011-09-28','2025-10-13','Female','Hana Saad - 01192514162','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (287,'01165223471','Heliopolis, Cairo',0,-1,-1,'1952-03-03','2025-10-16','Female','Ramy Amin - 01256966214','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (288,'01136257968','Dokki, Giza',0,-1,-1,'1959-10-23','2025-09-24','Male','Karim Mostafa - 01186718761','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (289,'01086036592','Shobra, Cairo',1,2,4,'1996-04-23','2025-10-01','Male','Omar Farouk - 01531387105','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (290,'01093589436','Heliopolis, Cairo',0,-1,-1,'1952-10-18','2025-10-05','Male','Amr Halim - 01029300099','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (291,'01163818426','Maadi, Cairo',0,-1,-1,'1963-03-30','2025-10-20','Male','Youssef Ali - 01074146984','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (292,'01187223682','Nasr City, Cairo',0,-1,-1,'1951-01-29','2025-10-10','Female','Salma Ibrahim - 01094327098','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (293,'01014248159','Zagazig, Sharqia',0,-1,-1,'1952-01-21','2025-10-05','Female','Mahmoud Tarek - 01118774492','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (294,'01117403221','Maadi, Cairo',1,2,2,'1991-01-26','2025-09-23','Female','Nada Fahmy - 01528129834','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (295,'01265208117','6th of October City, Giza',0,3,1,'1966-08-31','2025-10-06','Male','Nada Fahmy - 01068093996','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (296,'01149909893','Nasr City, Cairo',0,-1,-1,'2005-09-03','2025-09-25','Female','Ramy Amin - 01561736976','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (297,'01542025037','Alexandria, Roushdy',0,-1,-1,'1987-04-22','2025-09-26','Male','Hana Saad - 01042940684','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (298,'01273972503','Mansoura, Dakahlia',1,3,2,'1989-10-01','2025-10-04','Male','Hana Saad - 01226614775','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (299,'01164588795','Zagazig, Sharqia',1,3,4,'1950-12-20','2025-09-27','Female','Tarek Ismail - 01158949382','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (300,'01220989849','Maadi, Cairo',0,-1,-1,'2015-08-22','2025-10-21','Female','Tarek Ismail - 01140834935','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (301,'01181806846','Maadi, Cairo',0,-1,-1,'1986-07-06','2025-09-26','Male','Tarek Ismail - 01551572022','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (302,'01572723340','Zagazig, Sharqia',0,-1,-1,'1997-02-05','2025-10-09','Female','Mai Kamal - 01213123725','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (303,'01522221393','6th of October City, Giza',0,-1,-1,'1974-12-05','2025-09-27','Female','Nourhan Adel - 01584215862','2025-09-21 16:08:32');
+INSERT INTO `` (`user_id`,`patient_phone`,`patient_address`,`isAssignedToRoom`,`room_number`,`floor_number`,`date_of_birth`,`next_check_date`,`patient_gender`,`emergency_contact`,`created_at`) VALUES (304,'01597240455','Maadi, Cairo',0,-1,-1,'1983-03-10','2025-10-02','Male','Nourhan Adel - 01230597742','2025-09-21 18:51:15');
 
 
 -- ==========================================
 -- Doctors
 -- ==========================================
-INSERT INTO doctors (doctor_id, hosp_emp_id, initial_consultation_price, followup_consultation_price, years_of_exp)
+INSERT INTO doctors (emp_id, hosp_emp_id, initial_consultation_price, followup_consultation_price, years_of_exp)
 VALUES
 (8, 8, 1200, 800, 15),
 (12, 12, 900, 600, 8),
@@ -661,7 +661,7 @@ VALUES
 -- ==========================================
 -- Surgeons
 -- ==========================================
-INSERT INTO surgeons (surgeon_id, hosp_emp_id, initial_consultation_price, followup_consultation_price, surgery_price, years_of_exp)
+INSERT INTO surgeons (emp_id, hosp_emp_id, initial_consultation_price, followup_consultation_price, surgery_price, years_of_exp)
 VALUES
 (27, 27, 1400, 900, 120000, 18),
 (32, 32, 1000, 650, 75000, 10),
@@ -681,7 +681,7 @@ VALUES
 -- ==========================================
 -- Nurses
 -- ==========================================
-INSERT INTO nurses (nurse_id, hosp_emp_id, floor_number)
+INSERT INTO nurses (emp_id, hosp_emp_id, floor_number)
 VALUES
 (4, 4, 3),
 (15, 15, 1),
@@ -1006,7 +1006,7 @@ VALUES
 -- ==========================================
 -- Consultations for Doctors and Surgeons (1-hour duration, mixed statuses)
 -- ==========================================
-INSERT INTO consultations (hosp_emp_id, patient_id, availability_id, consultation_date, start_time, end_time, consultation_status, consultation_type)
+INSERT INTO consultations (hosp_emp_id, user_id, availability_id, consultation_date, start_time, end_time, consultation_status, consultation_type)
 VALUES
 -- Doctor 8 consultations
 (8, NULL, 1, '2024-12-02', '09:00:00', '10:00:00', 'Scheduled', 'initial_consultation_price'),
@@ -1115,7 +1115,7 @@ VALUES
 
 
 -- Staff_id = 12 (Doctor) assigned to patients
-INSERT INTO staff_patient (staff_id, patient_id, relation_type, assigned_date)
+INSERT INTO staff_patient (staff_id, user_id, relation_type, assigned_date)
 VALUES
 -- Doctor 12 assigned to patients (focus on staff_id = 12)
 (12, 256, 'Doctor', '2024-11-20 09:00:00'),

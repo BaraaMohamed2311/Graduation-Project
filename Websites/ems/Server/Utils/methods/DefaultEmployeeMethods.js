@@ -197,7 +197,6 @@ class DefaultEmployeeMethods {
         const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
         const queries = [];
 
-        console.log("+++++parsedUpdates",parsedUpdates , updating_string , parsedObjects)
 
         // 1. Ensure user exists
         if (parsedUpdates.users) {
@@ -228,7 +227,7 @@ class DefaultEmployeeMethods {
             SET current_version = current_version + 1
             WHERE table_name = 'ems_employees'
         `);
-            console.log("Updating  employee:", user_id, updating_string);
+
         const result = await sqlTransaction(queries);
 
         // Check if user update affected any rows (to know if user exists)

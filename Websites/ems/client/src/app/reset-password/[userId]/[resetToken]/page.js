@@ -48,7 +48,7 @@ export default function ForgetPasswordPage() {
           }
         })
         .catch(err=>{
-          console.log("Error Login",err);
+
           setFormBtnState("Try Again");
           userNotification("error" , data.message)
         })

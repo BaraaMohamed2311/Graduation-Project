@@ -8,7 +8,7 @@ import getUserImage from "@/utils/getUserImg"
 
 export default function BookingCard({ userType, bookingData, handleBookBtn ,userToken }) {
   const CardFields = CardFieldsMap[userType];
-  if (!CardFields) return <div>❌ Unknown user type: {userType}</div>;
+
   let [blobURL , setBlobURL] = useState("/avatar.jpg");
  // fetch on first render if wasn't stored in localStorage 
    useEffect(()=>{
@@ -20,6 +20,10 @@ export default function BookingCard({ userType, bookingData, handleBookBtn ,user
 
  
  } ,[bookingData.user_id])
+
+ 
+  if (!CardFields) return <div>❌ Unknown user type: {userType}</div>;
+  
 
   return (
     <div className={styles.card}>

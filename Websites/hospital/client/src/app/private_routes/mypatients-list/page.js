@@ -47,10 +47,10 @@ useEffect(() => {
 //        Initial Fetch
 // ===========================================
 useEffect(() => {
-  console.log("isFiltered",isFiltered)
+
   if (isFiltered) return;
   if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
-  console.log("fetched_my_patient_pages",fetched_my_patient_pages)
+
   if (!fetched_my_patient_pages.has(currPage) || needsSync) {
     fetch(`${process.env.APIKEY}/list/my-patients?user_id=${user_data.user_id}&pagination=${currPage}&size=${sizeOfPage}`, {
       mode: "cors",
@@ -65,7 +65,7 @@ useEffect(() => {
       })
       .then((data) => {
         if (data?.success) {
-          console.log("success")
+
           setNumOfPages(data.numOfPages || 1);
           setCached_My_Patients((prev) => {
             const map = new Map(prev.map((emp) => [emp.user_id, emp])); 
@@ -99,14 +99,14 @@ useEffect(() => {
 }, [currPage,isIndexedDBLoaded , needsSync]);
 
 
-useEffect(()=>{console.log("fetched_my_patient_pages",fetched_my_patient_pages)},[fetched_my_patient_pages])
+
 
 // ===========================================
 //        Table Buttons
 // ===========================================
 
     function handleVisitBtn(mypatient){
-      console.log("Visiting mypatient",mypatient)
+
       router.replace(`/private_routes/mypatient/${mypatient.user_id}?currPage=${currPage}`)
     }
 

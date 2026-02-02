@@ -72,7 +72,7 @@ class CompanyUsersMethods {
                 SELECT u.user_id
                 FROM users u
                 INNER JOIN employees e ON u.user_id = e.emp_id
-
+            
                 -- Permissions and roles
                 LEFT JOIN employee_perms ep ON e.emp_id = ep.emp_id
                 LEFT JOIN perms p ON ep.perm_id = p.perm_id
@@ -129,9 +129,9 @@ class CompanyUsersMethods {
         INNER JOIN employees e ON u.user_id = e.emp_id
 
         -- Title-specific joins
-        LEFT JOIN doctors d ON d.doctor_id = e.emp_id
-        LEFT JOIN surgeons s ON s.surgeon_id = e.emp_id
-        LEFT JOIN nurses n ON n.nurse_id = e.emp_id
+        LEFT JOIN doctors d ON d.emp_id = e.emp_id
+        LEFT JOIN surgeons s ON s.emp_id = e.emp_id
+        LEFT JOIN nurses n ON n.emp_id = e.emp_id
 
         -- Permissions and roles
         LEFT JOIN employee_perms ep ON e.emp_id = ep.emp_id
@@ -153,25 +153,6 @@ class CompanyUsersMethods {
     return result;
 }
 
-    // ========================================
-    // Category-based Operations
-    // ========================================
-
-    /**
-     * Get all employees by category (leadership, technical, medical, etc.)
-
-     */
-    static async getEmployeesByCategory(category, limit = 10, offset = 0, whereClause = '') {
-        return await CompanyUserFactory.getAllByCategory(category, limit, offset, whereClause);
-    }
-
-    /**
-     * Get count of employees by category
-
-     */
-    static async getEmployeesCategoryCount(category, whereClause = '') {
-        return await CompanyUserFactory.getCountByCategory(category, whereClause);
-    }
 
   
 

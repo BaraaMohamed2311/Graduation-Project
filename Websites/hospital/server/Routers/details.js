@@ -14,7 +14,7 @@ const { approvalRequiredFields ,roleToEntityMap  } = require("../Tables/data.js"
 const { pickAllowedFields , SELF_UPDATE_FIELDS} = require("../Tables/pick_exc_fields.js");
 const AuditLogs = require("../Utils/methods/AuditLogs.js");
 const PatientHealthStatus = require("../Models/Patient_health_status.js")
-
+const extractUserFromToken = require("../Utils/extractUserFromToken.js")
 // =================================
 //  Get One Patient Data MySQL
 // =================================
@@ -26,7 +26,8 @@ router.get("/employee/:id",jwtVerify,async (req,res)=>{
         if( !user_id ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
-        const Modifier_role = await User.getUserRole(user_id);
+        const tokenFields = extractUserFromToken(req);
+        const Modifier_role = await User.getUserRole(tokenFields.user_id);
         
         if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
@@ -66,7 +67,8 @@ router.get("/patient/:id",jwtVerify,async (req,res)=>{
         if( !user_id  ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
-        const Modifier_role = await User.getUserRole(user_id);
+        const tokenFields = extractUserFromToken(req);
+        const Modifier_role = await User.getUserRole(tokenFields.user_id);
         
         if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
@@ -96,13 +98,14 @@ router.get("/patient/:id",jwtVerify,async (req,res)=>{
 // =================================
 router.get("/patient",jwtVerify,async (req,res)=>{
     try{
-        const {user_email, user_phone} = req.query;
+        const {user_email, user_phone,modifier_id} = req.query;
 
         //Bad Request if both do not exist
         if( !user_email &&  !user_phone  ) return res.status(400).json({success:false,message:"Bad Request"});
 
         // Ceck if list page can be accessible
-        const Modifier_role = await User.getUserRole(user_id);
+        const tokenFields = extractUserFromToken(req);
+        const Modifier_role = await User.getUserRole(tokenFields.user_id);
         
         if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
@@ -112,7 +115,7 @@ router.get("/patient",jwtVerify,async (req,res)=>{
         // joins them with "AND" if both exists
         const filter_fields = [filter_email, filter_phone].filter(Boolean).join(" AND ");
         const patientData = await PatientMethods.getOnePatientDataByFilters(filter_fields);
-        console.log("patient", patientData)
+
       if( patientData ){
         res.status(200).json({success : true , body:patientData, message:"Successfully Fetched Data"})
       }
@@ -139,11 +142,11 @@ router.get("/patient/health-status/:patientId",jwtVerify,async (req,res)=>{
         const {patientId} = req.params
 
         const record = await PatientHealthStatus.findOne({ user_id: patientId });
-        console.log("patientId healthstatus",patientId)
+
         if (!record) {
             return res.status(404).json({ success: false, message: "Patient not found" });
         }
-        console.log("record",record)
+
         res.json({ success: true, body: record });
     
         
@@ -162,7 +165,7 @@ router.get("/patient-files/:patientId",jwtVerify,async (req,res)=>{
      try {
         const { patientId } = req.params;
 
-        const records = await PatientFile.find({ patient_id: patientId });
+        const records = await PatientFile.find({ user_id: patientId });
 
         if (!records || records.length === 0) {
         return res.status(404).json({ success: false, message: "No files found for this patient" });

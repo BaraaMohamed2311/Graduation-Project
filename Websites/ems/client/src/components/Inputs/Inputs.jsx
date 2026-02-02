@@ -4,7 +4,7 @@ import {InputLabelMaps} from "./Inputs_Fields"
 
 
  export default function Inputs({inputs_info ,label_type , formKind , defaultValues = {} , references }){
-    console.log("type ty",label_type)
+
     const InputComponent = InputLabelMaps[label_type] || InputLabelMaps["normal_input"]; // Default to RegularInput if type is not found
 
 

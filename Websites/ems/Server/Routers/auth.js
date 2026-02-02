@@ -64,7 +64,7 @@ const generalUserMethods = require("../Utils/methods/generalUserMethods.js");
             user = empData ? {...user , ...empData} : user;
             // get user's specific data if he's a specific table data
             const specificData = isCompanyEmployee ? await CompanyUsersMethods.MapUserToGETSpecificDataFunction(user_id, user_title) : null;
-            console.log("specificData",specificData)
+
             user = isCompanyEmployee ? {...user , ...specificData} : user;
 
             // User must register as patient if he is not an employee and not registered as patient
@@ -78,7 +78,6 @@ const generalUserMethods = require("../Utils/methods/generalUserMethods.js");
             // Gets Perms Set and convert it to Array
             // Gets Role
             if(userIsEmployee && isCompanyEmployee && user){
-                console.log("await User.getSetUserperms(user_id)",Array.from (await User.getSetUserperms(user_id)),user)
                 user.emp_perms =  Array.from(await User.getSetUserperms(user_id));
                 user.role_name = await User.getUserRole(user_id)
             }

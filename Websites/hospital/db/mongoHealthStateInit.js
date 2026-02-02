@@ -62,10 +62,6 @@ async function seed() {
         }
 
 
-
-        console.log("Inserted", docs,);
-
-
     } catch (err) {
         console.error(err);
 

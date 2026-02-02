@@ -65,7 +65,7 @@ function PatientDetailsPage() {
           if (data && data.success && data.body) {
             setCached_Employees((prev) => {
       const updated = [...prev, data.body];
-      console.log("Updated cached_employees:", updated);
+
       return updated;
     });
             userNotification("success", "Employee loaded successfully");
@@ -110,7 +110,7 @@ function PatientDetailsPage() {
         e.preventDefault();
         // get updated user data and actions that were made
         let {updatedPatientData , actionString} = checkActionsMade();
-        console.log("updatedPatientData , actionString",updatedPatientData , actionString)
+
 
         const reqBody = {
                       modifier_id: user_data.user_id,
@@ -168,7 +168,7 @@ function PatientDetailsPage() {
       
         // Join actions array to form the action string
         let actionString = actions.join("-");
-        console.log("actionString",actionString)
+
         return {
           updatedPatientData,
           actionString,
@@ -195,7 +195,7 @@ function PatientDetailsPage() {
             user_data.token,
             setProgress
           );
-          console.log("Upload response:", res);
+
 
           // ✅ UPDATE STATE IMMEDIATELY
           if (res?.success && res?.record?.files) {

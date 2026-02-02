@@ -36,7 +36,7 @@ const PermsList = ({permissions})=>{
 //            Doctor
 const DoctorProfile = ({ user_data, permissions }) => {
   const inputsBoxsRef = useRef({})
-  console.log("Permissions List:", permissions);
+
   return (
     <>
       <div className={"user-info"}>
