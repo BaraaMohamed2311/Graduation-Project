@@ -131,7 +131,7 @@ const global_mapped_specialities = {
     const global_roles = [
             {value:"SuperAdmin", text:"SuperAdmin"},
             {value:"Admin", text:"Admin"},
-            {value:"Employee", text:"Employee"},
+            {value:"NormalUser", text:"NormalUser"},
     ]
 
         // --------------------------------------------------
