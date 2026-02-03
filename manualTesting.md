@@ -26,7 +26,7 @@
 
 Any user accepted after registering with a hospital position will be reflected to employees table here.
 
-## SuperAdmin User baraamohamed2311@gmail.com 1234
+## SuperAdmin User amr.halim8092@gmail.com 123456
 - Try Access Rooms (requires permission)
 - Try Modify Rooms data (requires permission)
 - Try Modify others data, modify everything (requires permission)
