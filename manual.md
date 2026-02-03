@@ -1,3 +1,8 @@
+# General
+- systems are managed with roles and perms
+- users with higher roles can modify others data of users lower roles but not vice versa
+- To modify role of other user you must be SuperAdmin
+
 # Employee Management System
 
 Generally
