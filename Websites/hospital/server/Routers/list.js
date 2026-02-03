@@ -589,10 +589,10 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
                     //===5. Check if modifier have perm to update other users data & action is requested
                     if(permsRequestedSet.has("Modify Other Patient")){
                             // build the updating string for query
-                            const updating_string = buildJoinedUpdate(newPatientData);
+                            const updatingObj = buildJoinedUpdate(newPatientData);
 
                             // Since patient is treated as NormalUser we execute perm directly 
-                            isUpdated = await perms.executeChangeOtherUserData(other_user_id,other_user_title,updating_string);
+                            isUpdated = await perms.executeChangeOtherUserData(other_user_id,other_user_title,updatingObj);
                             
 
                     }
@@ -684,9 +684,9 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
                     //===5. Check if modifier have perm to update other users data & action is requested
                     if(permsRequestedSet.has("Modify My Patient")){
                             // build the updating string for query
-                            const updating_string = buildJoinedUpdate(newPatientData);
+                            const updatingObj = buildJoinedUpdate(newPatientData);
                             // Since patient is treated as NormalUser we execute perm directly 
-                            isUpdated = perms.executeChangeOtherUserData(other_user_id,other_user_title,updating_string);
+                            isUpdated = perms.executeChangeOtherUserData(other_user_id,other_user_title,updatingObj);
                             
                     }
                     

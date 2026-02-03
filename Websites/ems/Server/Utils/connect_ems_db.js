@@ -12,6 +12,7 @@ const connectionPool = mysql.createPool({
   connectionLimit: 10,
 });
 
+console.log("DB_HOST",process.env.DB_HOST)
 
 
 module.exports = connectionPool;

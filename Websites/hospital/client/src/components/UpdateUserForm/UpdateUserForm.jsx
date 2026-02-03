@@ -20,21 +20,49 @@ export default function UpdateUserForm({
     let [formBtnState, setFormBtnState] = useState("Update");
     let [isLoadingBtn , setIsLoadingBtn ] = useState(false);
     let {inputsBoxsRef , checkBoxsRef , selectBoxsRef} = references;
-        const { select_role_options, ...otherOptions } = fieldDefinitions.select_def || {};
+
+    const { select_role_options, ...otherOptions } = fieldDefinitions.select_def || {};
     const { perms_check_box, ...otherCheckBoxes } = fieldDefinitions.check_box || {};
 
-    // if updating other user we have to check that modifier is authorized 
-    if(!isUpdatingSelf){
-        const is_authorized_to_update_roles = modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Employee Role");
-        const is_authorized_to_update_perms = modifier_data.emp_perms && modifier_data.emp_perms.has("Modify Employee Perms");
+    const is_authorized_to_update_roles =  modifier_data?.emp_perms?.has("Modify Employee Role");
+    const is_authorized_to_update_perms =  modifier_data?.emp_perms?.has("Modify Employee Perms");
 
 
-        const authorized_select_def = is_authorized_to_update_roles ? fieldDefinitions.select_def : otherOptions;
-        const  authorized_check_box = is_authorized_to_update_perms ? fieldDefinitions.check_box  : otherCheckBoxes;
-        fieldDefinitions = {select_def : authorized_select_def ,  check_box : authorized_check_box , inputs_info : fieldDefinitions.inputs_info}
-    }
-    
-    console.log("authorized fieldDefinitions",fieldDefinitions)
+
+    // Filter inputs_info based on authorization
+    const authorized_inputs_info = fieldDefinitions.inputs_info
+
+    // Here we filter the fieldDefinitions based on the modifier's permissions
+
+    const authorized_select_def = (() => {
+        if (!fieldDefinitions.select_def) return {};
+
+        if (is_authorized_to_update_roles) {
+            return fieldDefinitions.select_def; // keep as-is
+        }
+
+        // strip only role-related selects
+        const { select_role_options, ...rest } = fieldDefinitions.select_def;
+        return rest;
+        })();
+    const authorized_check_box = (() => {
+        if (!fieldDefinitions.check_box) return {};
+
+        if (is_authorized_to_update_perms) {
+            return fieldDefinitions.check_box; // keep everything
+        }
+
+        // strip non-authorized checkbox groups
+        const { perms_check_box, ...rest } = fieldDefinitions.check_box;
+        return rest;
+        })();
+
+        // Construct the final authorized field definitions
+    const authorizedFieldDefinitions = {
+        inputs_info: authorized_inputs_info, // always allowed
+        select_def: authorized_select_def,
+        check_box: authorized_check_box
+};
 
     return (
         <>
@@ -42,10 +70,10 @@ export default function UpdateUserForm({
                 {/* we have to check user modifier perms to check which inputs are displayed for editable fields  */}
                 <Form 
                     references ={{ inputsBoxsRef, checkBoxsRef ,selectBoxsRef}} 
-                    form_handler = {(e)=>update_handler(e ,url,token )}
+                    form_handler = {(e)=>update_handler(e ,url,token,authorizedFieldDefinitions )}
                     // add employee_displayed to form to show prev values of inputs
                     user_displayed = {user_displayed} 
-                    fieldDefinitions={fieldDefinitions}
+                    fieldDefinitions={authorizedFieldDefinitions}
                     formBtnState = {formBtnState}  
                     isLoginPage={false} 
 

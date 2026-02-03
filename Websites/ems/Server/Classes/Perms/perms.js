@@ -17,8 +17,8 @@ class perms {
         return this.perms.has(perm)
     }
 
-    static async executeChangeOtherUserData(other_user_id, other_user_title, updating_string){
-        return await CompanyUsersMethods.MapUserToFullUpdateFunction(other_user_id, other_user_title, updating_string)
+    static async executeChangeOtherUserData(other_user_id, other_user_title, updatingObj){
+        return await CompanyUsersMethods.MapUserToFullUpdateFunction(other_user_id, other_user_title, updatingObj)
     }
 
 

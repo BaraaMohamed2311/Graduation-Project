@@ -1,11 +1,12 @@
 const { Tables, TableAliases, fieldToTableMap, roleToEntityMap } = require("../Tables/data"); 
-const stringifyFields = require("./stringifyFields");
 
 // ------------------------------
-// Main Function
+// Main Function - Returns SQL with placeholders and values
 // ------------------------------
 function buildJoinedUpdate(newUpdateData, entityType = null) {
-  if (!newUpdateData || typeof newUpdateData !== "object") return "";
+  if (!newUpdateData || typeof newUpdateData !== "object") {
+    return { sql: "", values: [] };
+  }
 
   // 1. Group filters by table
   const tableGroups = {};
@@ -28,17 +29,40 @@ function buildJoinedUpdate(newUpdateData, entityType = null) {
 
   // 4. Build joined filters for each table
   const parts = [];
+  const values = [];
 
   for (const tableName in tableGroups) {
     const alias = TableAliases[tableName];
     const filterEntries = tableGroups[tableName];
 
-    const sqlPart = stringifyFields("joined", filterEntries, alias);
-    if (sqlPart) parts.push(sqlPart);
+    const { sql, values: entryValues } = buildSetClause(filterEntries, alias);
+    if (sql) {
+      parts.push(sql);
+      values.push(...entryValues);
+    }
   }
 
   // 5. Join all parts
-  return parts.length > 0 ? parts.join(" , ") : "";
+  const sql = parts.length > 0 ? parts.join(" , ") : "";
+  
+  return { sql, values };
+}
+
+// ------------------------------
+// Build SET clause with placeholders
+// ------------------------------
+function buildSetClause(entries, alias) {
+  const setParts = [];
+  const values = [];
+
+  for (const [field, value] of entries) {
+    // Use alias.field = ? format
+    setParts.push(`${alias}.${field} = ?`);
+    values.push(value);
+  }
+
+  const sql = setParts.join(" , ");
+  return { sql, values };
 }
 
 // ------------------------------

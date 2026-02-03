@@ -126,7 +126,7 @@ export default function UpdateUserFormFields({
             />
 
             {/* Check Boxs */}
-            {Object.keys(check_box).length > 0 && Object.entries(check_box).map(([key , arrOfInputDefs])=>(
+            { check_box &&  Object.keys(check_box)?.length > 0 && Object.entries(check_box).map(([key , arrOfInputDefs])=>(
                 <Inputs
                     key={key}
                     inputs_info={arrOfInputDefs} // bcuz components need an array to loop on

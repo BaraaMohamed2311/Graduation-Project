@@ -181,11 +181,11 @@ static async getSpecificData(user_id, user_title) {
     /**
      * Update user data (full/core update)
      */
-    static async updateFullCore(user_id, user_title, updating_string ) {
+    static async updateFullCore(user_id, user_title, updatingObj ) {
         this.#validateUserTitle(user_title);
         const method = this.#fullUpdateMethods[user_title];
         if (!method) return false;
-        return await method.call(this.#methodClassMap[user_title], user_id, updating_string);
+        return await method.call(this.#methodClassMap[user_title], user_id, updatingObj);
     }
 
     // ========================================

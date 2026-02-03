@@ -13,28 +13,40 @@ class Admin extends User {
         return this.priority
     }
     // other user must be admin or less role, cannot be superAdmin
-    static  EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updating_string  ){
-
-        return new Promise(async (resolve , reject )=>{
-            try{
-               
-            if( this.priority >= roles.getRolePriority(other_user_Role)){
-
-                await perms.executeChangeOtherUserData(other_user_id , other_user_title, updating_string  )
-                resolve(true);
-            }
-            else{
-                consoleLog("Admins Cannot Edit Users With Higher Role" , "error");
-                resolve(false);
-            }
-        } catch(err){
-            console.error(err)
-            reject(err)
+    static async EditOtherUserData(other_user_id, other_user_Role, other_user_title, updatingObj) {
+        if (this.priority >= roles.getRolePriority(other_user_Role)) {
+            await perms.executeChangeOtherUserData(
+            other_user_id,
+            other_user_title,
+            updatingObj
+            );
+            return { success: true };
         }
-        })
-       
-        
+
+        return {
+            success: false,
+            message: "User cannot modify higher roles"
+        };
+        }
+
+        // this updates emp_perms field in perms table
+    static async ChangeOtherUserperms(emp_id,other_user_Role,StringOfNewperms,oldUserpermsSet) {
+        if (this.priority < roles.getRolePriority(other_user_Role)) {
+            return {
+            success: false,
+            message: "User cannot modify higher roles"
+            };
+        }
+
+        await perms.executeChangeOtherPerms(
+            emp_id,
+            StringOfNewperms,
+            oldUserpermsSet
+        );
+
+        return { success: true };
     }
+
     // other user must be admin or less role, cannot be superAdmin
     async RemoveOtherUser(emp_id , otherUserRole){
         if( this.priority >= roles.getRolePriority(otherUserRole)){

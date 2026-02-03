@@ -27,8 +27,8 @@ class HospitalUsersMethods {
         return await HospitalUserFactory.updateData(user_id, title, data, actions);
     }
 
-    static async MapUserToFullUpdateFunction(user_id, title, updating_string ) {
-        return await HospitalUserFactory.updateFullCore(user_id, title, updating_string);
+    static async MapUserToFullUpdateFunction(user_id, title, updatingObj ) {
+        return await HospitalUserFactory.updateFullCore(user_id, title, updatingObj);
     }
 
     // ========================================

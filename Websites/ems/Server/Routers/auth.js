@@ -126,13 +126,17 @@ const generalUserMethods = require("../Utils/methods/generalUserMethods.js");
                 if(!user.user_email || !user.user_password) return res.status(400 ).json({success:false,message:"Bad Request"});
 
                 const check_unregistered_table = await isExist(`SELECT EXISTS(SELECT * FROM unregistered_employees WHERE user_email = ?) AS data_exists`, [user.user_email]);
-                const check_employees_table = await isExist(`SELECT EXISTS(SELECT * FROM employees WHERE user_email = ?) AS data_exists`, [user.user_email]);
+                const check_users_table = await isExist(`SELECT EXISTS(SELECT * FROM users WHERE user_email = ? ) AS data_exists`, [user.user_email]);
+                const check_employees_table = await isExist(`SELECT EXISTS(SELECT * FROM employees WHERE emp_id = ?) AS data_exists`, [check_users_table.user_id]);
 
                 if (check_unregistered_table) {
                     return res.json({ success: false, message: "User Already staged & Waiting For Approval" });
-                } else if (check_employees_table) {
+                } else if (check_employees_table && check_users_table?.user_type === 'employee') {
                     return res.json({ success: false, message: "User Already Registered & Approved" });
                 } 
+                else if (check_users_table?.user_type === 'patient'){
+                    return res.json({ success: false, message: "User already registered As patient, use another email" });
+                }
                 /* If user is not staged or registered before we start registering it */
 
             // assign hashed to user before preparing for inserting into db 

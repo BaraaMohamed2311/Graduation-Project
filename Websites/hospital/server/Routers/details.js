@@ -227,10 +227,10 @@ router.patch("/self",jwtVerify, async (req, res) => {
 
 
         // build the updating string for query
-        const updating_string = buildJoinedUpdate(safeUserDetails);
+        const updatingObj = buildJoinedUpdate(safeUserDetails);
 
             
-            const isUpdated =  await HospitalUsersMethods.MapUserToFullUpdateFunction(user_id, userTitle, updating_string);
+            const isUpdated =  await HospitalUsersMethods.MapUserToFullUpdateFunction(user_id, userTitle, updatingObj);
                 //===7. Add Audit Log
             await AuditLogs.addLog(
                 user_id,

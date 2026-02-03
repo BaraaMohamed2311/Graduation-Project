@@ -4,6 +4,7 @@ const Tables = require("../../Tables/data");
 const sqlTransaction = require("../../Utils/sqlTransaction")
 const parseUpdatingStringByTable = require("../parseUpdatingStringByTable");
 const parsedUpdatesToObjects = require("../parsedUpdatesToObjects");
+const generatePlaceHolders = require("../generatePlaceholders")
 class PatientMethods {
     // ============================
     //              GET
@@ -282,46 +283,61 @@ class PatientMethods {
     //              Update
     // ============================
 
-    static async updatePatientFullCore(user_id, updating_string) {
-    const parsedUpdates = parseUpdatingStringByTable(updating_string);
-    const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
-    const queries = [];
-
+    static async updatePatientFullCore(user_id, updatingObj) {
+    // parsedUpdates = {
+        //   users: { sql: "user_name = ?, user_email = ?", values: ["Ali", "a@b.com"] },
+        //   employees: { sql: "emp_salary = ?", values: [5000] }
+        // }
+        const parsedUpdates = parseUpdatingStringByTable(updatingObj);
+        // parsedObjects = {
+        //   users: { user_name: "Ali", user_email: "a@b.com" },
+        //   employees: { emp_salary: 5000 }
+        // }
+        const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
+        const queries = [];
+        const params = []
+        console.log(parsedUpdates)
     // 1. Ensure user exists
     if (parsedUpdates.users) {
         queries.push(`
             UPDATE users
-            SET ${parsedUpdates.users}
-            WHERE user_id = ${user_id} AND user_type = 'patient'
+            SET ${parsedUpdates.users.sql}
+            WHERE user_id = ? AND user_type = 'patient'
         `);
+        params.push([...parsedUpdates.users.values, user_id])
     }
 
     // 2. UPSERT patients
     if (parsedUpdates.patients) {
-        const { columns_field, values_field } = stringifyFields(
+        const { columns_field } = stringifyFields(
             "seperate",
             Object.entries(parsedObjects.patients) || {}
         );
+        const placeholders = generatePlaceholders(columns_field.split(',').length);
         queries.push(`
-            INSERT INTO patients (user_id${columns_field ? ', ' + columns_field : ''})
+            INSERT INTO patients (user_id , ${columns_field})
             SELECT
-                ${user_id}
-                ${values_field ? ', ' + values_field : ''}
+                ?,
+                ${placeholders}
             FROM users u
-            WHERE u.user_type = 'patient' AND u.user_id = ${user_id}
+            WHERE u.user_type = 'patient' AND u.user_id = ?
             ON DUPLICATE KEY UPDATE
-                ${parsedUpdates.patients}
+                ${parsedUpdates.patients.sql}
         `);
+        // id , insert values, id , update values
+        params.push([user_id, ...parsedUpdates.patients.values,user_id ,...parsedUpdates.patients.values])
     }
 
-    // 3. Version update
+    
+    console.log(queries,params)
+    // 3. Version update    
     queries.push(`
         UPDATE table_version
         SET current_version = current_version + 1
         WHERE table_name = 'patients'
     `);
 
-    const result = await sqlTransaction(queries);
+    const result = await sqlTransaction(queries,params);
 
     // Check if user update affected any rows (to know if user exists)
     if (parsedUpdates.users && !result) {

@@ -9,102 +9,69 @@ class SuperAdmin extends User {
         return this.priority
     }
     
-    // this updates role_name field in roles table 
-    static async ChangeOtherUserRole( hosp_emp_id , other_user_Role , other_user_new_role ){
-        return new Promise(async (resolve , reject )=>{
-            try{
-                
-            // compares user modifier priority with other user's 
-                if( this.priority >= roles.getRolePriority(other_user_Role)){
-                    await perms.executeChangeOtherRole( hosp_emp_id , other_user_Role , other_user_new_role )
-                    resolve(true);
-                }
-                else{
-                    resolve(false);
-                }
-        } catch(err){
-            console.error(err)
-            reject(err)
+    // this updates role_name field in roles table
+    static async ChangeOtherUserRole(
+    emp_id,
+    other_user_Role,
+    other_user_new_role
+    ) {
+        if (this.priority < roles.getRolePriority(other_user_Role)) {
+            return {
+            success: false,
+            message: "User cannot modify higher roles"
+            };
         }
-        })
+
+        await perms.executeChangeOtherRole(
+            emp_id,
+            other_user_Role,
+            other_user_new_role
+        );
+
+        return { success: true };
     }
+
 
     
     // this updates emp_perms field in perms table
-    static async ChangeOtherUserperms(hosp_emp_id , other_user_Role , StringOfNewperms , oldUserpermsSet){
-        
-        return new Promise(async (resolve , reject )=>{
-            try{
-                
-                if( this.priority >= roles.getRolePriority(other_user_Role)){
-                    
-                    await perms.executeChangeOtherPerms(hosp_emp_id , StringOfNewperms , oldUserpermsSet)
-                
-                resolve(true);
-            }
-            else{
-
-                resolve(false);
-            }
-        } catch(err){
-            console.error(err)
-            reject(err)
+    static async ChangeOtherUserperms(emp_id,other_user_Role,StringOfNewperms,oldUserpermsSet) {
+        if (this.priority < roles.getRolePriority(other_user_Role)) {
+            return {
+            success: false,
+            message: "User cannot modify higher roles"
+            };
         }
-        })
+
+        await perms.executeChangeOtherPerms(
+            emp_id,
+            StringOfNewperms,
+            oldUserpermsSet
+        );
+
+        return { success: true };
     }
 
 
     // this updates any data field in employees table
 
-    static async EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updating_string  ){
-
-        return new Promise(async (resolve , reject )=>{
-            try{
-                
-            if( this.priority >= roles.getRolePriority(other_user_Role)){
-                
-                await perms.executeChangeOtherUserData(other_user_id, other_user_title, updating_string )
-                
-                resolve(true);
-            }
-            else{
-                resolve(false);
-            }
-        } catch(err){
-            console.error(err)
-            reject(err)
+    static async EditOtherUserData(other_user_id, other_user_Role, other_user_title, updatingObj) {
+        if (this.priority >= roles.getRolePriority(other_user_Role)) {
+            await perms.executeChangeOtherUserData(
+            other_user_id,
+            other_user_title,
+            updatingObj
+            );
+            return { success: true };
         }
-        })
-    }
 
-    static async EditOtherUserFiles(){}
+        return {
+            success: false,
+            message: "User cannot modify higher roles"
+        };
+        }
 
-    static async RemovePatientUser(other_user_id , other_user_Role){
 
-            if( this.priority >= roles.getRolePriority(other_user_Role)){
 
-            if(isNaN(Number(other_user_id))) return;
-
-            return await perms.executeRemoveOther(other_user_id);
-            
-            }
-            else{
-                return false
-            }
-   
-        
-    }
-
-    // other user must be admin or less role, cannot be superAdmin
-    static async RemovePatientUser(other_user_id , other_user_Role){
-            if( this.priority >= roles.getRolePriority(other_user_Role)){
-                if(isNaN(Number(other_user_id))) return;
-                return await perms.executeRemoveOther(other_user_id);
-            }
-            else{
-                return false
-            }
-    }
 }
 
 module.exports = SuperAdmin;

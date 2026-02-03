@@ -17,9 +17,9 @@ class perms {
 
     // ================ Actual Execution of Perms ================= //
 
-    static async executeChangeOtherUserData(other_user_id, other_user_title, updating_string){
+    static async executeChangeOtherUserData(other_user_id, other_user_title, updatingObj){
 
-        return await HospitalUsersMethods.MapUserToFullUpdateFunction(other_user_id, other_user_title, updating_string)
+        return await HospitalUsersMethods.MapUserToFullUpdateFunction(other_user_id, other_user_title, updatingObj)
     }
 
     static async executeModifyPatientFiles(){

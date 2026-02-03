@@ -97,10 +97,10 @@ const originalEmployee = cached_employees?.find(
 
 
   /***************************************update_handler***************************************/
-     function update_handler(e, url, token) {
+     function update_handler(e, url, token ,fieldDefinitions) {
         e.preventDefault();
         // get updated user data and actions that were made
-        let {updatedEmployeeData , actionString} = checkActionsMade();
+        let {updatedEmployeeData , actionString} = checkActionsMade(fieldDefinitions);
 
 
         const reqBody = {
@@ -116,8 +116,8 @@ const originalEmployee = cached_employees?.find(
         
       }
 /***************************************checkActionsMade***************************************/
-      function checkActionsMade(){
-
+      function checkActionsMade(fieldDefinitions){
+const {inputs_info , select_def , check_box} = fieldDefinitions || {};
         let actions = [];
         let updatedEmployeeData = {};
 
@@ -127,20 +127,24 @@ const originalEmployee = cached_employees?.find(
 
        // === 1. Check for changes in general input fields
 
-        allInputFields.forEach((input_info) => {
-          //  Check If any inputBox is empty 
-          if ( (inputsBoxsRef.current[input_info.name] && !inputsBoxsRef.current[input_info.name].value) ){
-            userNotification("error", "Input fields cannot be empty");
-            return
-          }
-          
-          // we check at first that input element is rendered using current of reference
-          else if (inputsBoxsRef.current[input_info.name] && (inputsBoxsRef.current[input_info.name].value !== employee[input_info.name])) {
+        // dynamic fields instead of static inputs_info
+        if(inputs_info && inputs_info.length > 0){
+          inputs_info.forEach((input_info) => {
+            if (inputsBoxsRef.current[input_info.name] && !inputsBoxsRef.current[input_info.name].value) {
+              userNotification("error", "Input fields cannot be empty");
+              return;
+            }
+            
+            else if (inputsBoxsRef.current[input_info.name] && 
+                    (inputsBoxsRef.current[input_info.name].value !== employee[input_info.name])) {
               updatedEmployeeData[input_info.name] = inputsBoxsRef.current[input_info.name].value;
-            if (!actions.includes("Modify Employee Data")) actions.push("Modify Employee Data"); // Add "MD" if not already added
-          }
-          
-        });
+              if (!actions.includes("Modify Employee Data")) {
+                actions.push("Modify Employee Data");
+              }
+            }
+          });
+        }
+        
 
         
 
@@ -148,43 +152,52 @@ const originalEmployee = cached_employees?.find(
         
         
 
-          // we check at first that input element is rendered using current of reference
-          if (selectBoxsRef.current[select_def.select_role_options.name] && (selectBoxsRef.current[select_def.select_role_options.name].value !== employee[select_def.select_role_options.name])) {
-            updatedEmployeeData.other_user_new_role= selectBoxsRef.current[select_def.select_role_options.name].value;
-            if (!actions.includes("Modify Employee Role")) actions.push("Modify Employee Role"); // Add "MR" if not already added
+          const roleName = select_def?.select_role_options?.name;
+          const roleRef = selectBoxsRef?.current?.[roleName];
+          const currentValue = employee?.[roleName];
+
+          if (roleRef?.value !== undefined && roleRef.value !== currentValue) {
+            updatedEmployeeData.other_user_new_role = roleRef.value;
+
+            if (!actions.includes("Modify Employee Role")) {
+              actions.push("Modify Employee Role");
+            }
           }
-        
+
       
       // ====================================================== Modify Permissions ======================================================
         
         let updated_emp_perms = [];
         let permModified = false; // Track if any permission was modified
+          console.log("check_box",check_box)
 
-        check_box.perms_check_box.forEach((check_box_info) => {
-            const isCurrentlyChecked = checkBoxsRef.current[check_box_info.name].checked;
-            const wasPreviouslyChecked = employee_displayed_perms.has(check_box_info.value);
-            
-            // Check if permission state changed
-            if (isCurrentlyChecked !== wasPreviouslyChecked) {
-                permModified = true; // Mark that permissions were modified
-            }
-            
-            // Add to updated array if currently checked (scenarios 1 and 2)
-            if (isCurrentlyChecked) {
-                updated_emp_perms.push(check_box_info.value);
-            }
-        });
+        if(check_box && Object.keys(check_box).length > 0){
+            check_box.perms_check_box.forEach((check_box_info) => {
+              const isCurrentlyChecked = checkBoxsRef.current[check_box_info.name].checked;
+              const wasPreviouslyChecked = employee_displayed_perms.has(check_box_info.value);
+              
+              // Check if permission state changed
+              if (isCurrentlyChecked !== wasPreviouslyChecked) {
+                  permModified = true; // Mark that permissions were modified
+              }
+              
+              // Add to updated array if currently checked (scenarios 1 and 2)
+              if (isCurrentlyChecked) {
+                  updated_emp_perms.push(check_box_info.value);
+              }
+          });
 
-        // Scenario 3: If all permissions were unchecked but some existed before
-        // OR if any permission was changed in any way
-        if (permModified || (updated_emp_perms.length === 0 && employee_displayed_perms.size > 0)) {
-            if (!actions.includes("Modify Employee Perms")) {
-                actions.push("Modify Employee Perms");
-            }
+          // Scenario 3: If all permissions were unchecked but some existed before
+          // OR if any permission was changed in any way
+          if (permModified || (updated_emp_perms.length === 0 && employee_displayed_perms.size > 0)) {
+              if (!actions.includes("Modify Employee Perms")) {
+                  actions.push("Modify Employee Perms");
+              }
+          }
+
+          updatedEmployeeData.other_user_new_perms = updated_emp_perms.join(", ");
         }
-
-        updatedEmployeeData.other_user_new_perms = updated_emp_perms.join(", ");
-
+        
       
         // Join actions array to form the action string
         let actionString = actions.join("-");

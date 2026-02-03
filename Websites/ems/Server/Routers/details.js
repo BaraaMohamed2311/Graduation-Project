@@ -75,9 +75,9 @@ router.patch("/self",jwtVerify, async (req, res) => {
         const userTitle = await User.getUserTitleByID(user_id);
 
         // build the updating string for query
-        const updating_string = buildJoinedUpdate(safeData);
+        const updatingObj = buildJoinedUpdate(safeData);
 
-        const isUpdated =  await CompanyUsersMethods.MapUserToFullUpdateFunction(user_id, userTitle, updating_string);
+        const isUpdated =  await CompanyUsersMethods.MapUserToFullUpdateFunction(user_id, userTitle, updatingObj);
 
         if(isUpdated){
             return res.status(200).json({ success: true, message: "User Updated Successfully" });

@@ -23,18 +23,18 @@ async function ModifyOtherUserData(other_user_id, other_user_Role,other_user_tit
         // updating string for alias1.col1=new_value , alias2.col2=new_value2 , ...
         // inserting object for (col1,col2) values (val1,val2) on first time insert
         const entityType = other_user_title?.toLowerCase();
-        const updating_string = buildJoinedUpdate(newOtherUserData,entityType);
+        const updatingObj = buildJoinedUpdate(newOtherUserData,entityType);
 
         if(modifierRole === "SuperAdmin"){
-            const succeeded = await SuperAdmin.EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updating_string  )
-            if(!succeeded){
-                failing_messages.push({success:false , message: "You Have To Be Admin Or SuperAdmin"})
+            const result = await SuperAdmin.EditOtherUserData(other_user_id ,other_user_Role, other_user_title , updatingObj  )
+            if(!result.success){
+                failing_messages.push({success:false , message:result.message})
             }
         }
         else if (modifierRole === "Admin"){
-        const succeeded = await Admin.EditOtherUserData(other_user_id ,other_user_Role,other_user_title , updating_string  )
-            if(!succeeded){
-                failing_messages.push({success:false , message: "Failed To Modify User Data"})
+        const result = await Admin.EditOtherUserData(other_user_id ,other_user_Role,other_user_title , updatingObj  )
+            if(!result.success){
+                failing_messages.push({success:false , message:result.message})
             }
         }
         else{

@@ -4,6 +4,7 @@ const parseUpdatingStringByTable= require("../parseUpdatingStringByTable");
 const parsedUpdatesToObjects = require("../parsedUpdatesToObjects");
 const stringifyFields  = require("../stringifyFields");
 const sqlTransaction = require("../sqlTransaction");
+const generatePlaceholders = require("../generatePlaceholders")
 
 class DefaultEmployeeMethods {
     /**
@@ -191,34 +192,49 @@ class DefaultEmployeeMethods {
     //  Full/Core Update Method
     // =================================================
 
-    static async updateDefaultEmployeeFullCore(user_id, updating_string) {
-        
-        const parsedUpdates = parseUpdatingStringByTable(updating_string);
+    static async updateDefaultEmployeeFullCore(user_id, updatingObj) {
+        // parsedUpdates = {
+        //   users: { sql: "user_name = ?, user_email = ?", values: ["Ali", "a@b.com"] },
+        //   employees: { sql: "emp_salary = ?", values: [5000] }
+        // }
+        const parsedUpdates = parseUpdatingStringByTable(updatingObj);
+        // parsedObjects = {
+        //   users: { user_name: "Ali", user_email: "a@b.com" },
+        //   employees: { emp_salary: 5000 }
+        // }
         const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
         const queries = [];
-
+        const params = []
 
         // 1. Ensure user exists
         if (parsedUpdates.users) {
             queries.push(`
                 UPDATE users
-                SET ${parsedUpdates.users}
-                WHERE user_id = ${user_id} AND user_type = 'employee'
+                SET ${parsedUpdates.users.sql}
+                WHERE user_id = ? AND user_type = 'employee'
             `);
+            params.push([...parsedUpdates.users.values, user_id])
         }
 
         // 2. UPSERT employees
         if (parsedUpdates.employees) {
-            const { columns_field, values_field } = stringifyFields(
+
+            const { columns_field } = stringifyFields(
                 "seperate",
                 Object.entries(parsedObjects.employees) || {}
             );
+
+            const placeholders = generatePlaceholders(columns_field.split(',').length);
+
             queries.push(`
                 INSERT INTO employees (emp_id,${columns_field})
-                VALUES (${user_id},${values_field})
+                VALUES (?,${placeholders})
                 ON DUPLICATE KEY UPDATE
-                    ${parsedUpdates.employees}
+                    ${parsedUpdates.employees.sql}
             `);
+            // ✅ CORRECT
+            // id, insert values , update values
+            params.push([user_id, ...parsedUpdates.employees.values, ...parsedUpdates.employees.values ]);
         }
 
         // 3. Version update
@@ -228,7 +244,7 @@ class DefaultEmployeeMethods {
             WHERE table_name = 'ems_employees'
         `);
 
-        const result = await sqlTransaction(queries);
+        const result = await sqlTransaction(queries , params);
 
         // Check if user update affected any rows (to know if user exists)
         if (parsedUpdates.users && !result) {

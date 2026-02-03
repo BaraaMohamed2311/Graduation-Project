@@ -49,9 +49,9 @@ class CompanyUsersMethods {
      * Update user data (full/core update)
 
      */
-    static async MapUserToFullUpdateFunction(user_id, title, updating_string) {
+    static async MapUserToFullUpdateFunction(user_id, title, updatingObj) {
 
-        return await CompanyUserFactory.updateFullCore(user_id, title, updating_string);
+        return await CompanyUserFactory.updateFullCore(user_id, title, updatingObj);
     }
 
     // ========================================
@@ -72,7 +72,7 @@ class CompanyUsersMethods {
                 SELECT u.user_id
                 FROM users u
                 INNER JOIN employees e ON u.user_id = e.emp_id
-            
+
                 -- Permissions and roles
                 LEFT JOIN employee_perms ep ON e.emp_id = ep.emp_id
                 LEFT JOIN perms p ON ep.perm_id = p.perm_id

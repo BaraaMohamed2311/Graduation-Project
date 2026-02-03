@@ -20,7 +20,7 @@ export default function UpdateUserForm({
     let [isLoadingBtn , setIsLoadingBtn ] = useState(false);
     let {inputsBoxsRef , checkBoxsRef , selectBoxsRef} = references;
 
-        const { select_role_options, ...otherOptions } = fieldDefinitions.select_def || {};
+    const { select_role_options, ...otherOptions } = fieldDefinitions.select_def || {};
     const { perms_check_box, ...otherCheckBoxes } = fieldDefinitions.check_box || {};
 
     const is_authorized_to_update_roles =  modifier_data?.emp_perms?.has("Modify Employee Role");
@@ -79,7 +79,7 @@ export default function UpdateUserForm({
                 {/* we have to check user modifier perms to check which inputs are displayed for editable fields  */}
                 <Form 
                     references ={{ inputsBoxsRef, checkBoxsRef ,selectBoxsRef}} 
-                    form_handler = {(e)=>update_handler(e ,url , token )}
+                    form_handler = {(e)=>update_handler(e ,url , token ,authorizedFieldDefinitions)}
                     // add employee_displayed to form to show prev values of inputs
                     user_displayed = {user_displayed} 
                     fieldDefinitions={authorizedFieldDefinitions}

@@ -4,6 +4,7 @@ const stringifyFields = require("../stringifyFields");
 const sqlTransaction = require("../sqlTransaction");
 const parseUpdatingStringByTable = require("../parseUpdatingStringByTable");
 const parsedUpdatesToObjects = require("../parsedUpdatesToObjects");
+const generatePlaceholders = require("../generatePlaceholders")
 const User = require("../../Classes/User");
 class NurseMethods {
 
@@ -338,55 +339,93 @@ class NurseMethods {
     // ============================
 
     // Updated updateNurseFullCore function
-static async updateNurseFullCore(emp_id, updating_string){
+static async updateNurseFullCore(emp_id, updatingObj){
 
-    
-    // Parse updating_string by table (returns strings) mapped to tables
-    const parsedUpdates = parseUpdatingStringByTable(updating_string);
-    // Convert to objects {col: val} mapped to tables
-    const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
+    // parsedUpdates = {
+        //   users: { sql: "user_name = ?, user_email = ?", values: ["Ali", "a@b.com"] },
+        //   employees: { sql: "emp_salary = ?", values: [5000] }
+        // }
+        const parsedUpdates = parseUpdatingStringByTable(updatingObj);
+        // parsedObjects = {
+        //   users: { user_name: "Ali", user_email: "a@b.com" },
+        //   employees: { emp_salary: 5000 }
+        // }
+        const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
+        const queries = [];
+        const params = []
 
-    const queries = [];
 
-    // 1. UPDATE ONLY users table (NO UPSERT - user must exist via registration)
+    // 1. Ensure user exists
     if (parsedUpdates.users) {
         queries.push(`
             UPDATE users
-            SET ${parsedUpdates.users}
-            WHERE user_id = ${emp_id} AND user_type = 'employee'
+            SET ${parsedUpdates.users.sql}
+            WHERE user_id = ? AND user_type = 'employee'
         `);
+        params.push([...parsedUpdates.users.values, emp_id])
     }
-    
-    // 2. UPSERT employees table (has defaults, can insert)
+
+    // 2. UPSERT employees
     if (parsedUpdates.employees) {
-        const {columns_field, values_field} = stringifyFields("seperate",Object.entries(parsedObjects.employees) || {});
-        queries.push(`
-            INSERT INTO employees (emp_id,${columns_field})
-            VALUES (${emp_id},${values_field})
-            ON DUPLICATE KEY UPDATE
-                ${parsedUpdates.employees}
-        `);
+        const { columns_field } = stringifyFields(
+                "seperate",
+                Object.entries(parsedObjects.employees) || {}
+            );
+
+            const placeholders = generatePlaceholders(columns_field.split(',').length);
+
+            queries.push(`
+                INSERT INTO employees (emp_id,${columns_field})
+                VALUES (?,${placeholders})
+                ON DUPLICATE KEY UPDATE
+                    ${parsedUpdates.employees.sql}
+            `);
+            // ✅ CORRECT
+            // id, insert values , update values
+            params.push([emp_id, ...parsedUpdates.employees.values, ...parsedUpdates.employees.values ]);
+            console.log(params)
     }
     
     // 3. UPSERT nurses table (has defaults via hosp_emp_id, can insert)
     if (parsedUpdates.nurses) {
-        const {columns_field, values_field} = stringifyFields("seperate",Object.entries(parsedObjects.nurses) || {});
+        const {columns_field} = stringifyFields("seperate",Object.entries(parsedObjects.nurses) || {});
+        const placeholders = generatePlaceholders(columns_field.split(',').length);
+
         queries.push(`
-            INSERT INTO nurses (emp_id,hosp_emp_id,${columns_field})
-            VALUES (${emp_id},${emp_id},${values_field})
+            INSERT INTO nurses (emp_id, hosp_emp_id,${columns_field})
+            SELECT
+                ?,
+                ?,
+                ${placeholders}
+            FROM employees e
+            JOIN users u
+                ON u.user_type = 'employee' AND u.user_id = e.emp_id
+            WHERE e.emp_id = ?
             ON DUPLICATE KEY UPDATE
-                ${parsedUpdates.nurses}
+                ${parsedUpdates.nurses.sql}
         `);
+        // emp_id, hosp_emp_id, insert_values, emp_id, update_values
+        params.push([emp_id,emp_id  , ...parsedUpdates.nurses.values ,emp_id, ...parsedUpdates.nurses.values ])
+        console.log(params)
     }
     
     // 4. Version update
+    // 4. Version update
     queries.push(`
-        UPDATE table_version
-        SET current_version = current_version + 1
-        WHERE table_name = 'ems_employees'
+       INSERT INTO table_version (table_name, current_version)
+        VALUES ('ems_employees', 1)
+        ON DUPLICATE KEY UPDATE
+        current_version = current_version + 1'
+    `);
+    // it's related to hospital, so we need to keep hospital's website synced
+    queries.push(`
+       INSERT INTO table_version (table_name, current_version)
+        VALUES ('hospital_employees', 1)
+        ON DUPLICATE KEY UPDATE
+        current_version = current_version + 1'
     `);
     
-    const result = await sqlTransaction(queries);
+    const result = await sqlTransaction(queries, params);
     
     // Check if user update affected any rows (to know if user exists)
     if (parsedUpdates.users && !result) {

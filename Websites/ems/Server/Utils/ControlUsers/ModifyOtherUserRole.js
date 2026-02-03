@@ -7,13 +7,13 @@ async function ModifyOtherUserRole(modifierRole, other_user_id, other_user_Role,
         // Modidify Role
 
         if(modifierRole === "SuperAdmin"){
-            const succeeded =await SuperAdmin.ChangeOtherUserRole(other_user_id , other_user_Role , other_user_new_role )
-            if(!succeeded){
-            failing_messages.push({success:false , message: "Failed To Modify User Role"})
+            const result =await SuperAdmin.ChangeOtherUserRole(other_user_id , other_user_Role , other_user_new_role )
+            if(!result.success){
+                failing_messages.push({success:false , message:result.message})
             }
         }
         else{
-            failing_messages.push({success:false , message: "You are not authorized to modify user roles"})
+            failing_messages.push({success:false , message: "You must be SuperAdmin to modify roles"})
         }
 
 
