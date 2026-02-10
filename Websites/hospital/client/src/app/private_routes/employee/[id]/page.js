@@ -123,7 +123,7 @@ const {inputs_info , select_def , check_box} = fieldDefinitions || {};
 
         const employee_displayed_perms = employee.emp_perms;
 
-    // ====================================================== Modify Data ======================================================
+    // ====================================================== Modify Employee Data ======================================================
 
        // === 1. Check for changes in general input fields
 
@@ -148,7 +148,7 @@ const {inputs_info , select_def , check_box} = fieldDefinitions || {};
 
         
 
-      //  ====================================================== Modify Role ======================================================
+      //  ====================================================== Modify Employee Role ======================================================
         
         
 

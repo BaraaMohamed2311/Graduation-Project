@@ -1,9 +1,9 @@
  const global_perms = [
-    { value: "Modify Data", text: "Modify Data" },
+    { value: "Modify Employee Data", text: "Modify Employee Data" },
     { value: "Modify Salary", text: "Modify Salary" },
     { value: "Display Salary", text: "Display Salary" },
-    { value: "Modify Perms", text: "Modify Perms" },
-    { value: "Modify Role", text: "Modify Role" },
+    { value: "Modify Employee Perms", text: "Modify Employee Perms" },
+    { value: "Modify Employee Role", text: "Modify Employee Role" },
     { value: "Delete User", text: "Delete User" },
     { value: "Accept Registered", text: "Accept Registered" }
     ]

@@ -72,7 +72,7 @@ const originalEmployee = cached_employees?.find(
   
   useEffect(() => {
   if (!isIndexedDBLoaded || originalEmployee) return;
-
+    
   fetch(`${process.env.APIKEY}/details/employee/${user_id}`, {
     mode: "cors",
     method: "GET",
@@ -132,7 +132,7 @@ const originalEmployee = cached_employees?.find(
 
         const employee_displayed_perms = employee.emp_perms;
 
-    // ====================================================== Modify Data ======================================================
+    // ====================================================== Modify Employee Data ======================================================
 
        // === 1. Check for changes in general input fields
 
@@ -157,7 +157,7 @@ const originalEmployee = cached_employees?.find(
 
         
 
-      //  ====================================================== Modify Role ======================================================
+      //  ====================================================== Modify Employee Role ======================================================
         
         
 

@@ -341,3 +341,21 @@ CREATE TABLE rooms (
     UNIQUE (room_number, floor_id) -- prevent duplicate room numbers on the same floor
 );
 
+-- ====================================================================================
+--          INDEX For faster searching (many unique values for column)
+-- ====================================================================================
+
+
+CREATE INDEX ix_users_user_email ON users(user_email);
+
+CREATE INDEX ix_patients_patient_phone ON patients(patient_phone);
+
+CREATE INDEX ix_consultations_hosp_emp_id ON consultations(hosp_emp_id);
+
+CREATE INDEX ix_consultations_user_id ON consultations(user_id);
+
+CREATE INDEX ix_availability_user_id ON availability(hosp_emp_id);
+
+CREATE INDEX ix_employees_emp_specialty ON employees(emp_specialty);
+
+

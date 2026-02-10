@@ -4,6 +4,13 @@ FROM node:20-alpine AS development
 
 WORKDIR /app
 
+# Declare the build argument
+ARG APIURL
+
+
+# Convert build arg to environment variable BEFORE build
+ENV APIURL=$APIURL
+
 ENV NODE_ENV=development
 
 COPY package.json .
@@ -40,6 +47,13 @@ RUN npm run build
 # Production Stage
 FROM node:20-alpine AS production
 
+
+# Declare the build argument
+ARG APIURL
+
+
+# Convert build arg to environment variable BEFORE build
+ENV APIURL=$APIURL
 
 # Set environment to production
 ENV NODE_ENV=production

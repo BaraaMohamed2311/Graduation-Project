@@ -7,6 +7,9 @@ if (dev === 'local') {
 } else if(dev === 'production') {
   require('dotenv').config({ path: './.env.prod' });   // Load production environment variables
 }
+else if(dev === 'production-kube') {
+  require('dotenv').config({ path: './.env.prod.kube' });   // Load production environment variables
+}
 else{
   console.log("Config development | No containers")
   require('dotenv').config({ path: './.env.dev' });  // Load development environment variables

@@ -21,6 +21,7 @@ export default function ForgetPasswordPage() {
     // sending request 
     // if empty do not send response
     if(inputsBoxsRef.current["emp_password1"].value  === inputsBoxsRef.current["emp_password2"].value){
+      
     fetch(`${process.env.APIKEY}/user/reset-password/${userId}/${resetToken}`, 
           {
           method:"PUT",

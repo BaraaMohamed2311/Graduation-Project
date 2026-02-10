@@ -1,0 +1,171 @@
+---
+# EMS Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ems-server-deployment
+  namespace: production
+  labels:
+    app: ems-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ems-server  # ← Consistent with labels below
+  template:
+    metadata:
+      labels:
+        app: ems-server  # ← Must match selector
+    spec:
+      containers:
+      - name: ems-server
+        image: baraamohamed/gradproj:ems_server_kube
+        ports:
+        - containerPort: 5500
+        env:
+        - name: NODE_ENV
+          value: "kube-production"
+        - name: DB_HOST
+          value: "db-service"  # ← Add database connection
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "ems_db"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: MYSQL_ROOT_PASSWORD
+
+---
+# EMS Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ems-client-deployment
+  namespace: production
+  labels:
+    app: ems-client
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ems-client
+  template:
+    metadata:
+      labels:
+        app: ems-client
+    spec:
+      containers:
+      - name: ems-client
+        image: baraamohamed/gradproj:ems_client
+        ports:
+        - containerPort: 3000
+        env:
+        - name: REACT_APP_API_URL  # ← Add backend URL
+          value: "http://ems-server-service:80"
+
+---
+# Hospital Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hospital-server-deployment
+  namespace: production
+  labels:
+    app: hospital-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hospital-server
+  template:
+    metadata:
+      labels:
+        app: hospital-server
+    spec:
+      containers:
+      - name: hospital-server
+        image: baraamohamed/gradproj:hospital_server_kube
+        ports:
+        - containerPort: 8888
+        env:
+        - name: NODE_ENV
+          value: "kube-production"
+        - name: DB_HOST
+          value: "db-service"  # ← Add database connection
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "ems_db"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: MYSQL_ROOT_PASSWORD
+
+---
+# Hospital Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hospital-client-deployment
+  namespace: production
+  labels:
+    app: hospital-client
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hospital-client
+  template:
+    metadata:
+      labels:
+        app: hospital-client
+    spec:
+      containers:
+      - name: hospital-client
+        image: baraamohamed/gradproj:hospital_client
+        ports:
+        - containerPort: 3000
+        env:
+        - name: REACT_APP_API_URL  # ← Add backend URL
+          value: "http://hospital-server-service:80"
+
+---
+# Database Deployment (with persistence)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deployment
+  namespace: production
+  labels:
+    app: db
+spec:
+  replicas: 1  # ← Only 1 replica for MySQL!
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: db
+        image: baraamohamed/gradproj:db
+        ports:
+        - containerPort: 3306  # ← MySQL port
+        env:
+        - name: MYSQL_DATABASE
+          value: "ems_db"
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: MYSQL_ROOT_PASSWORD
+        

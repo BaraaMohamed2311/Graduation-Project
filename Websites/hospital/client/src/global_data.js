@@ -3,7 +3,7 @@
     { value: "Modify Patient Files", text: "Modify Patient Files" },
     { value: "Modify Employee Perms", text: "Modify Employee Perms" },
     { value: "Modify Employee Role", text: "Modify Employee Role" },
-    { value: "Modify Role", text: "Modify Role" },
+    { value: "Modify Employee Role", text: "Modify Employee Role" },
     { value: "Modify Other Patient", text: "Modify Other Patient" },
     { value: "Modify Patient Data", text: "Modify Patient Data" },
     { value: "Delete Patient", text: "Delete Patient" },

@@ -7,7 +7,7 @@ const stringifyFields = require("../stringifyFields");
 //              Help in Choosing Role Class to Execute Task
 //===========================================================
 async function ModifyOtherUserData(other_user_id, other_user_Role,other_user_title, modifierRole, newOtherUserData, oldOtherUserEmail ,failing_messages) {
-    // This function is used to modify data in the database
+    // This function is used to Modify Employee Data in the database
     // It will be implemented later
 
         // If email is updated make sure it's not in the system

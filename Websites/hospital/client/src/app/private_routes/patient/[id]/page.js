@@ -131,7 +131,7 @@ function PatientDetailsPage() {
         let updatedPatientData = {};
 
 
-    // ====================================================== Modify Data ======================================================
+    // ====================================================== Modify Employee Data ======================================================
 
        // === 1. Check for changes in general input fields
 

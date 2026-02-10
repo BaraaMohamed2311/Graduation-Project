@@ -2,13 +2,14 @@
 const dev = process.env.NODE_ENV ;
 
 if (dev === 'local') {
-
   require('dotenv').config({ path: './.env.local' }); 
 } else if(dev === 'production') {
   require('dotenv').config({ path: './.env.prod' });   // Load production environment variables
 }
+else if(dev === 'production-kube') {
+  require('dotenv').config({ path: './.env.prod.kube' });   // Load production environment variables
+}
 else{
-
   require('dotenv').config({ path: './.env.dev' });  // Load development environment variables
 }
 /**************************/

@@ -4,12 +4,15 @@ FROM node:20-alpine AS development
 
 WORKDIR /app
 
+
+
 ENV NODE_ENV=development
 
 COPY package.json .
 COPY package-lock.json .
 
 RUN npm i
+
 
 
 COPY . .
@@ -32,8 +35,13 @@ RUN npm ci
 
 COPY . .
 
+
+
+
 # Set NODE_ENV=production before build
 ENV NODE_ENV=production
+
+
 
 RUN npm run build
 

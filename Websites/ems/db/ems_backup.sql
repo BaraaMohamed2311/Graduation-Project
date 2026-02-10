@@ -92,7 +92,7 @@ CREATE TABLE `perms` (
 
 
 
-INSERT INTO `perms` VALUES (1,'Modify Data'),(2,'Modify Salary'),(3,'Display Salary'),(4,'Accept Registered'),(5,'Modify Perms'),(6,'Modify Role'),(7,'Delete User');
+INSERT INTO `perms` VALUES (1,'Modify Employee Data'),(2,'Modify Salary'),(3,'Display Salary'),(4,'Accept Registered'),(5,'Modify Employee Perms'),(6,'Modify Employee Role'),(7,'Delete User');
 
 
 

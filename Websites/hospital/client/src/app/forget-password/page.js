@@ -12,12 +12,12 @@ export default function ForgetPasswordPage() {
   
     let inputsBoxsRef = useRef({});
   /**************************************/
-  function login_handler(event){
+  function forgot_password_handler(event){
     // preventing refresh
     event.preventDefault();
     // sending request 
     // if empty do not send response
-    console.log("inputsBoxsRef.current",inputsBoxsRef.current);
+
     fetch(`${process.env.APIKEY}/user/forget-password`, 
           {
           method:"POST",
@@ -57,7 +57,7 @@ export default function ForgetPasswordPage() {
         <div className={styles["center"]}>
           <h1>Email Check</h1>
           <Form 
-            form_handler={login_handler} 
+            form_handler={forgot_password_handler} 
             formBtnState = {formBtnState} 
             inputs_info = { [{
                         id:"forget_password",

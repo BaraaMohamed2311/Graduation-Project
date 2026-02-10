@@ -17,7 +17,7 @@ export default function MailerPage() {
         e.preventDefault();
 
         setIsLoadingBtn(true);
-
+        
         fetch(`${process.env.APIKEY}/mail/mail-employee`,{
             method:"POST",
             body:JSON.stringify({
