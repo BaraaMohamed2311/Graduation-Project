@@ -63,9 +63,7 @@ spec:
         image: baraamohamed/gradproj:ems_client
         ports:
         - containerPort: 3000
-        env:
-        - name: REACT_APP_API_URL  # ← Add backend URL
-          value: "http://ems-server-service:80"
+
 
 ---
 # Hospital Server Deployment
@@ -132,9 +130,6 @@ spec:
         image: baraamohamed/gradproj:hospital_client
         ports:
         - containerPort: 3000
-        env:
-        - name: REACT_APP_API_URL  # ← Add backend URL
-          value: "http://hospital-server-service:80"
 
 ---
 # Database Deployment (with persistence)

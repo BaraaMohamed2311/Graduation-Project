@@ -1,0 +1,105 @@
+---
+# EMS Server Service (Internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ems-server-service
+  namespace: production
+spec:
+  type: ClusterIP  # ← Internal only
+  selector:
+    app: ems-server  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5500
+
+---
+# EMS Client Service (Public access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ems-client-service
+  namespace: production
+spec:
+  type: NodePort  # ← Publicly accessible
+  selector:
+    app: ems-client  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+      nodePort: 30100  # ← Pick a port 30000-32767
+
+---
+# Hospital Server Service (Internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: hospital-server-service
+  namespace: production
+spec:
+  type: ClusterIP  # ← Internal only
+  selector:
+    app: hospital-server  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8888
+
+---
+# Hospital Client Service (Public access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: hospital-client-service
+  namespace: production
+spec:
+  type: NodePort  # ← Publicly accessible
+  selector:
+    app: hospital-client  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+      nodePort: 30101  # ← Different port than EMS client
+
+---
+# Database Service (Internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+  namespace: production
+spec:
+  type: ClusterIP  # ← Internal only
+  selector:
+    app: db  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 3306  # ← MySQL standard port
+      targetPort: 3306  # ← Container port (NOT 9376!)
+
+---
+# nginx Service 
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: production
+spec:
+  type: NodePort  # ← Internal only
+  selector:
+    app: nginx  
+  ports:
+    - name: ems
+      protocol: TCP
+      port: 82          # ← ClusterIP port
+      targetPort: 82    # ← Container port (NGINX listens here)
+      nodePort: 30600   # ← External access port (Kubernetes maps this)
+    - name: hospital
+      protocol: TCP
+      port: 81          # ← ClusterIP port
+      targetPort: 81    # ← Container port (NGINX listens here)
+      nodePort: 30601   # ← External access port (Kubernetes maps this)
+

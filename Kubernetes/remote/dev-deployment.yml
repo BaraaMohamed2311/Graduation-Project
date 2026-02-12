@@ -4,14 +4,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ems-server-deployment
-  namespace: production
+  namespace: development
   labels:
     app: ems-server
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: ems-server  # ← Consistent with labels below
+      app: ems-server 
   template:
     metadata:
       labels:
@@ -45,7 +45,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ems-client-deployment
-  namespace: production
+  namespace: development
   labels:
     app: ems-client
 spec:
@@ -64,8 +64,7 @@ spec:
         ports:
         - containerPort: 3000
         env:
-        - name: REACT_APP_API_URL  # ← Add backend URL
-          value: "http://ems-server-service:80"
+
 
 ---
 # Hospital Server Deployment
@@ -73,7 +72,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hospital-server-deployment
-  namespace: production
+  namespace: development
   labels:
     app: hospital-server
 spec:
@@ -114,7 +113,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hospital-client-deployment
-  namespace: production
+  namespace: development
   labels:
     app: hospital-client
 spec:
@@ -133,8 +132,7 @@ spec:
         ports:
         - containerPort: 3000
         env:
-        - name: REACT_APP_API_URL  # ← Add backend URL
-          value: "http://hospital-server-service:80"
+
 
 ---
 # Database Deployment (with persistence)
@@ -142,11 +140,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: db-deployment
-  namespace: production
+  namespace: development
   labels:
     app: db
 spec:
-  replicas: 1  # ← Only 1 replica for MySQL!
+  replicas: 1  # ← Only 1 replica for MySQL
   selector:
     matchLabels:
       app: db
@@ -159,7 +157,7 @@ spec:
       - name: db
         image: baraamohamed/gradproj:db
         ports:
-        - containerPort: 3306  # ← MySQL port
+        - containerPort: 3306  
         env:
         - name: MYSQL_DATABASE
           value: "ems_db"
@@ -168,4 +166,38 @@ spec:
             secretKeyRef:
               name: my-secret
               key: MYSQL_ROOT_PASSWORD
-        
+
+---
+# Hospital Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: development
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 82   # EMS
+        - containerPort: 81   # Hospital
+        - containerPort: 80   # nginx do not use it for other purposes
+        volumeMounts:                          # ← Correct way to mount ConfigMap
+          - name: nginx-config-volume
+            mountPath: /etc/nginx/nginx.conf
+            subPath: nginx-conf-file
+      volumes:                                 # ← Volumes defined at pod level
+        - name: nginx-config-volume
+          configMap:
+            name: nginx-configmap
