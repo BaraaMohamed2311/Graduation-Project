@@ -20,7 +20,8 @@ require("./cronjobs/markOldConsultationsCron.js")
 const express = require("express");
 const app = express();
 const consoleLog = require("./Utils/consoleLog.js");
-const appUses = require("./Startup/appUses.js")
+const appUses = require("./Startup/appUses.js");
+const mongoose =require("mongoose")
 // environment vars
 const PORT = process.env.PORT;
 
@@ -33,8 +34,9 @@ const PORT = process.env.PORT;
   })
 
 // Server Launch
-app.listen(PORT,(req, res)=>{
-    res
+app.listen(PORT,async (req, res)=>{
+      await mongoose.connect(process.env.Hospital_MongoDB);
+      console.log("MongoDB ready");
     consoleLog(`Server is Running on port : ${PORT}` , "success"); 
 })
 

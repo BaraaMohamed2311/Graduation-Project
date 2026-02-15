@@ -15,7 +15,7 @@ const mongoose = require("mongoose");
 const AuditLogs = require("../Utils/methods/AuditLogs.js");
 const path = require('path');
 
-let gfs_bucket;
+let bucket;
 
 // ===1. Define allowed types
 const ProfileImagemimetypes = new Set([
@@ -35,16 +35,11 @@ const patientFileTypes = new Set([
   "text/plain",
 ]);
 
-// ===2. Connect to MongoDB and return uploads bucket
-async function initializeConnectionMDB() {
-  const db = await conect_mongodb(process.env.Hospital_MongoDB);
-  const bucket = await connect_bucket(db, "uploads");
-  return bucket;
+function getBucket() {
+  const db = mongoose.connection.db;
+  if (!db) throw new Error("MongoDB not connected");
+  return connect_bucket(db, "uploads");
 }
-
-
-// ===3. Initialize bucket for GridFS operations
-initializeConnectionMDB().then((bucket) => (gfs_bucket = bucket));
 
 
 // ===4. Configure multer-gridfs-storage for profile images
@@ -90,9 +85,10 @@ const uploadPatientFile = multer({ storage: patientStorage });
 //                Get User Image
 // ==============================================
 
-router.get("/profile",jwtVerify, async (req, res) => {
+router.get("/profile", async (req, res) => {
   try {
-    if (gfs_bucket) {
+    const bucket = getBucket()
+    if (bucket) {
       // ===5.1 Find user record
       const user = await Profile_Pic_Module.findOne({
         user_id: req.query["user_id"],
@@ -108,14 +104,14 @@ router.get("/profile",jwtVerify, async (req, res) => {
       }
 
       // ===5.3 Find file in bucket
-      const cursor = await gfs_bucket.find({
+      const cursor = await bucket.find({
         filename: user.user_pic.file_name,
       });
       const docsArray = await cursor.toArray();
 
       // ===5.4 Pipe image back to response
       if (docsArray[0] && docsArray[0].filename) {
-        gfs_bucket.openDownloadStreamByName(docsArray[0].filename).pipe(res);
+        bucket.openDownloadStreamByName(docsArray[0].filename).pipe(res);
       } else {
         res.header("Content-Type", "application/json");
         return res.status(404).json({
@@ -158,8 +154,8 @@ router.get("/patient/:user_id",jwtVerify, async (req, res) => {
         message: "user_id is required"
       });
     }
-
-    if (!gfs_bucket) {
+    const bucket = getBucket()
+    if (!bucket) {
       return res.status(404).json({
         success: false,
         message: "Mongo GridFS bucket is undefined"
@@ -247,7 +243,8 @@ router.post(
     
 
     try {
-      if (!gfs_bucket) {
+      const bucket = getBucket()
+      if (!bucket) {
         return res
           .status(404)
           .json({ success: false, message: "Mongo Bucket is undefined" });
@@ -339,8 +336,8 @@ router.post("/other/patient",jwtVerify, uploadPatientFile.array("patient_file", 
                 const Modifier_role = await User.getUserRole(modifier_id);
                 
                 if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
-                
-                if (!gfs_bucket) {
+                const bucket = getBucket()
+                if (!bucket) {
                     return res
                         .status(404)
                         .json({ success: false, message: "Mongo Bucket is undefined" });
@@ -455,13 +452,13 @@ router.post("/other/patient",jwtVerify, uploadPatientFile.array("patient_file", 
 router.put(
   "/profile",jwtVerify,
   async (req, res, next) => {
-    await deleteFromBucket(gfs_bucket, req, res, next);
+    await deleteFromBucket(getBucket(), req, res, next);
   },
   uploadProfileImg.single("user_pic"),
   async (req, res) => {
     try {
-
-      if (gfs_bucket) {
+      const bucket = getBucket()
+      if (bucket) {
         const maxSizeInBytes =  20 * 1024 * 1024; // 20MB
 
         if (req.file.size > maxSizeInBytes)
@@ -479,7 +476,7 @@ router.put(
 
         // ===4. Pipe new image back to response
         if (req.file && req.file.filename) {
-          gfs_bucket.openDownloadStreamByName(req.file.filename).pipe(res);
+          bucket.openDownloadStreamByName(req.file.filename).pipe(res);
         } else {
           res.header("Content-Type", "application/json");
           return res.status(400).json({
@@ -622,8 +619,8 @@ router.delete("/other/patient/:file_id/delete", jwtVerify, async (req, res) => {
     const Modifier_role = await User.getUserRole(modifier_id);
     
     if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
-
-    if (!gfs_bucket) {
+    const bucket = getBucket()
+    if (!bucket) {
       return res.status(404).json({ 
         success: false, 
         message: "Mongo Bucket is undefined" 
