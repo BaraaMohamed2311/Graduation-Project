@@ -1,0 +1,109 @@
+---
+# EMS Server Service (Internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ems-server-service
+  namespace: {{ .Values.namespace}}
+spec:
+  type: ClusterIP  # ← Internal only
+  selector:
+    app: ems-server  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: {{ .Values.images.ems.ports.ems_server_container_port}} 
+
+---
+# EMS Client Service (Public access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ems-client-service
+  namespace: {{ .Values.namespace}}
+spec:
+  type: NodePort  # ← Publicly accessible
+  selector:
+    app: ems-client  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: {{ .Values.images.ems.ports.ems_client_container_port}} 
+      {{- if .Values.services.ems.ems_client_nodePort}}
+      nodePort: {{ .Values.services.ems.ems_client_nodePort}} 
+      {{- end}} 
+
+---
+# Hospital Server Service (Internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: hospital-server-service
+  namespace: {{ .Values.namespace}}
+spec:
+  type: ClusterIP  # ← Internal only
+  selector:
+    app: hospital-server  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: {{ .Values.images.hospital.ports.hospital_server_container_port}} 
+
+---
+# Hospital Client Service (Public access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: hospital-client-service
+  namespace: {{ .Values.namespace}}
+spec:
+  type: NodePort  # ← Publicly accessible
+  selector:
+    app: hospital-client  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: {{ .Values.images.hospital.ports.hospital_client_container_port}} 
+      {{- if .Values.services.hospital.hospital_client_nodePort}}
+      nodePort: {{ .Values.services.hospital.hospital_client_nodePort}}  
+      {{- end}}
+
+---
+# Database Service (Internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+  namespace: {{ .Values.namespace}}
+spec:
+  type: ClusterIP  # ← Internal only
+  selector:
+    app: db  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 3306  # ← MySQL standard port
+      targetPort: {{ .Values.images.db.ports.db_container_port}} 
+
+---
+# nginx Service 
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: {{ .Values.namespace}}
+spec:
+  type: NodePort  # ← Internal only
+  selector:
+    app: nginx  
+  ports:
+    - name: ems
+      protocol: TCP
+      port: {{ .Values.services.nginx.ems_nginx_port}}           # ← ClusterIP port
+      targetPort: {{ .Values.services.nginx.ems_nginx_port}}     # ← Container port (NGINX listens here)
+      nodePort: {{ .Values.services.nginx.ems_nodePort}}   # ← External access port (Kubernetes maps this)
+    - name: hospital
+      protocol: TCP
+      port: {{ .Values.services.nginx.hospital_nginx_port}}          # ← ClusterIP port
+      targetPort: {{ .Values.services.nginx.hospital_nginx_port}}    # ← Container port (NGINX listens here)
+      nodePort: {{ .Values.services.nginx.hospital_nodePort}}   # ← External access port (Kubernetes maps this)
+

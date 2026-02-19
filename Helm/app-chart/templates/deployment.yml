@@ -1,0 +1,205 @@
+---
+# EMS Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ems-server-deployment
+  namespace: {{ .Values.namespace}}
+  labels:
+    app: ems-server
+spec:
+  replicas: {{ .Values.deployments.ems.replicas.ems_server_replicas}} 
+  
+  selector:
+    matchLabels:
+      app: {{ .Values.deployments.ems.labels.ems_server_label}}  # ← Consistent with labels below
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployments.ems.labels.ems_server_label}}  # ← Must match selector
+    spec:
+      containers:
+      - name: ems-server
+        image: {{ .Values.images.ems.images.ems_server_image}} 
+        ports:
+        - containerPort: {{ .Values.images.ems.ports.ems_server_container_port}} 
+        env:
+        - name: NODE_ENV
+          value: "kube-production"
+        - name: DB_HOST
+          value: "db-service"  # ← Add database connection
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "ems_db"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: MYSQL_ROOT_PASSWORD
+
+---
+# EMS Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ems-client-deployment
+  namespace: {{ .Values.namespace}}
+  labels:
+    app: ems-client
+spec:
+  replicas: {{ .Values.deployments.ems.replicas.ems_client_replicas}} 
+  selector:
+    matchLabels:
+      app: {{ .Values.deployments.ems.labels.ems_client_label}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployments.ems.labels.ems_client_label}}
+    spec:
+      containers:
+      - name: ems-client
+        image: {{ .Values.images.ems.images.ems_client_image}}
+
+        ports:
+        - containerPort: {{ .Values.images.ems.ports.ems_client_container_port}} 
+
+
+---
+# Hospital Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hospital-server-deployment
+  namespace: {{ .Values.namespace}}
+  labels:
+    app: hospital-server
+spec:
+  replicas: {{ .Values.deployments.hospital.replicas.hospital_server_replicas}} 
+  selector:
+    matchLabels:
+      app: {{ .Values.deployments.hospital.labels.hospital_server_label}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployments.hospital.labels.hospital_server_label}}
+    spec:
+      containers:
+      - name: hospital-server
+        image: {{ .Values.images.hospital.images.hospital_server_image}}
+
+        ports:
+        - containerPort: {{ .Values.images.hospital.ports.hospital_server_container_port}} 
+        env:
+        - name: NODE_ENV
+          value: "kube-production"
+        - name: DB_HOST
+          value: "db-service"  # ← Add database connection
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "ems_db"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: MYSQL_ROOT_PASSWORD
+
+---
+# Hospital Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hospital-client-deployment
+  namespace: {{ .Values.namespace}}
+  labels:
+    app: hospital-client
+spec:
+  replicas: {{ .Values.deployments.hospital.replicas.hospital_client_replicas}} 
+  selector:
+    matchLabels:
+      app: {{ .Values.deployments.hospital.labels.hospital_client_label}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployments.hospital.labels.hospital_client_label}}
+    spec:
+      containers:
+      - name: hospital-client
+        image: {{ .Values.images.hospital.images.hospital_client_image}}
+
+        ports:
+        - containerPort: {{ .Values.images.hospital.ports.hospital_client_container_port}} 
+
+
+---
+# Database Deployment (with persistence)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deployment
+  namespace: {{ .Values.namespace}}
+  labels:
+    app: db
+spec:
+  replicas: {{ .Values.deployments.db.replicas.db_replicas}} 
+  selector:
+    matchLabels:
+      app: {{ .Values.deployments.db.labels.db_label}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployments.db.labels.db_label}}
+    spec:
+      containers:
+      - name: db
+        image: {{ .Values.images.db.images.db_image}} 
+
+        ports:
+        - containerPort: {{ .Values.images.db.ports.db_container_port}} 
+        env:
+        - name: MYSQL_DATABASE
+          value: "ems_db"
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: MYSQL_ROOT_PASSWORD
+
+---
+# Hospital Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: {{ .Values.namespace}}
+  labels:
+    app: nginx
+spec:
+  replicas: {{ .Values.deployments.nginx.replicas.nginx_replicas}} 
+  selector:
+    matchLabels:
+      app: {{ .Values.deployments.nginx.labels.nginx_label}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployments.nginx.labels.nginx_label}}
+    spec:
+      containers:
+      - name: nginx
+        image: {{ .Values.images.nginx.images.nginx_image}} 
+        ports:
+        - containerPort: {{ .Values.services.nginx.ems_nginx_port}}   # EMS
+        - containerPort: {{ .Values.services.nginx.hospital_nginx_port}}    # Hospital
+        volumeMounts:                          # ← Correct way to mount ConfigMap
+          - name: nginx-config-volume
+            mountPath: /etc/nginx/nginx.conf
+            subPath: nginx-conf-file
+      volumes:                                 # ← Volumes defined at pod level
+        - name: nginx-config-volume
+          configMap:
+            name: nginx-configmap

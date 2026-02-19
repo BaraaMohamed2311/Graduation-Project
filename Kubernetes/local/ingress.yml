@@ -7,39 +7,87 @@ spec:
   ingressClassName: nginx
   rules:
   # EMS Application
-  - host: ems.localhost
+  - host: ems.prod.localhost
     http:
       paths:
       - path: /api
         pathType: Prefix
         backend:
           service:
-            name: ems-server-service
+            name: ems-server-service-production
             port:
               number: 80
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: ems-client-service
+            name: ems-client-service-production
             port:
               number: 80
   
   # Hospital Application
-  - host: hospital.localhost
+  - host: hospital.prod.localhost
     http:
       paths:
       - path: /api
         pathType: Prefix
         backend:
           service:
-            name: hospital-server-service
+            name: hospital-server-service-production
             port:
               number: 80
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: hospital-client-service
+            name: hospital-client-service-production
+            port:
+              number: 80
+  
+  
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+  namespace: testing
+spec:
+  ingressClassName: nginx
+  rules:
+  # EMS Application
+  - host: ems.test.localhost
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: ems-server-service-testing
+            port:
+              number: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ems-client-service-testing
+            port:
+              number: 80
+  
+  # Hospital Application
+  - host: hospital.test.localhost
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: hospital-server-service-testing
+            port:
+              number: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: hospital-client-service-testing
             port:
               number: 80

@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ems-server-deployment
-  namespace: development
+  namespace: testing
   labels:
     app: ems-server
 spec:
@@ -45,7 +45,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ems-client-deployment
-  namespace: development
+  namespace: testing
   labels:
     app: ems-client
 spec:
@@ -71,7 +71,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hospital-server-deployment
-  namespace: development
+  namespace: testing
   labels:
     app: hospital-server
 spec:
@@ -112,7 +112,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hospital-client-deployment
-  namespace: development
+  namespace: testing
   labels:
     app: hospital-client
 spec:
@@ -137,7 +137,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: db-deployment
-  namespace: development
+  namespace: testing
   labels:
     app: db
 spec:

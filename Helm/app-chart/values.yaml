@@ -1,0 +1,94 @@
+
+namespace: testing
+# APP DEPLOYMENT
+deployments: 
+  ems:
+    labels:
+      ems_server_label: "ems-server"
+      ems_client_label: "ems-client"
+    images: 
+      ems_server_image: "baraamohamed/gradproj:ems_server_kube"
+      ems_client_image: "baraamohamed/gradproj:ems_client"
+
+    replicas:
+      ems_server_replicas: 2
+      ems_client_replicas: 1
+
+  hospital:
+    labels:
+      hospital_server_label: "hospital-server"
+      hospital_client_label: "hospital-client"
+    images: 
+      hospital_server_image: "baraamohamed/gradproj:hospital_server_kube"
+      hospital_client_image: "baraamohamed/gradproj:hospital_client"
+    replicas:
+      hospital_server_replicas: 3
+      hospital_client_replicas: 1
+  
+  db:
+    labels:
+      db_label: "db"
+    images: 
+      db_image: "baraamohamed/gradproj:db"
+    replicas:
+      db_replicas: 1
+
+  nginx:
+    labels:
+      nginx_label: "nginx"
+    images: 
+      nginx_image: "nginx"
+    replicas:
+      nginx_replicas: 1
+
+
+
+#########################################################
+
+services: 
+  nginx:
+    # Must match nginx conf ports, DO NOT use 80
+    ems_nginx_port: 82   # EMS
+    hospital_nginx_port: 81   # Hospital
+    ems_nodePort: 30700 # NodePorts exposed though nginx (production only)
+    hospital_nodePort: 30701  # NodePorts exposed though nginx (production only)
+
+  
+  ems:
+    ems_client_nodePort: 30200 # NodePorts exposed though service itself, for bypassing nginx (testing only)
+    
+  hospital:
+    hospital_client_nodePort: 30201 # NodePorts exposed service itself, for bypassing nginx (testing only)
+
+#########################################################
+images:
+  ems:
+    images: 
+      ems_server_image: "baraamohamed/gradproj:ems_server_kube"
+      ems_client_image: "baraamohamed/gradproj:ems_client"
+    ports:
+      ems_server_container_port: 5500
+      ems_client_container_port: 3000
+
+
+  hospital:
+    images: 
+      hospital_server_image: "baraamohamed/gradproj:hospital_server_kube"
+      hospital_client_image: "baraamohamed/gradproj:hospital_client"
+    ports:
+      hospital_server_container_port: 8888
+      hospital_client_container_port: 3000
+  
+  db:
+    images: 
+      db_image: "baraamohamed/gradproj:db"
+    ports:
+      db_container_port: 3306 # Keep it,if you change it you must override app-server db ports env variable "DB_PORT"
+
+
+  nginx:
+    images: 
+      nginx_image: "nginx"
+    ports:
+      nginx_container_port:
+

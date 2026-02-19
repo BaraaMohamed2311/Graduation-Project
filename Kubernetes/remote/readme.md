@@ -1,0 +1,1 @@
+Uses Nginx for forwarding requests, Could be deployed locally or @ remote server.
