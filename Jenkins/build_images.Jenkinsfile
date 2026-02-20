@@ -1,41 +1,30 @@
 node {
+    def version = "1-0-0"
 
+    stage('Clone repository') {
+        checkout scm
+    }
 
-def version = "1-0-0"
+    stage('Build & Push Docker Images') {
+        docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
 
+            def images = [
+                [name: "ems-client", path: "../Websites/ems/client"],
+                [name: "ems-server", path: "../Websites/ems/server"],
+                [name: "hospital-client", path: "../Websites/hospital/client"],
+                [name: "hospital-server", path: "../Websites/hospital/server"]
+            ]
 
-stage('Clone repository') {
-    checkout scm
-}
-
-stages {
-        stage('Build & Push Docker Images') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
-
-                        def images = [
-                            [name: "ems-client", path: "../Websites/ems/client"],
-                            [name: "ems-server", path: "../Websites/ems/server"],
-                            [name: "hospital-client", path: "../Websites/hospital/client"],
-                            [name: "hospital-server", path: "../Websites/hospital/server"]
-                        ]
-
-                        for (img in images) {
-                            sh """
-                                docker buildx create --use || true
-                                docker buildx build \
-                                  --platform linux/amd64,linux/arm64 \
-                                  -t baraamohamed/gradproj:${img.name}-${VERSION} \
-                                  ${img.path} \
-                                  --push
-                            """
-                        }
-                    }
-                }
+            for (img in images) {
+                sh """
+                    docker buildx create --use || true
+                    docker buildx build \
+                      --platform linux/amd64,linux/arm64 \
+                      -t baraamohamed/gradproj:${img.name}-${version} \
+                      ${img.path} \
+                      --push
+                """
             }
         }
     }
-
-
 }
