@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - 'Websites/*'
+      - 'Websites/**' # ** to Watch all files and subfolders in Websites
 jobs:
   build:
     name: Build
