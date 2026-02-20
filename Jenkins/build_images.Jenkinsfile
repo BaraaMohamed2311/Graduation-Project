@@ -2,7 +2,7 @@ node {
 
 
 def version = "1-0-0"
-def images = [:]
+
 
 stage('Clone repository') {
     checkout scm
