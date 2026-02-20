@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'docker:24-dind'      // Docker-in-Docker image
-            args '--privileged'         // required for DinD
-        }
-    }
+    agent any
 
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials' // Jenkins credential ID
