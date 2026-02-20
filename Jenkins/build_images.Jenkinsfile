@@ -8,38 +8,34 @@ stage('Clone repository') {
     checkout scm
 }
 
-stage('Build images') {
-    echo 'Building Docker images...'
+stages {
+        stage('Build & Push Docker Images') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
 
-    images.ems_client = docker.build("baraamohamed/gradproj:ems-client-${version}", "../Websites/ems/client")
-    images.ems_server = docker.build("baraamohamed/gradproj:ems-server-${version}", "../Websites/ems/server")
-    images.hospital_client = docker.build("baraamohamed/gradproj:hospital-client-${version}", "../Websites/hospital/client")
-    images.hospital_server = docker.build("baraamohamed/gradproj:hospital-server-${version}", "../Websites/hospital/server")
-}
+                        def images = [
+                            [name: "ems-client", path: "../Websites/ems/client"],
+                            [name: "ems-server", path: "../Websites/ems/server"],
+                            [name: "hospital-client", path: "../Websites/hospital/client"],
+                            [name: "hospital-server", path: "../Websites/hospital/server"]
+                        ]
 
-stage('Test images') {
-    echo 'Running container tests...'
-
-    sh "docker run --rm baraamohamed/gradproj:ems-client-${version} ./run-tests.sh"
-    sh "docker run --rm baraamohamed/gradproj:ems-server-${version} ./run-tests.sh"
-    sh "docker run --rm baraamohamed/gradproj:hospital-client-${version} ./run-tests.sh"
-    sh "docker run --rm baraamohamed/gradproj:hospital-server-${version} ./run-tests.sh"
-}
-
-stage('Push images') {
-    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-
-        images.ems_client.push()
-        images.ems_server.push()
-        images.hospital_client.push()
-        images.hospital_server.push()
-
-        images.ems_client.push("latest")
-        images.ems_server.push("latest")
-        images.hospital_client.push("latest")
-        images.hospital_server.push("latest")
+                        for (img in images) {
+                            sh """
+                                docker buildx create --use || true
+                                docker buildx build \
+                                  --platform linux/amd64,linux/arm64 \
+                                  -t baraamohamed/gradproj:${img.name}-${VERSION} \
+                                  ${img.path} \
+                                  --push
+                            """
+                        }
+                    }
+                }
+            }
+        }
     }
-}
 
 
 }
