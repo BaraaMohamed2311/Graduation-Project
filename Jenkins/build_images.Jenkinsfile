@@ -26,7 +26,10 @@ pipeline {
                         ]
 
                         for (img in images) {
+                     
                             bat """
+                                echo Listing current directory
+                                dir
                                 docker buildx create --use || true
                                 docker buildx build \
                                   --platform linux/amd64,linux/arm64 \
