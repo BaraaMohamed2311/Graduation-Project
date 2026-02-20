@@ -1,30 +1,57 @@
-node {
-    def version = "1-0-0"
-
-    stage('Clone repository') {
-        checkout scm
+pipeline {
+    agent {
+        docker {
+            image 'docker:24-dind'      // Docker-in-Docker image
+            args '--privileged'         // required for DinD
+        }
     }
 
-    stage('Build & Push Docker Images') {
-        docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
+    environment {
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials' // Jenkins credential ID
+        VERSION = '1-0-0' 
+    }
 
-            def images = [
-                [name: "ems-client", path: "../Websites/ems/client"],
-                [name: "ems-server", path: "../Websites/ems/server"],
-                [name: "hospital-client", path: "../Websites/hospital/client"],
-                [name: "hospital-server", path: "../Websites/hospital/server"]
-            ]
-
-            for (img in images) {
-                sh """
-                    docker buildx create --use || true
-                    docker buildx build \
-                      --platform linux/amd64,linux/arm64 \
-                      -t baraamohamed/gradproj:${img.name}-${version} \
-                      ${img.path} \
-                      --push
-                """
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
             }
+        }
+
+
+        stage('Build & Push Docker Images') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
+                        def images = [
+                            [name: "ems-client", path: "../Websites/ems/client"],
+                            [name: "ems-server", path: "../Websites/ems/server"],
+                            [name: "hospital-client", path: "../Websites/hospital/client"],
+                            [name: "hospital-server", path: "../Websites/hospital/server"]
+                        ]
+
+                        for (img in images) {
+                            sh """
+                                docker buildx create --use || true
+                                docker buildx build \
+                                  --platform linux/amd64,linux/arm64 \
+                                  -t baraamohamed/gradproj:${img.name}-${VERSION} \
+                                  ${img.path} \
+                                  --push
+                            """
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Build finished.'
+        }
+        failure {
+            echo 'Build failed.'
         }
     }
 }
