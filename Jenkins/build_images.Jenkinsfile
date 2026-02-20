@@ -30,6 +30,7 @@ pipeline {
                             bat """
                                 echo Listing current directory
                                 dir
+                                echo ${img.path}/${img.file}
                                 docker buildx create --use || true
                                 docker buildx build \
                                   --platform linux/amd64,linux/arm64 \
