@@ -19,10 +19,10 @@ pipeline {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
                         def images = [
-                            [name: "ems-client", path: "Websites/ems/client"],
-                            [name: "ems-server", path: "Websites/ems/server"],
-                            [name: "hospital-client", path: "Websites/hospital/client"],
-                            [name: "hospital-server", path: "Websites/hospital/server"]
+                            [name: "ems-client", path: "Websites/ems/client",file:"Dockerfile.frontend"],
+                            [name: "ems-server", path: "Websites/ems/server",file:"Dockerfile.backend"],
+                            [name: "hospital-client", path: "Websites/hospital/client",file:"Dockerfile.frontend"],
+                            [name: "hospital-server", path: "Websites/hospital/server",file:"Dockerfile.backend"]
                         ]
 
                         for (img in images) {
@@ -31,6 +31,7 @@ pipeline {
                                 docker buildx build \
                                   --platform linux/amd64,linux/arm64 \
                                   -t baraamohamed/gradproj:${img.name}-${VERSION} \
+                                  -f ${img.file}\
                                   ${img.path} \
                                   --push
                             """
