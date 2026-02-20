@@ -19,10 +19,10 @@ pipeline {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
                         def images = [
-                            [name: "ems-client", path: "../Websites/ems/client"],
-                            [name: "ems-server", path: "../Websites/ems/server"],
-                            [name: "hospital-client", path: "../Websites/hospital/client"],
-                            [name: "hospital-server", path: "../Websites/hospital/server"]
+                            [name: "ems-client", path: "Websites/ems/client"],
+                            [name: "ems-server", path: "Websites/ems/server"],
+                            [name: "hospital-client", path: "Websites/hospital/client"],
+                            [name: "hospital-server", path: "Websites/hospital/server"]
                         ]
 
                         for (img in images) {
