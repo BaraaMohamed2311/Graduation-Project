@@ -2,7 +2,7 @@ name: selective_build
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'Websites/**' # ** to Watch all files and subfolders in Websites
 jobs:
