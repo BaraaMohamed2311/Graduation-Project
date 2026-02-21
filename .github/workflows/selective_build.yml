@@ -1,10 +1,51 @@
-name: Trigger Jenkins
-if: steps.detect.outputs.services != ''
-uses: appleboy/jenkins-action@v1
-with:
-  url: ${{ secrets.JENKINS_URL }}
-  user: ${{ secrets.JENKINS_USER }}
-  token: ${{ secrets.JENKINS_TOKEN }}
-  job: image_building
-  params: |
-    SERVICES=${{ steps.detect.outputs.services }}
+name: Build Changed Services
+
+on:
+  push:
+    paths:
+      - "Websites/**"
+
+jobs:
+  detect-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2  # needed to compare with previous commit
+
+      - name: Get changed files
+        id: changes
+        run: |
+          changed=$(git diff --name-only HEAD~1 HEAD)
+          echo "all_changed_files=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Detect changed services
+        id: detect
+        shell: bash
+        run: |
+          services=()
+          files="${{ steps.changes.outputs.all_changed_files }}"
+
+          [[ $files == *"Websites/ems/client"* ]] && services+=("ems-client")
+          [[ $files == *"Websites/ems/server"* ]] && services+=("ems-server")
+          [[ $files == *"Websites/hospital/client"* ]] && services+=("hospital-client")
+          [[ $files == *"Websites/hospital/server"* ]] && services+=("hospital-server")
+
+          joined=$(IFS=,; echo "${services[*]}")
+          echo "services=$joined" >> "$GITHUB_OUTPUT"
+
+      - name: Print detected services
+        run: echo "Changed services -> ${{ steps.detect.outputs.services }}"
+
+      - name: Trigger Jenkins
+        if: steps.detect.outputs.services != ''
+        uses: appleboy/jenkins-action@v1
+        with:
+          url: ${{ secrets.JENKINS_URL }}
+          user: ${{ secrets.JENKINS_USER }}
+          token: ${{ secrets.JENKINS_TOKEN }}
+          job: image_building
+          params: |
+            SERVICES=${{ steps.detect.outputs.services }}
