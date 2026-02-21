@@ -37,8 +37,9 @@ jobs:
           [[ $files == *"Websites/hospital/server"* ]] && services+=("hospital-server")
 
           joined=$(IFS=,; echo "${services[*]}")
+          echo $services
           echo "services=$joined" >> "$GITHUB_OUTPUT"
-          echo  steps.detect.outputs.services ${{ steps.detect.outputs.services }}
+
 
       - name: Trigger Jenkins
         if: steps.detect.outputs.services != ''

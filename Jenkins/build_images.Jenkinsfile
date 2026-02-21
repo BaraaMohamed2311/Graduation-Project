@@ -20,12 +20,13 @@ pipeline {
                     docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
                         // Fallback to empty string if null
                         echo "params.SERVICES: ${params.SERVICES}"
+                        echo "params: ${params}"
                         def servicesParam = params.SERVICES ?: ""
                         
                         // Split only if not empty
                         def services = servicesParam ? servicesParam.split(",") : []
 
-                        echo "Received services: ${services}"
+
                         def images = [
                             "ems-client": [path: "Websites\\ems\\client",      file: "Dockerfile.frontend"],
                             "ems-server": [path: "Websites\\ems\\server",      file: "Dockerfile.backend"],
