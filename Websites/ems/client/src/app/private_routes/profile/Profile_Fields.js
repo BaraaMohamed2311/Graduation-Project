@@ -7,9 +7,9 @@ import { useRef, useState } from "react";
 import ProfileEditManager from "@/components/ProfileEditManager/ProfileEditManager";
 import PermsList from "@/components/PermsList/PermsList"
 import { selfEditableFields , approvalRequiredFields } from "./data";
-// ====================================================
+// ===================================================
 //            Rendering helpers
-// ====================================================
+// ===================================================
 
 const AvailabilityList = ({availability_schedule})=>{
 
