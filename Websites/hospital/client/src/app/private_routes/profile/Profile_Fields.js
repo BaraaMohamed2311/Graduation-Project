@@ -8,6 +8,7 @@ import HealthStatus from "@/components/HealthStatus/HealthStatus"
 import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
 import { useRef, useState } from "react";
 import ProfileEditManager from "@/components/ProfileEditManager/ProfileEditManager";
+import PermsList from "@/components/PermsList/PermsList"
 import { selfEditableFields , approvalRequiredFields } from "./data";
 import AvailabilityList from "@/components/AvailabilityList/AvailabilityList"
 // ===================================================
@@ -16,18 +17,6 @@ import AvailabilityList from "@/components/AvailabilityList/AvailabilityList"
 
 
 
-const PermsList = ({permissions})=>{
-  
-  return (<>
-    {/* Perms List */}
-    <strong className={styles.perms_header}>Permissions</strong>
-          <div className={styles.perms_wrapper}>
-            {permissions && permissions[0] !== "None" ? permissions.map((perm) => (
-              <span key={perm} className="perm">{perm}</span>
-            )) : "None"}
-          </div>
-  </>)
-}
 
 // ===================================================
 //            Specific Fields Components

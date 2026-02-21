@@ -19,7 +19,9 @@ jobs:
         id: changes
         run: |
           changed=$(git diff --name-only HEAD~1 HEAD)
-          echo "all_changed_files=$changed" >> "$GITHUB_OUTPUT"
+          echo "changed<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$changed" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Detect changed services
         id: detect
@@ -35,9 +37,6 @@ jobs:
 
           joined=$(IFS=,; echo "${services[*]}")
           echo "services=$joined" >> "$GITHUB_OUTPUT"
-
-      - name: Print detected services
-        run: echo "Changed services -> ${{ steps.detect.outputs.services }}"
 
       - name: Trigger Jenkins
         if: steps.detect.outputs.services != ''

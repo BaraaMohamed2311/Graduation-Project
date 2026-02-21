@@ -5,6 +5,7 @@ import styles from "./profile.module.css"
 import Image from "next/image";
 import { useRef, useState } from "react";
 import ProfileEditManager from "@/components/ProfileEditManager/ProfileEditManager";
+import PermsList from "@/components/PermsList/PermsList"
 import { selfEditableFields , approvalRequiredFields } from "./data";
 // ===================================================
 //            Rendering helpers
@@ -36,18 +37,6 @@ const AvailabilityList = ({availability_schedule})=>{
   </>)
 }
 
-const PermsList = ({permissions})=>{
-  
-  return (<>
-    {/* Perms List */}
-    <strong className={styles.perms_header}>Permissions</strong>
-          <div className={styles.perms_wrapper}>
-            {permissions && permissions[0] !== "None" ? permissions.map((perm) => (
-              <span key={perm} className="perm">{perm}</span>
-            )) : "None"}
-          </div>
-  </>)
-}
 
 // ===================================================
 //            Specific Fields Components
