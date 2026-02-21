@@ -38,7 +38,8 @@ pipeline {
 
                         for (svc in services) {
                              def conf = map[svc]
-
+                                echo "-f ${conf.file}"
+                                echo "${conf.path}"
                                 bat """
                                     docker buildx build ^
                                     --platform linux/amd64,linux/arm64 ^
