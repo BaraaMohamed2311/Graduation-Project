@@ -91,7 +91,7 @@ export default function LoginPage() {
     <>
       <div className={styles["login"]}>
         <div className={styles["center"]}>
-          <h1>EMS | Login</h1>
+          <h1>EMS - Login</h1>
           <Form form_handler={login_handler}
                 formBtnState = {formBtnState} 
                 formKind={"login_form"}

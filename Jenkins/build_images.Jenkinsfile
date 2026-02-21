@@ -30,10 +30,10 @@ pipeline {
 
 
                         def map = [
-                            "ems-client": [path: "Websites\\ems\\client",      file: "Dockerfile.frontend"],
-                            "ems-server": [path: "Websites\\ems\\server",      file: "Dockerfile.backend"],
-                            "hospital-client": [path: "Websites\\hospital\\client", file: "Dockerfile.frontend"],
-                            "hospital-server":[path: "Websites\\hospital\\server", file: "Dockerfile.backend"]
+                            "ems-client": [path: "Websites/ems/client",      file: "Dockerfile.frontend"],
+                            "ems-server": [path: "Websites/ems/server",      file: "Dockerfile.backend"],
+                            "hospital-client": [path: "Websites/hospital/client", file: "Dockerfile.frontend"],
+                            "hospital-server":[path: "Websites/hospital/server", file: "Dockerfile.backend"]
                         ]
 
                         for (svc in services) {
