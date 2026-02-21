@@ -19,10 +19,10 @@ export default function private_routes(WrappedComponent) {
         setIsLoading(false);
       }
     }, [user_data.token]);
-
+ 
     useEffect(() => {
       if (!isLoading && !isValid) {
-        router.push("/login"); // Navigate to login page
+        router.push("/login"); // Navigate to login pages
       }
     }, [isLoading, isValid]);
 

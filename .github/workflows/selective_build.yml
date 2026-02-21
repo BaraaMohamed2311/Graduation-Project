@@ -29,7 +29,7 @@ jobs:
         run: |
           services=()
           files="${{ steps.changes.outputs.all_changed_files }}"
-
+          echo $files
           [[ $files == *"Websites/ems/client"* ]] && services+=("ems-client")
           [[ $files == *"Websites/ems/server"* ]] && services+=("ems-server")
           [[ $files == *"Websites/hospital/client"* ]] && services+=("hospital-client")
