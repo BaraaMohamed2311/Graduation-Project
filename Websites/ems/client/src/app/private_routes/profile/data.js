@@ -7,7 +7,7 @@ const selfEditableFields = {
         name: "user_email",
         type: "email",
       },
-      {
+      { 
         key: "user_name",
         label: "Name",
         name: "user_name",
