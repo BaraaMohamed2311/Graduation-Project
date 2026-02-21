@@ -49,5 +49,5 @@ jobs:
           user: ${{ secrets.JENKINS_USER }}
           token: ${{ secrets.JENKINS_TOKEN }}
           job: image_building
-          params: |
+          parameters: |
             SERVICES=${{ steps.detect.outputs.services }}
