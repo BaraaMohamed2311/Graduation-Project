@@ -39,8 +39,7 @@ pipeline {
                         for (svc in services) {
                              def conf = images[svc.trim()]
                              def workspace = env.WORKSPACE // location where repo is checked out
-                                echo "-f ${conf.file}"
-                                echo "${conf.path}"
+                                echo "PATH TO IMAGE %WORKSPACE%/${conf.path}/${conf.file}"
                                 bat """
                                     docker buildx build ^
                                     --platform linux/amd64,linux/arm64 ^
