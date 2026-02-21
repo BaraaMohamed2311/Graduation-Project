@@ -37,15 +37,16 @@ pipeline {
                         ]
 
                         for (svc in services) {
-                             def conf = map[svc]
+                             def conf = images[svc.trim()]
+                             def workspace = env.WORKSPACE // location where repo is checked out
                                 echo "-f ${conf.file}"
                                 echo "${conf.path}"
                                 bat """
                                     docker buildx build ^
                                     --platform linux/amd64,linux/arm64 ^
-                                    -t baraamohamed/gradproj:${svc}-${VERSION} ^
-                                    -f ${conf.file} ^
-                                    ${conf.path} ^
+                                    -t baraamohamed/gradproj:${svc.trim()}-${VERSION} ^
+                                    -f %WORKSPACE%/${conf.path}/${conf.file} ^
+                                    %WORKSPACE%/${conf.path} ^
                                     --push
                                 """
                         }
