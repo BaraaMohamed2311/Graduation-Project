@@ -19,7 +19,7 @@ jobs:
         id: changes
         run: |
           changed=$(git diff --name-only HEAD~1 HEAD)
-          echo "changed<<EOF" >> $GITHUB_OUTPUT
+          echo "all_changed_files<<EOF" >> $GITHUB_OUTPUT
           echo "$changed" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
@@ -29,7 +29,8 @@ jobs:
         run: |
           services=()
           files="${{ steps.changes.outputs.all_changed_files }}"
-          echo $files
+          echo "Raw changed files:"
+          printf '%s\n' "$files"
           [[ $files == *"Websites/ems/client"* ]] && services+=("ems-client")
           [[ $files == *"Websites/ems/server"* ]] && services+=("ems-server")
           [[ $files == *"Websites/hospital/client"* ]] && services+=("hospital-client")
