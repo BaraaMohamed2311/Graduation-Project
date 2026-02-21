@@ -5,7 +5,7 @@ import Footer from "@/components/Footer/Footer";
 import { useEffect } from "react";
 
 export default function Home() {
-  // useClosure to create debouncer to limit number of executions
+  // useClosure to create debouncer to limit number of execution
     function debounce(callback, delay) {
         let timer;
         return function (...args) {
