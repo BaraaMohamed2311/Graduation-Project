@@ -50,7 +50,6 @@ jobs:
           fi
         
       - name: Trigger Jenkins
-        if: steps.detect.outputs.services != ''
         uses: appleboy/jenkins-action@v1
         with:
           url: ${{ secrets.JENKINS_URL }}
