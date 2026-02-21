@@ -1,7 +1,7 @@
 
   .center{
       width: 50rem;
-      height: 40rem;
+      max-height: 40rem;
       overflow-y: scroll;
       background: white;
       border-radius: 10px;

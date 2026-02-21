@@ -377,7 +377,7 @@ async function confirmDeleteAccount() {
           <div className={"user-details"}>
             <ul className={styles["activity-list"]}>
               <li className={styles["buttons-wrapper"]}>
-                {can_modify_unrelated_patient && <EditableSection buttonText="Edit Employee" buttonClassName="grey-button">
+                {can_modify_unrelated_patient && <EditableSection buttonText="Edit Patient" buttonClassName="grey-button">
                   <UpdateUserForm
                     url={`list/other/patient`}
                     user_displayed={patient}

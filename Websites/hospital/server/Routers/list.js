@@ -96,7 +96,7 @@ router.get("/doctors",jwtVerify,async (req,res)=>{
         const tokenFields = extractUserFromToken(req);
         const Modifier_role = await User.getUserRole(tokenFields.user_id);
 
-        if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
+        
 
         // Extract orderBy entries
             const orderBy = {};
@@ -163,7 +163,7 @@ router.get("/surgeons",jwtVerify,async (req,res)=>{
         const tokenFields = extractUserFromToken(req);
         const Modifier_role = await User.getUserRole(tokenFields.user_id);
 
-        if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
+        
 
 
         // Extract orderBy entries
@@ -385,6 +385,7 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
                     const other_user_Role = await User.getUserRole(other_user_id );
 
                     // Exclude important fields
+                    
                     const safeData = excludeFields(newEmployeeData, EXCLUDE_UPDATE_FIELDS);
 
                     

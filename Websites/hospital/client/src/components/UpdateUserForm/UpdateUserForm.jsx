@@ -24,7 +24,7 @@ export default function UpdateUserForm({
     const { select_role_options, ...otherOptions } = fieldDefinitions.select_def || {};
     const { perms_check_box, ...otherCheckBoxes } = fieldDefinitions.check_box || {};
 
-    const is_authorized_to_update_roles =  modifier_data?.emp_perms?.has("Modify Employee Role");
+    const is_authorized_to_update_roles =  modifier_data?.emp_perms?.has("Modify Employee Role") && modifier_data?.role_name === "SuperAdmin";
     const is_authorized_to_update_perms =  modifier_data?.emp_perms?.has("Modify Employee Perms");
 
 

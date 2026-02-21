@@ -4,7 +4,8 @@ const stringifyFields = require("../stringifyFields");
 const sqlTransaction = require("../sqlTransaction");
 const parseUpdatingStringByTable = require("../parseUpdatingStringByTable");
 const parsedUpdatesToObjects = require("../parsedUpdatesToObjects");
-const generatePlaceHolders = require("../generatePlaceholders")
+const generatePlaceholders = require("../generatePlaceholders")
+
 const User = require("../../Classes/User");
 class NurseMethods {
 

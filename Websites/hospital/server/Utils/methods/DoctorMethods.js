@@ -4,7 +4,7 @@ const Tables = require("../../Tables/data");
 const stringifyFields = require("../stringifyFields");
 const parseUpdatingStringByTable = require("../parseUpdatingStringByTable");
 const parsedUpdatesToObjects = require("../parsedUpdatesToObjects");
-const generatePlaceHolders = require("../generatePlaceholders")
+const generatePlaceholders = require("../generatePlaceholders")
 class DoctorMethods {
 
 

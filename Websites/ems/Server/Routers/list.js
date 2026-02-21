@@ -123,7 +123,7 @@ router.get("/employees",jwtVerify,async (req,res)=>{
                     
                     // check if user is authorized to modify salarry
                     const is_authorized_modify_salary = modifierSetperms.has("Modify Salary");
-                    const excuded_fields = is_authorized_modify_salary ? EXCLUDE_UPDATE_FIELDS : EXCLUDE_UPDATE_FIELDS.push("emp_salary","emp_bonus","initial_consultation_price","surgery_price","followup_consultation_price");
+                    const excuded_fields = is_authorized_modify_salary ? EXCLUDE_UPDATE_FIELDS : [...EXCLUDE_UPDATE_FIELDS,"emp_salary","emp_bonus","initial_consultation_price","surgery_price","followup_consultation_price"];
                     const safeData = excludeFields( newEmployeeData ,excuded_fields)
                     
                     //===6. Check if modifier have perm to update other users data & action is requested
@@ -280,6 +280,8 @@ router.get("/registered-approve",jwtVerify,async (req,res)=>{
         // Bad Request if
         if(!modifier_id || !currPage || !size   ) return res.status(400 ).json({success:false,message:"Bad Request"});
 
+            const Modifier_role = await User.getUserRole(modifier_id);
+            if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
             // perms have there separate filtiring conditing using "HAVING" not "WHERE"
             const filtering_string = Object.keys(restFilters).length > 0 ? padBoth(JoinFiltering(Object.entries({  user_email:restFilters.user_email , user_name:restFilters.user_name})),1) :null; ;

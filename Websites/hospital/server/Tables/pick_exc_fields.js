@@ -31,6 +31,7 @@ function pickAllowedFields(source, allowed) {
 }
 
 function excludeFields(source, excluded) {
+  
   const forbiddenFields = Object.keys(source).filter(key => excluded.includes(key));
   if (forbiddenFields.length > 0) {
     console.warn(`Attempted to update excluded fields: ${forbiddenFields.join(", ")}`);

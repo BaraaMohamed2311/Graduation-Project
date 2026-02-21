@@ -306,22 +306,7 @@ function PatientDetailsPage() {
   return (
     <main className={styles["page-main"]}>
       
-      {is_authorized_to_modify_my_patents_data && 
-        <EditableSection buttonText="Edit Employee" buttonClassName="grey-button">
-          <UpdateUserForm
-              url={`list/other/mypatient`}
-              user_displayed={mypatient}
-              currPage={currPage}
-              userData={user_data}
-              modifier_data={user_data}
-              // Pass the references and functions as props
-              references={{inputsBoxsRef,selectBoxsRef}}
-              update_handler={update_handler}
-              fieldDefinitions={{select_def,inputs_info}}
-              token={user_data.token}
-            />
-          </EditableSection>
-      }
+      
         <div className={"page-container"}>
           {/* --- Header Section --- */}
           <div className={"main-content"}>
@@ -375,29 +360,23 @@ function PatientDetailsPage() {
           <div className={"user-details"}>
             <ul className={styles["activity-list"]}>
               <li className={styles["buttons-wrapper"]}>
-                <button
-                  onClick={(e) => setIsEditing(prev => !prev)}
-                  className="grey-button"
-                >
-                  Edit Data
-                </button>
+              {is_authorized_to_modify_my_patents_data && 
+        <EditableSection buttonText="Edit Patient" buttonClassName="grey-button">
+          <UpdateUserForm
+              url={`list/other/mypatient`}
+              user_displayed={mypatient}
+              currPage={currPage}
+              userData={user_data}
+              modifier_data={user_data}
+              // Pass the references and functions as props
+              references={{inputsBoxsRef,selectBoxsRef}}
+              update_handler={update_handler}
+              fieldDefinitions={{select_def,inputs_info}}
+              token={user_data.token}
+            />
+          </EditableSection>
+      }
 
-
-                <button
-                  onClick={(e) =>
-                    handleDeletion("list/delete-patient", user_data.token, {
-                      user_id: mypatient.user_id,
-                      patient_name: mypatient.patient_name,
-                      user_email: mypatient.user_email,
-                      modifier_email: user_data.user_email,
-                      modifier_id: user_data.user_id,
-                      modifier_name: user_data.user_name,
-                    })
-                  }
-                  className="red-button"
-                >
-                  Delete Patient
-                </button>
 
                 <button
                                   className="red-button"

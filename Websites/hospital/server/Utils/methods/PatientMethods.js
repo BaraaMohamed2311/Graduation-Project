@@ -4,7 +4,7 @@ const Tables = require("../../Tables/data");
 const sqlTransaction = require("../../Utils/sqlTransaction")
 const parseUpdatingStringByTable = require("../parseUpdatingStringByTable");
 const parsedUpdatesToObjects = require("../parsedUpdatesToObjects");
-const generatePlaceHolders = require("../generatePlaceholders")
+const generatePlaceholders = require("../generatePlaceholders")
 class PatientMethods {
     // ============================
     //              GET
