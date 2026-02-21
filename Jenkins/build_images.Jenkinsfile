@@ -1,10 +1,6 @@
 pipeline {
     agent any
-    parameters {
-        // Define different types of parameters here
-        string(name: 'TARGET_ENV', defaultValue: 'dev', description: 'Select the target environment (dev, staging, production)')
 
-    }
 
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials' // Jenkins credential ID
@@ -24,9 +20,9 @@ pipeline {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
                         // Fallback to empty string if null
-                        echo "params.SERVICES: ${parameters.SERVICES}"
-                        echo "params: ${parameters}"
-                        def servicesParam = parameters.SERVICES ?: ""
+                        echo "params.SERVICES: ${params.SERVICES}"
+                        echo "params: ${params}"
+                        def servicesParam = params.SERVICES ?: ""
                         
                         // Split only if not empty
                         def services = servicesParam ? servicesParam.split(",") : []
