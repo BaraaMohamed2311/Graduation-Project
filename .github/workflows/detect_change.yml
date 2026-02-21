@@ -1,0 +1,13 @@
+- name: Detect changed services
+  id: detect
+  run: |
+    services=() # empty list
+
+    files="${{ steps.changes.outputs.all_changed_files }}"
+
+    [[ $files == *"Websites/ems/client"* ]] && services+=("ems-client")
+    [[ $files == *"Websites/ems/server"* ]] && services+=("ems-server")
+    [[ $files == *"Websites/hospital/client"* ]] && services+=("hospital-client")
+    [[ $files == *"Websites/hospital/server"* ]] && services+=("hospital-server")
+
+    echo "services=$(IFS=,; echo "${services[*]}")" >> $GITHUB_OUTPUT

@@ -1,19 +1,10 @@
-name: selective_build
-on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'Websites/**' # ** to Watch all files and subfolders in Websites
-jobs:
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: trigger single Job
-        uses: appleboy/jenkins-action@v1
-        with:
-          url: "https://975e-41-35-30-123.ngrok-free.app"
-          user: "baraamohamed2311"
-          token: "11a3244dca44a0bd34026a5840ee1d1f23"
-          job: "image_building"
+- name: Trigger Jenkins
+  if: steps.detect.outputs.services != ''
+  uses: appleboy/jenkins-action@v1
+  with:
+    url: ${{ secrets.JENKINS_URL }}
+    user: ${{ secrets.JENKINS_USER }}
+    token: ${{ secrets.JENKINS_TOKEN }}
+    job: image_building
+    params: |
+      SERVICES=${{ steps.detect.outputs.services }}
