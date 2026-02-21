@@ -39,8 +39,16 @@ jobs:
           joined=$(IFS=,; echo "${services[*]}")
           echo $services
           echo "services=$joined" >> "$GITHUB_OUTPUT"
-          echo "steps.detect.outputs.services" ${{ steps.detect.outputs.services }}
 
+      - name: Debug before trigger
+        run: |
+          echo "Services output: ${{ steps.detect.outputs.services }}"
+          if [ -z "${{ steps.detect.outputs.services }}" ]; then
+            echo "WARNING: services is empty, Jenkins will not be triggered"
+          else
+            echo "OK: services has value, Jenkins will be triggered"
+          fi
+        
       - name: Trigger Jenkins
         if: steps.detect.outputs.services != ''
         uses: appleboy/jenkins-action@v1

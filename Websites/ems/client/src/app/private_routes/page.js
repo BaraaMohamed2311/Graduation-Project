@@ -22,7 +22,7 @@ export default function private_routes(WrappedComponent) {
  
     useEffect(() => {
       if (!isLoading && !isValid) {
-        router.push("/login"); // Navigate to login
+        router.push("/login"); // Navigate to login page
       }
     }, [isLoading, isValid]);
 
