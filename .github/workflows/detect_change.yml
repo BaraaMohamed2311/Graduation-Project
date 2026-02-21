@@ -11,4 +11,5 @@
     [[ $files == *"Websites/hospital/client"* ]] && services+=("hospital-client")
     [[ $files == *"Websites/hospital/server"* ]] && services+=("hospital-server")
 
-    echo "services=$(IFS=,; echo "${services[*]}")" >> "$GITHUB_OUTPUT"
+    joined=$(IFS=,; echo "${services[*]}")
+    echo "services=$joined" >> "$GITHUB_OUTPUT"
