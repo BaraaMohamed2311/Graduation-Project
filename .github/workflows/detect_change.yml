@@ -1,9 +1,13 @@
-- name: Detect changed services
-  id: detect
-  shell: bash
+name: Detect changed services
+id: detect
+shell: bash
+on:
+  push:
+    paths:
+      - "Websites/**"
   run: |
     services=()
-
+    echo HERE FILES $steps.changes.outputs.all_changed_files 
     files="${{ steps.changes.outputs.all_changed_files }}"
 
     [[ $files == *"Websites/ems/client"* ]] && services+=("ems-client")
