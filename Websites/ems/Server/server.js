@@ -11,7 +11,7 @@ else if(dev === 'production-kube') {
 }
 else{
   require('dotenv').config({ path: './.env.dev' });  // Load development environment variables
-} 
+}
 /**************************/
 const express = require("express");
 const app = express();

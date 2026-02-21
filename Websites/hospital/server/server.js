@@ -13,7 +13,7 @@ else if(dev === 'production-kube') {
 else{
   console.log("Config development | No containers")
   require('dotenv').config({ path: './.env.dev' });  // Load development environment variables
-}
+} 
 /**********Crons************/
 require("./cronjobs/markOldConsultationsCron.js")
 /**********Init************/
