@@ -37,7 +37,7 @@ pipeline {
                         ]
 
                         for (svc in services) {
-                             def conf = images[svc.trim()]
+                             def conf = map[svc.trim()]
                              def workspace = env.WORKSPACE // location where repo is checked out
                                 echo "PATH TO IMAGE %WORKSPACE%/${conf.path}/${conf.file}"
                                 bat """
