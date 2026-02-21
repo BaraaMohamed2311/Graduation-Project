@@ -23,7 +23,6 @@ pipeline {
                     docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS) {
                         // Fallback to empty string if null
                         echo "SERVICES: ${SERVICES}"
-                        echo "params: ${params}"
                         def servicesParam = SERVICES ?: ""
                         
                         // Split only if not empty
