@@ -5,7 +5,7 @@ import Footer from "@/components/Footer/Footer";
 import { useEffect } from "react";
 
 export default function Home() {
-  // useClosure to create debouncer to limit number of execution
+  // useClosure to create debouncer to limit number of executions
     function debounce(callback, delay) {
         let timer;
         return function (...args) {
@@ -15,7 +15,7 @@ export default function Home() {
             }, delay);
         };
     }
-
+ 
     useEffect(() => {
         const roles_cards = document.querySelectorAll(".role-cards");
         const debouncedHandleMouseMoveGlow = debounce(handleMouseMoveCircle, 200);
