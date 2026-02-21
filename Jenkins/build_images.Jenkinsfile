@@ -44,6 +44,7 @@ pipeline {
                                     docker buildx build ^
                                     --platform linux/amd64,linux/arm64 ^
                                     -t baraamohamed/gradproj:${svc.trim()}-${VERSION} ^
+                                    -t baraamohamed/gradproj:${svc.trim()}-latest ^
                                     -f %WORKSPACE%/${conf.path}/${conf.file} ^
                                     %WORKSPACE%/${conf.path} ^
                                     --push
