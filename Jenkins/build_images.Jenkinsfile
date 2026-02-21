@@ -29,7 +29,7 @@ pipeline {
                         def services = servicesParam ? servicesParam.split(",") : []
 
 
-                        def images = [
+                        def map = [
                             "ems-client": [path: "Websites\\ems\\client",      file: "Dockerfile.frontend"],
                             "ems-server": [path: "Websites\\ems\\server",      file: "Dockerfile.backend"],
                             "hospital-client": [path: "Websites\\hospital\\client", file: "Dockerfile.frontend"],
