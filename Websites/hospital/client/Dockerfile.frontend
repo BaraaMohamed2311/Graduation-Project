@@ -18,6 +18,9 @@ COPY package-lock.json .
 
 RUN npm i
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
 
 COPY . .
 
@@ -66,6 +69,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
 
 # Expose port (default for Next.js)
 EXPOSE 3000

@@ -13,6 +13,9 @@ RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
 RUN npm ci
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
 COPY . .
 
 EXPOSE 8888
