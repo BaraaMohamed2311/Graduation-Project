@@ -1,5 +1,5 @@
 
-namespace: testing
+namespace: production
 # APP DEPLOYMENT
 deployments: 
   ems:
@@ -50,8 +50,8 @@ services:
     # Must match nginx conf ports, DO NOT use 80
     ems_nginx_port: 82   # EMS
     hospital_nginx_port: 81   # Hospital
-    ems_nodePort: 30700 # NodePorts exposed though nginx (production only)
-    hospital_nodePort: 30701  # NodePorts exposed though nginx (production only)
+    ems_nodePort: 30600 # NodePorts exposed though nginx (production only)
+    hospital_nodePort: 30601  # NodePorts exposed though nginx (production only)
 
   
   ems:

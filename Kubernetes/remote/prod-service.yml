@@ -88,7 +88,7 @@ metadata:
   name: nginx-service
   namespace: production
 spec:
-  type: NodePort  # ← Internal only
+  type: NodePort  
   selector:
     app: nginx  
   ports:
