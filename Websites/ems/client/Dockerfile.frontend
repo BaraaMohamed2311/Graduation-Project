@@ -8,8 +8,8 @@ WORKDIR /app
 
 ENV NODE_ENV=development
 
-COPY package.json .
-COPY package-lock.json .
+# Install dependencies (best caching point)
+COPY package.json package-lock.json ./
 
 RUN npm i
 
@@ -37,9 +37,6 @@ RUN npm ci
 
 COPY . .
 
-
-
-
 # Set NODE_ENV=production before build
 ENV NODE_ENV=production
 
@@ -63,6 +60,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
+# Drop privileges
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 

@@ -3,20 +3,23 @@ FROM node:20-alpine
 WORKDIR /app
 
 ARG NODE_ENV=development
-ENV NODE_ENV=${NODE_ENV}
+ENV NODE_ENV=$NODE_ENV
 
-RUN echo "Building in $NODE_ENV mode"
+# System setup
+RUN echo "Building in $NODE_ENV mode" \
+ && apk add --no-cache python3 make g++ \
+ && addgroup -S appgroup \
+ && adduser -S appuser -G appgroup
 
-# Required for native Node modules (bcrypt, sharp, etc.)
-RUN apk add --no-cache python3 make g++
-
+# Install dependencies (best caching point)
 COPY package.json package-lock.json ./
 RUN npm ci
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-
+# Copy application code
 COPY . .
+
+# Drop privileges
+USER appuser
 
 EXPOSE 5500
 CMD ["npm","run","start"]
