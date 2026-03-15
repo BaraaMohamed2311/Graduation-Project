@@ -1,5 +1,11 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            // Use Docker-in-Docker with buildkit support
+            image 'docker:24-dind'
+            args  '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
     parameters {
           string(name: 'SERVICES', defaultValue: '', description: 'Used to build specific image only')
     }
@@ -12,6 +18,36 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+         stage('Setup buildx + QEMU') {
+            steps {
+                sh """
+                    # Step 1: Register QEMU emulators for cross-arch builds
+                    docker run --rm --privileged \
+                        multiarch/qemu-user-static \
+                        --reset -p yes
+
+                    # Step 2: Install buildx if not present
+                    mkdir -p ~/.docker/cli-plugins
+                    curl -sSL https://github.com/docker/buildx/releases/download/v0.12.0/buildx-v0.12.0.linux-amd64 \
+                        -o ~/.docker/cli-plugins/docker-buildx
+                    chmod +x ~/.docker/cli-plugins/docker-buildx
+
+                    # Step 3: Create a new builder with container driver
+                    docker buildx create \
+                        --name ci-builder \
+                        --driver docker-container \
+                        --driver-opt network=host \
+                        --use
+
+                    # Step 4: Boot the builder and verify platforms
+                    docker buildx inspect ci-builder --bootstrap
+
+                    # Should show: linux/amd64, linux/arm64, linux/arm/v7
+                    docker buildx ls
+                """
             }
         }
 
@@ -109,6 +145,13 @@ pipeline {
                             }
                         }
                     }
+            }
+        }
+
+
+        stage('Teardown Builder') {
+            steps {
+                sh "docker buildx rm ci-builder || true"
             }
         }
     
