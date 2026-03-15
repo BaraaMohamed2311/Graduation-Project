@@ -45,7 +45,6 @@ pipeline {
                                 ).trim()
 
                                 echo "Version: ${version}"
-                                
                                 echo "PATH TO IMAGE %WORKSPACE%/${conf.path}/${conf.file}"
                                 bat """
                                     docker buildx build ^
