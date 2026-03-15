@@ -1,11 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            // Use Docker-in-Docker with buildkit support
-            image 'docker:24-dind'
-            args  '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent any
     parameters {
           string(name: 'SERVICES', defaultValue: '', description: 'Used to build specific image only')
     }
