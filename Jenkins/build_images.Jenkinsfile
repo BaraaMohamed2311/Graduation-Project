@@ -52,13 +52,13 @@ pipeline {
                                 // windows bat  uses ^ for line continuation, and %WORKSPACE% for env variable access
                                 bat """
                                     docker buildx build ^
-                                    --platform linux/amd64,linux/arm64 ^
-                                    -t baraamohamed/gradproj:${svc.trim()}-${version} ^
-                                    -t baraamohamed/gradproj:${svc.trim()}-latest ^
-                                    -f %WORKSPACE%/${conf.path}/${conf.file} ^
-                                    %WORKSPACE%/${conf.path} ^
-                                    --push
-                                """
+                                        --platform linux/amd64,linux/arm64 ^
+                                        -t baraamohamed/gradproj:${svc.trim()}-${version} ^
+                                        -t baraamohamed/gradproj:${svc.trim()}-latest ^
+                                        -f %WORKSPACE%\\${conf.path}\\${conf.file} ^
+                                        %WORKSPACE%\\${conf.path} ^
+                                        --push
+                                    """
                         }
                         }
                     }
@@ -100,13 +100,13 @@ pipeline {
                                     // linux uses sh \ for line continuation, and $WORKSPACE for env variable access
                                     sh """
                                         docker buildx build \\
-                                        --platform linux/amd64,linux/arm64 \\
-                                        -t baraamohamed/gradproj:${svc.trim()}-${version} \\
-                                        -t baraamohamed/gradproj:${svc.trim()}-latest \\
-                                        -f \$WORKSPACE/${conf.path}/${conf.file} \\
-                                        \$WORKSPACE/${conf.path}   \\ 
-                                        --push
-                                    """
+                                            --platform linux/amd64,linux/arm64 \\
+                                            -t baraamohamed/gradproj:${svc.trim()}-${version} \\
+                                            -t baraamohamed/gradproj:${svc.trim()}-latest \\
+                                            -f \$WORKSPACE/${conf.path}/${conf.file} \\
+                                            \$WORKSPACE/${conf.path} \\
+                                            --push
+                                        """
                             }
                             }
                         }
