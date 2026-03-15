@@ -6,7 +6,7 @@ const nextConfig = {
         // "http://localhost:3050/api" so localhost uses nginx to communcate between containers inside docker
         APIKEY: process.env.NODE_ENV === "production" ? "/api" : "http://localhost:5500/api",
       },
-      
+      optimizeFonts: false,   // stop fetching fonts at build time
       reactStrictMode: false,
 };
 

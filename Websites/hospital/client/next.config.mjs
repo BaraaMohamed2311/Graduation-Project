@@ -6,7 +6,7 @@ const nextConfig = {
         
         APIKEY: process.env.NODE_ENV === "production" ? "/api" : "http://localhost:8888/api",
       },
-      
+      optimizeFonts: false,   // stop fetching fonts at build time
       reactStrictMode: false,
 };
 

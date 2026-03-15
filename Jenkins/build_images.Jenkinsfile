@@ -76,11 +76,12 @@ pipeline {
                             def version = pkg.version
 
                             echo "Building ${svcName} v${version}"
-
+                            // --network=host to use for tools needed during build that require internet access
                             sh """
                                 docker buildx build \\
                                     --builder multiarch \\
                                     --platform linux/amd64,linux/arm64 \\
+                                    --network=host \\
                                     -t baraamohamed/gradproj:${svcName}-${version} \\
                                     -t baraamohamed/gradproj:${svcName}-latest \\
                                     -f \$WORKSPACE/${conf.path}/${conf.file} \\
@@ -133,11 +134,12 @@ pipeline {
                             def version = pkg.version
 
                             echo "Building ${svcName} v${version}"
-
+                            // --network=host to use for tools needed during build that require internet access
                             bat """
                                 docker buildx build ^
                                     --builder multiarch ^
                                     --platform linux/amd64,linux/arm64 ^
+                                    --network=host ^
                                     -t baraamohamed/gradproj:${svcName}-${version} ^
                                     -t baraamohamed/gradproj:${svcName}-latest ^
                                     -f %WORKSPACE%\\${conf.path}\\${conf.file} ^
