@@ -146,14 +146,16 @@ pipeline {
                         }
                     }
             }
-        }
 
-
-        stage('Teardown Builder') {
-            steps {
-                sh "docker buildx rm ci-builder || true"
+            stage('Teardown Builder') {
+                steps {
+                    sh "docker buildx rm ci-builder || true"
+                }
             }
         }
+
+
+        
     
 
     post {
