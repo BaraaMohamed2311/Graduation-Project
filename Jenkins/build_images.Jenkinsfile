@@ -6,7 +6,6 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials' // Jenkins credential ID
-        VERSION = '1-0-0' 
     }
 
     stages {
@@ -30,8 +29,8 @@ pipeline {
 
 
                         def map = [
-                            "ems-client": [path: "Websites/ems/client",      file: "Dockerfile.frontend"],
-                            "ems-server": [path: "Websites/ems/server",      file: "Dockerfile.backend"],
+                            "ems-client": [path: "Websites/ems/client", file: "Dockerfile.frontend"],
+                            "ems-server": [path: "Websites/ems/server", file: "Dockerfile.backend"],
                             "hospital-client": [path: "Websites/hospital/client", file: "Dockerfile.frontend"],
                             "hospital-server":[path: "Websites/hospital/server", file: "Dockerfile.backend"]
                         ]
@@ -39,6 +38,14 @@ pipeline {
                         for (svc in services) {
                              def conf = map[svc.trim()]
                              def workspace = env.WORKSPACE // location where repo is checked out
+                             // Get version of each app frpm package.json
+                             def version = sh(
+                                    script: "jq -r '.version' %WORKSPACE%/${conf.path}/package.json",
+                                    returnStdout: true // capture the output of the command for use in variable
+                                ).trim()
+
+                                echo "Version: ${version}"
+                                
                                 echo "PATH TO IMAGE %WORKSPACE%/${conf.path}/${conf.file}"
                                 bat """
                                     docker buildx build ^

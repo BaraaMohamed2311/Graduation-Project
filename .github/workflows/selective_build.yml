@@ -49,7 +49,7 @@ jobs:
             echo "OK: services has value, Jenkins will be triggered"
           fi
         
-      - name: Trigger Jenkins
+      - name: Trigger Jenkins Docker Compose Build
         uses: appleboy/jenkins-action@v1
         with:
           url: ${{ secrets.JENKINS_URL }}
@@ -58,3 +58,4 @@ jobs:
           job: image_building
           parameters: |
             SERVICES=${{ steps.detect.outputs.services }}
+
