@@ -52,6 +52,7 @@ pipeline {
                                 // windows bat  uses ^ for line continuation, and %WORKSPACE% for env variable access
                                 bat """
                                     docker buildx build ^
+                                        --builder multiarch ^
                                         --platform linux/amd64,linux/arm64 ^
                                         -t baraamohamed/gradproj:${svc.trim()}-${version} ^
                                         -t baraamohamed/gradproj:${svc.trim()}-latest ^
@@ -100,6 +101,7 @@ pipeline {
                                     // linux uses sh \ for line continuation, and $WORKSPACE for env variable access
                                     sh """
                                         docker buildx build \\
+                                            --builder multiarch \\
                                             --platform linux/amd64,linux/arm64 \\
                                             -t baraamohamed/gradproj:${svc.trim()}-${version} \\
                                             -t baraamohamed/gradproj:${svc.trim()}-latest \\
