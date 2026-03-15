@@ -15,6 +15,25 @@ pipeline {
             }
         }
 
+    // Setup Docker Buildx for multi-arch builds
+        stage('Setup Buildx') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh '''
+                            docker buildx create --name multiarch --driver docker-container --use || true
+                            docker buildx inspect multiarch --bootstrap
+                        '''
+                    } else {
+                        bat '''
+                            docker buildx create --name multiarch --driver docker-container --use || exit /b 0
+                            docker buildx inspect multiarch --bootstrap
+                        '''
+                    }
+                }
+            }
+        }
+
 
 
         // Windows build and push to Docker Hub
