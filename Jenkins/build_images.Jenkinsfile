@@ -39,17 +39,15 @@ pipeline {
                              def conf = map[svc.trim()]
                              def workspace = env.WORKSPACE // location where repo is checked out
                              // Get version of each app frpm package.json
-                             def version = sh(
-                                    script: "jq -r '.version' %WORKSPACE%/${conf.path}/package.json",
-                                    returnStdout: true // capture the output of the command for use in variable
-                                ).trim()
+                             def pkg_file = readJSON file: "${workspace}/${conf.path}/package.json"
+                             def version = pkg_file.version
 
-                                echo "Version: ${version}"
+                                echo "APP /${conf.path} | Version: ${version}"
                                 echo "PATH TO IMAGE %WORKSPACE%/${conf.path}/${conf.file}"
                                 bat """
                                     docker buildx build ^
                                     --platform linux/amd64,linux/arm64 ^
-                                    -t baraamohamed/gradproj:${svc.trim()}-${VERSION} ^
+                                    -t baraamohamed/gradproj:${svc.trim()}-${version} ^
                                     -t baraamohamed/gradproj:${svc.trim()}-latest ^
                                     -f %WORKSPACE%/${conf.path}/${conf.file} ^
                                     %WORKSPACE%/${conf.path} ^
