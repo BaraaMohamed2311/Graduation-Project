@@ -47,6 +47,7 @@ pipeline {
 
                                 echo "APP /${conf.path} | Version: ${version}"
                                 echo "PATH TO IMAGE %WORKSPACE%/${conf.path}/${conf.file}"
+                                // windows bat  uses ^ for line continuation, and %WORKSPACE% for env variable access
                                 bat """
                                     docker buildx build ^
                                     --platform linux/amd64,linux/arm64 ^
@@ -94,7 +95,8 @@ pipeline {
 
                                     echo "APP /${conf.path} | Version: ${version}"
                                     echo "PATH TO IMAGE $WORKSPACE/${conf.path}/${conf.file}"
-                                    bat """
+                                    // linux uses sh \ for line continuation, and $WORKSPACE for env variable access
+                                    sh """
                                         docker buildx build \\
                                         --platform linux/amd64,linux/arm64 \\
                                         -t baraamohamed/gradproj:${svc.trim()}-${version} \\
