@@ -124,6 +124,11 @@ pipeline {
 
                         def servicesParam = (params.SERVICES ?: "").trim()
                         def services = servicesParam ? servicesParam.split(",") : []
+                        // stop pipeline if no services specified, to avoid building all images by default which is time consuming and not always needed
+                        // also avoids timing out the production message if the build is triggered without parameters by mistake
+                        if (services.isEmpty()) {
+                            error "No services specified. Set the SERVICES parameter (e.g. ems-client,ems-server)"
+                        }
 
                         def map = [
                             "ems-client"     : [path: "Websites/ems/client",     file: "Dockerfile.frontend"],
