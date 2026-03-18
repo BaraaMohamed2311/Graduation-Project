@@ -86,8 +86,8 @@ pipeline {
                                         --builder multiarch \\
                                         --platform linux/amd64,linux/arm64 \\
                                         --network=host \\
-                                        -t baraamohamed/gradproj:${svcName}:${version} \\
-                                        -t baraamohamed/gradproj:${svcName}:latest \\
+                                        -t baraamohamed/gradproj:${svcName}-${version} \\
+                                        -t baraamohamed/gradproj:${svcName}-latest \\
                                         -f \$WORKSPACE/${conf.path}/${conf.file} \\
                                         \$WORKSPACE/${conf.path} \\
                                         --push
@@ -152,8 +152,8 @@ pipeline {
                                         --builder multiarch ^
                                         --platform linux/amd64,linux/arm64 ^
                                         --network=host ^
-                                        -t baraamohamed/gradproj:${svcName}:${version} ^
-                                        -t baraamohamed/gradproj:${svcName}:latest ^
+                                        -t baraamohamed/gradproj:${svcName}-${version} ^
+                                        -t baraamohamed/gradproj:${svcName}-latest ^
                                         -f %WORKSPACE%\\${conf.path}\\${conf.file} ^
                                         %WORKSPACE%\\${conf.path} ^
                                         --push
