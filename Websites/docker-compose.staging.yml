@@ -1,0 +1,109 @@
+# PORTS in staging are different from production to avoid conflict between them if they are on the same host staging_ports = production_ports + 100
+services:
+
+# So host can resolve services names "ems_server" & "ems_client"
+  nginx:
+    depends_on:
+      - hospital_client
+      - hospital_server
+      - ems_client
+      - ems_server
+
+    restart: on-failure
+    image: baraamohamed/gradproj:nginx
+
+    ports:
+      - "3150:3050"
+      - "3151:3051"
+
+
+    networks:
+      - ems-net
+      - hospital-net
+
+
+# server does envirmonet checking at server.js code
+  ems_server:
+    image: baraamohamed/gradproj:ems_server:${EMS_SERVER_VERSION:-1.0.0}
+    deploy:
+      replicas: 3
+    container_name: ems_server
+    environment:
+      NODE_ENV: ${NODE_ENV} # if not provided it will build development env by default
+    ports:
+      - 5600:5500
+
+    networks:
+      - ems-net
+      - db-net
+
+
+
+
+# client has to be provided with enviroment or by default it will build development env
+  ems_client:
+    image: baraamohamed/gradproj:ems_client:${EMS_CLIENT_VERSION:-1.0.0}
+    deploy:
+      replicas: 3
+    container_name: ems_client
+
+    ports:
+      - 3100:3000
+
+    networks:
+      - ems-net
+
+  # server does envirmonet checking at server.js code
+  hospital_server:
+    image: baraamohamed/gradproj:hospital_server:${HOSPITAL_SERVER_VERSION:-1.0.0}
+    deploy:
+      replicas: 3
+    container_name: hospital_server
+    environment:
+      NODE_ENV: ${NODE_ENV} # if not provided it will build development env by default
+    ports:
+      - 8988:8888
+
+    networks:
+      - hospital-net
+      - db-net
+
+
+
+
+# client has to be provided with enviroment or by default it will build development env
+  hospital_client:
+    image: baraamohamed/gradproj:hospital_client:${HOSPITAL_CLIENT_VERSION:-1.0.0}
+    deploy:
+      replicas: 3
+    container_name: hospital_client
+    ports:
+      - 3101:3000
+
+    networks:
+      - hospital-net
+
+
+  mysql_db:
+    image: baraamohamed/gradproj:db
+    secrets:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_PASSWORD
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    container_name: cenralized_mysql
+
+
+    networks:
+      - db-net
+
+
+
+
+networks:
+  ems-net :
+    driver : bridge
+  hospital-net :
+    driver : bridge
+  db-net :
+    driver : bridge

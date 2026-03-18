@@ -1,6 +1,6 @@
 pipeline {
     agent any
-
+    def successfulImages = [:]
     parameters {
         string(name: 'SERVICES', defaultValue: '', description: 'Used to build specific image only')
     }
@@ -28,6 +28,7 @@ pipeline {
                             docker buildx inspect multiarch --bootstrap
                         '''
                     } else {
+                        
                         bat '''
                             docker buildx create ^
                                 --name multiarch ^
@@ -56,7 +57,7 @@ pipeline {
 
                         def servicesParam = (params.SERVICES ?: "").trim()
                         def services = servicesParam ? servicesParam.split(",") : []
-
+                        // Server folder in ems and server folder in hospital are named differently, so we need to handle that
                         def map = [
                             "ems-client"     : [path: "Websites/ems/client",     file: "Dockerfile.frontend"],
                             "ems-server"     : [path: "Websites/ems/server",     file: "Dockerfile.backend"],
@@ -71,23 +72,30 @@ pipeline {
                             if (!conf) {
                                 error "Unknown service: '${svcName}'. Valid: ${map.keySet()}"
                             }
-
+                            echo "Building ${svcName}"
                             def pkg  = readJSON file: "${env.WORKSPACE}/${conf.path}/package.json"
                             def version = pkg.version
 
-                            echo "Building ${svcName} v${version}"
+                            echo "version app ${version}"
                             // --network=host to use for tools needed during build that require internet access
-                            sh """
-                                docker buildx build \\
-                                    --builder multiarch \\
-                                    --platform linux/amd64,linux/arm64 \\
-                                    --network=host \\
-                                    -t baraamohamed/gradproj:${svcName}-${version} \\
-                                    -t baraamohamed/gradproj:${svcName}-latest \\
-                                    -f \$WORKSPACE/${conf.path}/${conf.file} \\
-                                    \$WORKSPACE/${conf.path} \\
-                                    --push
-                            """
+                            try {
+                                sh """
+                                    docker buildx build \\
+                                        --builder multiarch \\
+                                        --platform linux/amd64,linux/arm64 \\
+                                        --network=host \\
+                                        -t baraamohamed/gradproj:${svcName}:${version} \\
+                                        -t baraamohamed/gradproj:${svcName}:latest \\
+                                        -f \$WORKSPACE/${conf.path}/${conf.file} \\
+                                        \$WORKSPACE/${conf.path} \\
+                                        --push
+                                """
+                                // store successful build
+                                successfulImages[svc.trim()] = version
+                            } catch (err) {
+                                echo "Failed to build ${svcName}: ${err}"
+                                continue
+                            }
 
                             echo "Pushed baraamohamed/gradproj:${svcName}-${version}"
                         }
@@ -129,29 +137,59 @@ pipeline {
                             if (!conf) {
                                 error "Unknown service: '${svcName}'"
                             }
-
+                            
+                            echo "Building ${svcName}"
                             def pkg     = readJSON file: "${env.WORKSPACE}\\${conf.path}\\package.json"
                             def version = pkg.version
-
-                            echo "Building ${svcName} v${version}"
+                            echo "version app ${version}"
+                            
                             // --network=host to use for tools needed during build that require internet access
-                            bat """
-                                docker buildx build ^
-                                    --builder multiarch ^
-                                    --platform linux/amd64,linux/arm64 ^
-                                    --network=host ^
-                                    -t baraamohamed/gradproj:${svcName}-${version} ^
-                                    -t baraamohamed/gradproj:${svcName}-latest ^
-                                    -f %WORKSPACE%\\${conf.path}\\${conf.file} ^
-                                    %WORKSPACE%\\${conf.path} ^
-                                    --push
-                            """
+                            try {
+                                bat """
+                                    docker buildx build ^
+                                        --builder multiarch ^
+                                        --platform linux/amd64,linux/arm64 ^
+                                        --network=host ^
+                                        -t baraamohamed/gradproj:${svcName}:${version} ^
+                                        -t baraamohamed/gradproj:${svcName}:latest ^
+                                        -f %WORKSPACE%\\${conf.path}\\${conf.file} ^
+                                        %WORKSPACE%\\${conf.path} ^
+                                        --push
+                                """
+                                // store successful build
+                                successfulImages[svc.trim()] = version
+                            } catch (err) {
+                                echo "Failed to build ${svcName}: ${err}"
+                                continue
+                            }
                         }
 
                         bat 'docker logout'
                     }
                 }
             }
+        }
+
+        stage('Deploy to Production') {
+                input {
+                    message "Deploy to production?"
+                    ok "Deploy"
+                }
+
+                steps {
+                    script {
+
+                        def jsonImages = writeJSON returnText: true, json: successfulImages
+
+                        build job: 'deploy-production',
+                            parameters: [
+                                string(
+                                    name: 'IMAGES_VERSIONS',
+                                    value: jsonImages
+                                )
+                            ]
+                    }
+                }
         }
     }
 

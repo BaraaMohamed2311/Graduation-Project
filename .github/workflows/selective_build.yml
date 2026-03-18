@@ -54,8 +54,8 @@ jobs:
         with:
           url: ${{ secrets.JENKINS_URL }}
           user: ${{ secrets.JENKINS_USER }}
-          token: ${{ secrets.JENKINS_TOKEN }}
-          job: image_building
+          token: ${{ secrets.JENKINS_TOKEN }} 
+          job: ${{ secrets.JENKINS_JOB_NAME }}
           parameters: |
             SERVICES=${{ steps.detect.outputs.services }}
 
