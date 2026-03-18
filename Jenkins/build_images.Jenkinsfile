@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    def successfulImages = [:]
+    
     parameters {
         string(name: 'SERVICES', defaultValue: '', description: 'Used to build specific image only')
     }
@@ -8,6 +8,7 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
     }
+    def successfulImages = [:]
 
     stages {
         stage('Checkout') {
@@ -181,7 +182,7 @@ pipeline {
 
                         def jsonImages = writeJSON returnText: true, json: successfulImages
 
-                        build job: 'deploy-production',
+                        build job: 'deploy-swarm-production',
                             parameters: [
                                 string(
                                     name: 'IMAGES_VERSIONS',
