@@ -1,3 +1,4 @@
+def successfulImages = [:] // global groovy variable to store successfully built images and their versions for later use in deployment
 pipeline {
     agent any
     
@@ -8,7 +9,7 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
     }
-    def successfulImages = [:]
+    
 
     stages {
         stage('Checkout') {
