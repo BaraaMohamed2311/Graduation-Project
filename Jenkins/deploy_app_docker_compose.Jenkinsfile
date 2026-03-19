@@ -50,7 +50,7 @@ pipeline {
                 script {
                     if (isUnix()) {
                         sh '''
-                            docker info --format '{{.Swarm.LocalNodeState}}' | grep -q "active" \
+                            docker info --format '{{.Swarm.LocalNodeState}}' | grep -qw "active" \
                                 || docker swarm init
                         '''
                     } else {
