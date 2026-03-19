@@ -185,7 +185,7 @@ pipeline {
 
                 steps {
                     script {
-
+                        
                         def jsonImages = writeJSON returnText: true, json: successfulImages
 
                         build job: 'deploy-swarm-production',
