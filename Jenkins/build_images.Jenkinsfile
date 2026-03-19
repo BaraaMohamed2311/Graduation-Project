@@ -185,7 +185,7 @@ pipeline {
 
         stage('Deploy to Production') {
                 input {
-                    message "Deploy to production?"
+                    message "Deploy to Swarm?"
                     ok "Deploy"
                 }
 
