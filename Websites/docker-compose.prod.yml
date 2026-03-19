@@ -88,8 +88,10 @@ services:
   mysql_db:
     image: baraamohamed/gradproj:db
     secrets:
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_PASSWORD
+      MYSQL_ROOT_PASSWORD:
+        external: true   # tells compose these secrets already exist in swarm, don't create them
+      MYSQL_PASSWORD:
+        external: true
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
     container_name: cenralized_mysql
