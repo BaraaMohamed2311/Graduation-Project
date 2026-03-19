@@ -72,13 +72,19 @@ pipeline {
                     script {
                         if (isUnix()) {
                             sh """
-                                echo $MYSQL_ROOT_PASSWORD | docker secret create MYSQL_ROOT_PASSWORD -
-                                echo $MYSQL_PASSWORD | docker secret create MYSQL_PASSWORD -
+                                docker secret inspect MYSQL_ROOT_PASSWORD > /dev/null 2>&1 \
+                                    || echo $MYSQL_ROOT_PASSWORD | docker secret create MYSQL_ROOT_PASSWORD -
+                                
+                                docker secret inspect MYSQL_PASSWORD > /dev/null 2>&1 \
+                                    || echo $MYSQL_PASSWORD | docker secret create MYSQL_PASSWORD -
                             """
                         } else {
                             bat """
-                                echo %MYSQL_ROOT_PASSWORD% | docker secret create MYSQL_ROOT_PASSWORD -
-                                echo %MYSQL_PASSWORD% | docker secret create MYSQL_PASSWORD -
+                                docker secret inspect MYSQL_ROOT_PASSWORD > nul 2>&1 \
+                                    || echo %MYSQL_ROOT_PASSWORD% | docker secret create MYSQL_ROOT_PASSWORD -
+                                
+                                docker secret inspect MYSQL_PASSWORD > nul 2>&1 \
+                                    || echo %MYSQL_PASSWORD% | docker secret create MYSQL_PASSWORD -
                             """
                         }
                     }
