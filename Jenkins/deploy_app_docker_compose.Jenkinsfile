@@ -49,15 +49,15 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh '''
+                        sh """
                             docker info --format '{{.Swarm.LocalNodeState}}' | grep -qw "active" \
                                 || docker swarm init
-                        '''
+                        """
                     } else {
-                        bat '''
+                        bat """
                             docker info --format "{{.Swarm.LocalNodeState}}" | findstr "active" \
                                 || docker swarm init
-                        '''
+                        """
                     }
                 }
             }
@@ -71,15 +71,15 @@ pipeline {
                 ]) {
                     script {
                         if (isUnix()) {
-                            sh '''
+                            sh """
                                 echo $MYSQL_ROOT_PASSWORD | docker secret create MYSQL_ROOT_PASSWORD -
                                 echo $MYSQL_PASSWORD | docker secret create MYSQL_PASSWORD -
-                            '''
+                            """
                         } else {
-                            bat '''
+                            bat """
                                 echo %MYSQL_ROOT_PASSWORD% | docker secret create MYSQL_ROOT_PASSWORD -
                                 echo %MYSQL_PASSWORD% | docker secret create MYSQL_PASSWORD -
-                            '''
+                            """
                         }
                     }
                 }
@@ -92,7 +92,7 @@ pipeline {
                 dir('Websites') {
                     script {
                         if (isUnix()) {
-                            sh '''
+                            sh """
                                 EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION} \
                                 EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION} \
                                 HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION} \
@@ -100,9 +100,9 @@ pipeline {
                                 docker-compose -f docker-compose.staging.yml pull
                                 
                                 docker stack deploy -c docker-compose.staging.yml staging_stack
-                            '''
+                            """
                         } else {
-                            bat '''
+                            bat """
                                 set EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION}
                                 set EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION}
                                 set HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION}
@@ -111,7 +111,7 @@ pipeline {
                                 docker-compose -f docker-compose.staging.yml pull
                             
                                 docker stack deploy -c docker-compose.staging.yml staging_stack
-                            '''
+                            """
                         }
                     }
                 }
@@ -131,7 +131,7 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh '''
+                        sh """
                             EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION} \
                             EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION} \
                             HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION} \
@@ -139,9 +139,9 @@ pipeline {
                             docker-compose -f docker-compose.prod.yml pull
                             
                             docker stack deploy -c docker-compose.prod.yml staging_stack
-                        '''
+                        """
                     } else {
-                        bat '''
+                        bat """
                             set EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION}
                             set EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION}
                             set HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION}
@@ -150,7 +150,7 @@ pipeline {
                             docker-compose -f docker-compose.prod.yml pull
                         
                             docker stack deploy -c docker-compose.prod.yml staging_stack
-                        '''
+                        """
                     }
                 }
             }
