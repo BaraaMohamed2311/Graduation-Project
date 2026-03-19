@@ -12,7 +12,7 @@ pipeline {
                 checkout scm
             }
         }
-
+    
         // prevents version being an empty string if image wasn't built which can cause docker-compose to set version to "latest" and deploy an unintended version
         stage("update images versions") {
             steps{
