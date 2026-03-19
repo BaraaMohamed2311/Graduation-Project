@@ -45,6 +45,24 @@ pipeline {
             
         }
 
+         stage("Init Swarm if needed"){
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh '''
+                            docker info --format '{{.Swarm.LocalNodeState}}' | grep -q "active" \
+                                || docker swarm init
+                        '''
+                    } else {
+                        bat '''
+                            docker info --format "{{.Swarm.LocalNodeState}}" | findstr "active" \
+                                || docker swarm init
+                        '''
+                    }
+                }
+            }
+         }
+
         stage("Setup Swarm Secrets") {
             steps {
                 withCredentials([
