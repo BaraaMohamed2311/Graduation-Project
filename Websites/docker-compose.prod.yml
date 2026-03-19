@@ -25,10 +25,10 @@ services:
 
 # server does envirmonet checking at server.js code
   ems_server:
-    image: baraamohamed/gradproj:ems_server-${EMS_SERVER_VERSION:-latest}
+    image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION:-latest}
     deploy:
       replicas: 3
-    container_name: ems_server
+    container_name: ems-server
     environment:
       NODE_ENV: ${NODE_ENV} # if not provided it will build development env by default
     ports:
@@ -43,10 +43,10 @@ services:
 
 # client has to be provided with enviroment or by default it will build development env
   ems_client:
-    image: baraamohamed/gradproj:ems_client-${EMS_CLIENT_VERSION:-latest}
+    image: baraamohamed/gradproj:ems-client-${EMS_CLIENT_VERSION:-latest}
     deploy:
       replicas: 3
-    container_name: ems_client
+    container_name: ems-client
 
     ports:
       - 3000:3000
@@ -56,10 +56,10 @@ services:
 
   # server does envirmonet checking at server.js code
   hospital_server:
-    image: baraamohamed/gradproj:hospital_server-${HOSPITAL_SERVER_VERSION:-latest}
+    image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION:-latest}
     deploy:
       replicas: 3
-    container_name: hospital_server
+    container_name: hospital-server
     environment:
       NODE_ENV: ${NODE_ENV} # if not provided it will build development env by default
     ports:
@@ -74,10 +74,10 @@ services:
 
 # client has to be provided with enviroment or by default it will build development env
   hospital_client:
-    image: baraamohamed/gradproj:hospital_client-${HOSPITAL_CLIENT_VERSION:-latest}
+    image: baraamohamed/gradproj:hospital-client-${HOSPITAL_CLIENT_VERSION:-latest}
     deploy:
       replicas: 3
-    container_name: hospital_client
+    container_name: hospital-client
     ports:
       - 3001:3000
 
