@@ -146,7 +146,10 @@ pipeline {
                             }
                             
                             echo "Building ${svcName}"
-                            def pkg     = readJSON file: "${env.WORKSPACE}\\${conf.path}\\package.json"
+                            echo "pkg path: ${env.WORKSPACE}\\${conf.path}\\package.json"
+                            def pkgRaw = readFile(file: "${env.WORKSPACE}/${conf.path}/package.json").replaceAll(/^\uFEFF/, '')  // strip BOM if present
+
+                            def pkg = readJSON text: pkgRaw
                             def version = pkg.version
                             echo "version app ${version}"
                             
