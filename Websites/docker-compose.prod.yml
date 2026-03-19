@@ -28,7 +28,7 @@ services:
     image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION:-latest}
     deploy:
       replicas: 3
-    container_name: ems-server
+
     environment:
       NODE_ENV: ${NODE_ENV} # if not provided it will build development env by default
     ports:
@@ -46,7 +46,7 @@ services:
     image: baraamohamed/gradproj:ems-client-${EMS_CLIENT_VERSION:-latest}
     deploy:
       replicas: 3
-    container_name: ems-client
+
 
     ports:
       - 3200:3000
@@ -59,7 +59,7 @@ services:
     image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION:-latest}
     deploy:
       replicas: 3
-    container_name: hospital-server
+
     environment:
       NODE_ENV: ${NODE_ENV} # if not provided it will build development env by default
     ports:
@@ -77,7 +77,7 @@ services:
     image: baraamohamed/gradproj:hospital-client-${HOSPITAL_CLIENT_VERSION:-latest}
     deploy:
       replicas: 3
-    container_name: hospital-client
+
     ports:
       - 3201:3000
 
@@ -92,7 +92,7 @@ services:
       - MYSQL_PASSWORD
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-    container_name: cenralized_mysql
+
 
 
     networks:
@@ -102,12 +102,15 @@ services:
 
 
 networks:
-  ems-net :
-    driver : overlay
-  hospital-net :
-    driver : overlay
-  db-net :
-    driver : overlay
+  ems-net:
+    driver: overlay
+    attachable: true
+  hospital-net:
+    driver: overlay
+    attachable: true
+  db-net:
+    driver: overlay
+    attachable: true
 
 secrets:
   MYSQL_ROOT_PASSWORD:
