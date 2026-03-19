@@ -15,7 +15,8 @@ pipeline {
 
         // prevents version being an empty string if image wasn't built which can cause docker-compose to set version to "latest" and deploy an unintended version
         stage("update images versions") {
-            script {
+            steps{
+                script {
                 def imagesMap = readJSON text: params.IMAGES_VERSIONS
 
                 // Get currently running versions from the stack as fallback
@@ -40,6 +41,8 @@ pipeline {
                 echo "HOSPITAL_SERVER_VERSION: ${env.HOSPITAL_SERVER_VERSION}"
                 echo "HOSPITAL_CLIENT_VERSION: ${env.HOSPITAL_CLIENT_VERSION}"
             }
+            }
+            
         }
 
         stage("Setup Swarm Secrets") {
