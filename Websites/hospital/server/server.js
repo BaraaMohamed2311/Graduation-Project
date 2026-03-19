@@ -5,7 +5,7 @@ if (dev === 'local') {
   console.log("Config Local Docker host")
   require('dotenv').config({ path: './.env.local' }); 
 } else if(dev === 'production') {
-  require('dotenv').config({ path: './.env.prod' });   // Load production environment variables 
+  require('dotenv').config({ path: './.env.prod' });   // Load production environment variables
 }
 else if(dev === 'production-kube') {
   require('dotenv').config({ path: './.env.prod.kube' });   // Load production environment variables
