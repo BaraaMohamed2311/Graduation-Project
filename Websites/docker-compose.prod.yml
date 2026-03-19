@@ -1,5 +1,5 @@
-# EMS containers & Hospital containers are separated by different networks
-# EMS and Hospital servers are connected to the same database network to access centralized database
+# ports must differ from staging and normal compose file deployment with no swarm to avoid conflict 
+# ports in production = compose ports + 200
 services:
 
 # So host can resolve services names "ems_server" & "ems_client"
@@ -14,8 +14,8 @@ services:
     image: baraamohamed/gradproj:nginx
 
     ports:
-      - "3050:3050"
-      - "3051:3051"
+      - "3250:3050"
+      - "3251:3051"
 
 
     networks:
@@ -32,7 +32,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV} # if not provided it will build development env by default
     ports:
-      - 5500:5500
+      - 5700:5500
 
     networks:
       - ems-net
@@ -49,7 +49,7 @@ services:
     container_name: ems-client
 
     ports:
-      - 3000:3000
+      - 3200:3000
 
     networks:
       - ems-net
@@ -63,7 +63,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV} # if not provided it will build development env by default
     ports:
-      - 8888:8888
+      - 9088:8888
 
     networks:
       - hospital-net
@@ -79,7 +79,7 @@ services:
       replicas: 3
     container_name: hospital-client
     ports:
-      - 3001:3000
+      - 3201:3000
 
     networks:
       - hospital-net
