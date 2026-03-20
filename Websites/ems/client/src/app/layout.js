@@ -1,5 +1,4 @@
 
-import { Inter } from "next/font/google";
 import "./globals.css";
 import LayoutProvider from "@/components/LayoutProvider/LayoutProvider";
 import { IsLoginProvider} from "@/contexts/isLogin"
@@ -10,7 +9,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Script from "next/script";
 
-const inter = Inter({ subsets: ["latin"] });
+
 
 export const metadata = {
   title: "EMS",
@@ -26,7 +25,7 @@ export default function RootLayout({ children }) {
       <Script noModule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></Script>
       
       </head>
-      <body className={inter.className}>
+      <body >
         <IsLoginProvider >
           <UserDataProvider>
 
