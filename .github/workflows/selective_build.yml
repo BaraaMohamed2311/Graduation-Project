@@ -3,7 +3,7 @@ name: Build Changed Services
 on:
   push:
     branches:
-      - master
+      - master 
 
 jobs:
   detect-and-build:
