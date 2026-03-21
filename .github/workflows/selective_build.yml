@@ -2,8 +2,8 @@ name: Build Changed Services
 
 on:
   push:
-    paths:
-      - "Websites/**"
+    branches:
+      - master
 
 jobs:
   detect-and-build:
