@@ -4,11 +4,6 @@ services:
 
 # So host can resolve services names "ems_server" & "ems_client"
   nginx:
-    depends_on:
-      - hospital_client
-      - hospital_server
-      - ems_client
-      - ems_server
 
     restart: on-failure
     image: baraamohamed/gradproj:nginx
