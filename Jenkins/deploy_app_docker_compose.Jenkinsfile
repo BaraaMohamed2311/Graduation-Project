@@ -93,34 +93,6 @@ pipeline {
         }
 
 
-        stage("Setup Networks") {
-            steps {
-                script {
-                    if (isUnix()) {
-                        sh """
-                            docker network create --driver overlay --attachable staging_stack_ems-net || true
-                            docker network create --driver overlay --attachable staging_stack_hospital-net || true
-                            docker network create --driver overlay --attachable staging_stack_db-net || true
-
-                            docker network create --driver overlay --attachable production_stack_ems-net || true
-                            docker network create --driver overlay --attachable production_stack_hospital-net || true
-                            docker network create --driver overlay --attachable production_stack_db-net || true
-                        """
-                    } else {
-                        bat """
-                            docker network create --driver overlay --attachable staging_stack_ems-net
-                            docker network create --driver overlay --attachable staging_stack_hospital-net
-                            docker network create --driver overlay --attachable staging_stack_db-net
-
-                            docker network create --driver overlay --attachable production_stack_ems-net
-                            docker network create --driver overlay --attachable production_stack_hospital-net
-                            docker network create --driver overlay --attachable production_stack_db-net
-                        """
-                    }
-                }
-            }
-        }
-
         stage("deploy stack to staging") {
             steps {
                 // The directory of the compose file is different from the root of the repo, so we need to change the working directory before running docker-compose commands

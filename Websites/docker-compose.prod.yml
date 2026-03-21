@@ -104,13 +104,10 @@ services:
 networks:
   ems-net:
     driver: overlay
-    attachable: true
   hospital-net:
     driver: overlay
-    attachable: true
   db-net:
     driver: overlay
-    attachable: true
 
 secrets:
   MYSQL_ROOT_PASSWORD:
