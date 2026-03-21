@@ -3,6 +3,12 @@ services:
 
 # So host can resolve services names "ems_server" & "ems_client"
   nginx:
+    depends_on:
+      - hospital_client
+      - hospital_server
+      - ems_client
+      - ems_server
+
     restart: on-failure
     image: baraamohamed/gradproj:nginx
 
@@ -93,12 +99,16 @@ networks:
   ems-net:
     driver: overlay
     attachable: true
+    name: staging_stack_ems-net  # Explicitly set the name here
   hospital-net:
     driver: overlay
     attachable: true
+    name: staging_stack_hospital-net
   db-net:
     driver: overlay
     attachable: true
+    name: staging_stack_db-net
+
 
 secrets:
   MYSQL_ROOT_PASSWORD:
