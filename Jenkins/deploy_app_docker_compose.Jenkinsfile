@@ -135,28 +135,30 @@ pipeline {
 
         stage("Deploy to Production") {
             steps {
-                script {
-                    if (isUnix()) {
-                        sh """
-                            EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION} \
-                            EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION} \
-                            HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION} \
-                            HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION} \
-                            docker-compose -f docker-compose.prod.yml pull
-                            
-                            docker stack deploy -c docker-compose.prod.yml staging_stack
-                        """
-                    } else {
-                        bat """
-                            set EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION}
-                            set EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION}
-                            set HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION}
-                            set HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION}
+                dir('Websites') {
+                    script {
+                        if (isUnix()) {
+                            sh """
+                                EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION} \
+                                EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION} \
+                                HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION} \
+                                HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION} \
+                                docker-compose -f docker-compose.prod.yml pull
+                                
+                                docker stack deploy -c docker-compose.prod.yml staging_stack
+                            """
+                        } else {
+                            bat """
+                                set EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION}
+                                set EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION}
+                                set HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION}
+                                set HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION}
 
-                            docker-compose -f docker-compose.prod.yml pull
-                        
-                            docker stack deploy -c docker-compose.prod.yml staging_stack
-                        """
+                                docker-compose -f docker-compose.prod.yml pull
+                            
+                                docker stack deploy -c docker-compose.prod.yml staging_stack
+                            """
+                        }
                     }
                 }
             }
