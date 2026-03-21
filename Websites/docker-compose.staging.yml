@@ -99,16 +99,12 @@ networks:
   ems-net:
     driver: overlay
     attachable: true
-    name: staging_stack_ems-net  # Explicitly set the name here
   hospital-net:
     driver: overlay
     attachable: true
-    name: staging_stack_hospital-net
   db-net:
     driver: overlay
     attachable: true
-    name: staging_stack_db-net
-
 
 secrets:
   MYSQL_ROOT_PASSWORD:
