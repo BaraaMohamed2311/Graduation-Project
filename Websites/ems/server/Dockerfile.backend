@@ -18,6 +18,8 @@ RUN npm ci
 # Copy application code
 COPY . .
 
+# Debugging: List files and permissions
+RUN echo "Listing files in /app:" && ls -la /app
 # Drop privileges
 USER appuser
 

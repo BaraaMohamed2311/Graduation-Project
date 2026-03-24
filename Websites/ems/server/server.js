@@ -3,14 +3,18 @@ const dev = process.env.NODE_ENV ;
 
 if (dev === 'local') {
   require('dotenv').config({ path: './.env.local' }); 
+  console.log("Running in local environment");
 } else if(dev === 'production') {
   require('dotenv').config({ path: './.env.prod' });   // Load production environment variables
+  console.log("Running in production environment");
 }
 else if(dev === 'production-kube') {
   require('dotenv').config({ path: './.env.prod.kube' });   // Load production environment variables
+  console.log("Running in production-kube environment");
 }
 else{
   require('dotenv').config({ path: './.env.dev' });  // Load development environment variables
+  console.log("Running in development environment");
 }
 /**************************/
 const express = require("express");

@@ -2,18 +2,20 @@
 const dev = process.env.NODE_ENV ;
  
 if (dev === 'local') {
-  console.log("Config Local Docker host")
   require('dotenv').config({ path: './.env.local' }); 
+  console.log("Running in local environment");
 } else if(dev === 'production') {
   require('dotenv').config({ path: './.env.prod' });   // Load production environment variables
+  console.log("Running in production environment");
 }
 else if(dev === 'production-kube') {
   require('dotenv').config({ path: './.env.prod.kube' });   // Load production environment variables
+  console.log("Running in production-kube environment");
 }
 else{
-  console.log("Config development | No containers")
   require('dotenv').config({ path: './.env.dev' });  // Load development environment variables
-} 
+  console.log("Running in development environment");
+}
 /**********Crons************/
 require("./cronjobs/markOldConsultationsCron.js")
 /**********Init************/
