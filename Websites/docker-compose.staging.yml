@@ -23,7 +23,7 @@ services:
     deploy:
       replicas: 3
     environment:
-      NODE_ENV: ${NODE_ENV} # if not provided it will build development env by default
+      NODE_ENV: production # if not provided it will build development env by default
     ports:
       - 5600:5500
 
@@ -52,7 +52,7 @@ services:
     deploy:
       replicas: 3
     environment:
-      NODE_ENV: ${NODE_ENV} # if not provided it will build development env by default
+      NODE_ENV: production # if not provided it will build development env by default
     ports:
       - 8988:8888
 
