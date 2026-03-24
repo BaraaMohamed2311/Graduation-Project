@@ -71,21 +71,21 @@ pipeline {
                 ]) {
                     script {
                         if (isUnix()) {
-                            sh """
+                            sh '''
                                 docker secret inspect MYSQL_ROOT_PASSWORD > /dev/null 2>&1 \
                                     || echo $MYSQL_ROOT_PASSWORD | docker secret create MYSQL_ROOT_PASSWORD -
                                 
                                 docker secret inspect MYSQL_PASSWORD > /dev/null 2>&1 \
                                     || echo $MYSQL_PASSWORD | docker secret create MYSQL_PASSWORD -
-                            """
+                            '''
                         } else {
-                            bat """
+                            bat '''
                                 docker secret inspect MYSQL_ROOT_PASSWORD > nul 2>&1 \
                                     || echo %MYSQL_ROOT_PASSWORD% | docker secret create MYSQL_ROOT_PASSWORD -
                                 
                                 docker secret inspect MYSQL_PASSWORD > nul 2>&1 \
                                     || echo %MYSQL_PASSWORD% | docker secret create MYSQL_PASSWORD -
-                            """
+                            '''
                         }
                     }
                 }
@@ -106,6 +106,8 @@ pipeline {
                                 HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION} \
                                 docker-compose -f docker-compose.staging.yml pull
                                 
+                                set -a && source .env && set +a
+
                                 docker stack deploy -c docker-compose.staging.yml staging_stack
                             """
                         } else {
@@ -116,7 +118,9 @@ pipeline {
                                 set HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION}
 
                                 docker-compose -f docker-compose.staging.yml pull
-                            
+
+                                set -a && source .env && set +a
+
                                 docker stack deploy -c docker-compose.staging.yml staging_stack
                             """
                         }
@@ -145,7 +149,9 @@ pipeline {
                                 HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION} \
                                 HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION} \
                                 docker-compose -f docker-compose.prod.yml pull
-                                
+
+                                set -a && source .env && set +a
+
                                 docker stack deploy -c docker-compose.prod.yml production_stack
                             """
                         } else {
@@ -156,7 +162,9 @@ pipeline {
                                 set HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION}
 
                                 docker-compose -f docker-compose.prod.yml pull
-                            
+
+                                set -a && source .env && set +a
+
                                 docker stack deploy -c docker-compose.prod.yml production_stack
                             """
                         }
