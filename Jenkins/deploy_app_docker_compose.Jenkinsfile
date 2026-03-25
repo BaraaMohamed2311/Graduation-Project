@@ -62,25 +62,27 @@ pipeline {
         stage("Setup Swarm Secrets") {
             steps {
                 withCredentials([
-                    file(credentialsId: 'EMS_PRODUCTION_ENV',      variable: 'EMS_PRODUCTION_ENV'),
-                    file(credentialsId: 'HOSPITAL_PRODUCTION_ENV',      variable: 'HOSPITAL_PRODUCTION_ENV'),
+                    file(credentialsId: 'EMS_PRODUCTION_ENV', variable: 'EMS_PRODUCTION_ENV'),
+                    file(credentialsId: 'HOSPITAL_PRODUCTION_ENV', variable: 'HOSPITAL_PRODUCTION_ENV'),
                     string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
                     string(credentialsId: 'MYSQL_PASSWORD', variable: 'MYSQL_PASSWORD')
                 ]) {
                     script {
                         if (isUnix()) {
                             sh '''
+                                # String secrets
                                 docker secret inspect MYSQL_ROOT_PASSWORD > /dev/null 2>&1 \
-                                    || echo $MYSQL_ROOT_PASSWORD | docker secret create MYSQL_ROOT_PASSWORD -
+                                    || echo "$MYSQL_ROOT_PASSWORD" | docker secret create MYSQL_ROOT_PASSWORD -
 
                                 docker secret inspect MYSQL_PASSWORD > /dev/null 2>&1 \
-                                    || echo $MYSQL_PASSWORD | docker secret create MYSQL_PASSWORD -
-                                
-                                docker secret inspect prod_hospital_server_config > /dev/null 2>&1 \
-                                    || docker secret create prod_hospital_server_config $HOSPITAL_SERVER_ENV
+                                    || echo "$MYSQL_PASSWORD" | docker secret create MYSQL_PASSWORD -
 
-                                docker secret inspect prod_hospital_client_config > /dev/null 2>&1 \
-                                    || docker secret create prod_hospital_client_config $HOSPITAL_CLIENT_ENV
+                                # File secrets (IMPORTANT: pass file path directly)
+                                docker secret inspect prod_ems_config > /dev/null 2>&1 \
+                                    || docker secret create prod_ems_config "$EMS_PRODUCTION_ENV"
+
+                                docker secret inspect prod_hospital_config > /dev/null 2>&1 \
+                                    || docker secret create prod_hospital_config "$HOSPITAL_PRODUCTION_ENV"
                             '''
                         } else {
                             bat '''
@@ -90,11 +92,11 @@ pipeline {
                                 docker secret inspect MYSQL_PASSWORD > nul 2>&1 ^
                                     || echo %MYSQL_PASSWORD% | docker secret create MYSQL_PASSWORD -
 
-                                docker secret inspect prod_hospital_server_config > /dev/null 2>&1 ^
-                                    || docker secret create prod_hospital_server_config $HOSPITAL_SERVER_ENV
+                                docker secret inspect prod_ems_config > nul 2>&1 ^
+                                    || docker secret create prod_ems_config %EMS_PRODUCTION_ENV%
 
-                                docker secret inspect prod_hospital_client_config > /dev/null 2>&1 ^
-                                    || docker secret create prod_hospital_client_config $HOSPITAL_CLIENT_ENV
+                                docker secret inspect prod_hospital_config > nul 2>&1 ^
+                                    || docker secret create prod_hospital_config %HOSPITAL_PRODUCTION_ENV%
                             '''
                         }
                     }
