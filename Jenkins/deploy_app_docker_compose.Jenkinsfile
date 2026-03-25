@@ -128,7 +128,7 @@ pipeline {
                             sh """
                                 ${exportEnvVarsUnix()}
                                 docker compose -f docker-compose.staging.yml pull
-                                docker compose -f docker-compose.staging.yml config > /tmp/resolved-staging.yml
+                                envsubst < docker-compose.staging.yml > /tmp/resolved-staging.yml
                                 docker stack deploy -c /tmp/resolved-staging.yml staging_stack
                                 rm /tmp/resolved-staging.yml
                             """
@@ -163,7 +163,7 @@ pipeline {
                             sh """
                                 ${exportEnvVarsUnix()}
                                 docker compose -f docker-compose.prod.yml pull
-                                docker compose -f docker-compose.prod.yml config > /tmp/resolved-prod.yml
+                                envsubst < docker-compose.prod.yml > /tmp/resolved-prod.yml
                                 docker stack deploy -c /tmp/resolved-prod.yml production_stack
                                 rm /tmp/resolved-prod.yml
                             """

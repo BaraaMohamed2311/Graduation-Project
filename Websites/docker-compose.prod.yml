@@ -1,5 +1,4 @@
 # ports in production = compose ports + 200
-version: "3.4" 
 
 services:
 
