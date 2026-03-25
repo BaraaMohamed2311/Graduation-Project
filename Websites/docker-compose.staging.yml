@@ -1,79 +1,75 @@
 # PORTS in staging are different from production to avoid conflict between them if they are on the same host staging_ports = production_ports + 100
 services:
 
-# So host can resolve services names "ems_server" & "ems_client" 
   nginx:
-
     restart: on-failure
     image: baraamohamed/gradproj:nginx
-
     ports:
-      - "3150:3050"
-      - "3151:3051"
-
-
+      - target: 3050
+        published: 3150
+        protocol: tcp
+        mode: ingress
+      - target: 3051
+        published: 3151
+        protocol: tcp
+        mode: ingress
     networks:
       - ems-net
       - hospital-net
 
-
-# server does envirmonet checking at server.js code
   ems_server:
     image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION:-latest}
     deploy:
       replicas: 3
     environment:
-      NODE_ENV: production # if not provided it will build development env by default
+      NODE_ENV: production
     ports:
-      - 5600:5500
-
+      - target: 5500
+        published: 5600
+        protocol: tcp
+        mode: ingress
     networks:
       - ems-net
       - db-net
 
-
-
-
-# client has to be provided with enviroment or by default it will build development env
   ems_client:
     image: baraamohamed/gradproj:ems-client-${EMS_CLIENT_VERSION:-latest}
     deploy:
       replicas: 3
-
     ports:
-      - 3100:3000
-
+      - target: 3000
+        published: 3100
+        protocol: tcp
+        mode: ingress
     networks:
       - ems-net
 
-  # server does envirmonet checking at server.js code
   hospital_server:
     image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION:-latest}
     deploy:
       replicas: 3
     environment:
-      NODE_ENV: production # if not provided it will build development env by default
+      NODE_ENV: production
     ports:
-      - 8988:8888
-
+      - target: 8888
+        published: 8988
+        protocol: tcp
+        mode: ingress
     networks:
       - hospital-net
       - db-net
 
-
-
-
-# client has to be provided with enviroment or by default it will build development env
   hospital_client:
     image: baraamohamed/gradproj:hospital-client-${HOSPITAL_CLIENT_VERSION:-latest}
     deploy:
       replicas: 3
     ports:
-      - 3101:3000
-
+      - target: 3000
+        published: 3101
+        protocol: tcp
+        mode: ingress
     networks:
       - hospital-net
-
 
   mysql_db:
     image: baraamohamed/gradproj:db
@@ -82,13 +78,8 @@ services:
       - MYSQL_PASSWORD
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-
-
     networks:
       - db-net
-
-
-
 
 networks:
   ems-net:
