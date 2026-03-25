@@ -1,5 +1,27 @@
 
+def exportEnvVarsUnix() {
+    return """
+        export EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION}
+        export EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION}
+        export HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION}
+        export HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION}
+        export NODE_ENV=${env.NODE_ENV}
+        export MYSQL_DATABASE=${env.MYSQL_DATABASE}
+        export MYSQL_USER=${env.MYSQL_USER}
+    """
+}
 
+def exportEnvVarsWindows() {
+    return """
+        set EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION}
+        set EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION}
+        set HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION}
+        set HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION}
+        set NODE_ENV=${env.NODE_ENV}
+        set MYSQL_DATABASE=${env.MYSQL_DATABASE}
+        set MYSQL_USER=${env.MYSQL_USER}
+    """
+}
 pipeline {
     agent any
 
