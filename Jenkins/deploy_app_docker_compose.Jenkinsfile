@@ -1,42 +1,10 @@
-def exportEnvVarsUnix() {
-    return """
-        export EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION}
-        export EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION}
-        export HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION}
-        export HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION}
-        export NODE_ENV=${env.NODE_ENV}
-        export MYSQL_DATABASE=${env.MYSQL_DATABASE}
-        export MYSQL_USER=${env.MYSQL_USER}
-    """
-}
 
-def exportEnvVarsWindows() {
-    return """
-        set EMS_SERVER_VERSION=${env.EMS_SERVER_VERSION}
-        set EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION}
-        set HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION}
-        set HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION}
-        set NODE_ENV=${env.NODE_ENV}
-        set MYSQL_DATABASE=${env.MYSQL_DATABASE}
-        set MYSQL_USER=${env.MYSQL_USER}
-    """
-}
 
 pipeline {
     agent any
 
     parameters {
         string(name: 'IMAGES_VERSIONS', defaultValue: '', description: 'Used to deploy specific image only')
-    }
-
-    environment {
-        MYSQL_DATABASE = 'ems_db'
-        MYSQL_USER = 'appuser'
-        NODE_ENV = 'production'
-        HOSPITAL_CLIENT_VERSION = '1.0.0'
-        HOSPITAL_SERVER_VERSION = '1.0.0'
-        EMS_CLIENT_VERSION = '1.0.0'
-        EMS_SERVER_VERSION = '1.0.0'
     }
 
     stages {
@@ -94,6 +62,8 @@ pipeline {
         stage("Setup Swarm Secrets") {
             steps {
                 withCredentials([
+                    file(credentialsId: 'EMS_PRODUCTION_ENV',      variable: 'EMS_PRODUCTION_ENV'),
+                    file(credentialsId: 'HOSPITAL_PRODUCTION_ENV',      variable: 'HOSPITAL_PRODUCTION_ENV'),
                     string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
                     string(credentialsId: 'MYSQL_PASSWORD', variable: 'MYSQL_PASSWORD')
                 ]) {
@@ -105,6 +75,12 @@ pipeline {
 
                                 docker secret inspect MYSQL_PASSWORD > /dev/null 2>&1 \
                                     || echo $MYSQL_PASSWORD | docker secret create MYSQL_PASSWORD -
+                                
+                                docker secret inspect prod_hospital_server_config > /dev/null 2>&1 \
+                                    || docker secret create prod_hospital_server_config $HOSPITAL_SERVER_ENV
+
+                                docker secret inspect prod_hospital_client_config > /dev/null 2>&1 \
+                                    || docker secret create prod_hospital_client_config $HOSPITAL_CLIENT_ENV
                             '''
                         } else {
                             bat '''
@@ -113,6 +89,12 @@ pipeline {
 
                                 docker secret inspect MYSQL_PASSWORD > nul 2>&1 ^
                                     || echo %MYSQL_PASSWORD% | docker secret create MYSQL_PASSWORD -
+
+                                docker secret inspect prod_hospital_server_config > /dev/null 2>&1 ^
+                                    || docker secret create prod_hospital_server_config $HOSPITAL_SERVER_ENV
+
+                                docker secret inspect prod_hospital_client_config > /dev/null 2>&1 ^
+                                    || docker secret create prod_hospital_client_config $HOSPITAL_CLIENT_ENV
                             '''
                         }
                     }
