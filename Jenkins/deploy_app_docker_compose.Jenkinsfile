@@ -33,10 +33,6 @@ pipeline {
         MYSQL_DATABASE = 'ems_db'
         MYSQL_USER = 'appuser'
         NODE_ENV = 'production'
-        HOSPITAL_CLIENT_VERSION = '1.0.0'
-        HOSPITAL_SERVER_VERSION = '1.0.0'
-        EMS_CLIENT_VERSION = '1.0.0'
-        EMS_SERVER_VERSION = '1.0.0'
     }
 
     stages {
