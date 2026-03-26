@@ -5,11 +5,8 @@ services:
 
 # So host can resolve services names "ems_server" & "ems_client" 
   nginx:
-
     restart: on-failure
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./nginx
+    image: baraamohamed/gradproj:nginx
     ports:
       - "3050:3050"
       - "3051:3051"
@@ -22,15 +19,8 @@ services:
 
 # server does envirmonet checking at server.js code
   ems_server:
-    build: 
-      context: ./ems/Server
-      dockerfile: Dockerfile.backend
-      args:
-        - NODE_ENV=${NODE_ENV:-development} # defined in .env
+    image: baraamohamed/gradproj:ems-server-1.0.0
     container_name: ems_server
-
-    ports:
-      - 5500:5500
 
     networks:
       - ems-net
@@ -41,31 +31,19 @@ services:
 
 # client has to be provided with enviroment or by default it will build development env
   ems_client:
-    build: 
-      context: ./ems/client
-      dockerfile: Dockerfile.frontend
-      target: ${NODE_ENV:-development} # defined in .env
-      args:
-        - NODE_ENV=${NODE_ENV}
+    image: baraamohamed/gradproj:ems-client-1.0.0
     container_name: ems_client
 
-    ports:
-      - 3000:3000
 
     networks:
       - ems-net
 
   # server does envirmonet checking at server.js code
   hospital_server:
-    build: 
-      context: ./hospital/server
-      dockerfile: Dockerfile.backend
-      args:
-        - NODE_ENV=${NODE_ENV:-development} # defined in .env
+    image: baraamohamed/gradproj:hospital-server-1.0.0
     container_name: hospital_server
 
-    ports:
-      - 8888:8888
+
 
     networks:
       - hospital-net
@@ -76,12 +54,7 @@ services:
 
 # client has to be provided with enviroment or by default it will build development env
   hospital_client:
-    build: 
-      context: ./hospital/client
-      dockerfile: Dockerfile.frontend
-      target: ${NODE_ENV:-development} # defined in .env
-      args:
-        - NODE_ENV=${NODE_ENV}
+    image: baraamohamed/gradproj:hospital-client-1.0.0
     container_name: hospital_client
     ports:
       - 3001:3000
@@ -91,9 +64,7 @@ services:
       
 
   mysql_db:
-    build: 
-      context: ./db
-      dockerfile: Dockerfile
+    image: baraamohamed/gradproj:db
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
