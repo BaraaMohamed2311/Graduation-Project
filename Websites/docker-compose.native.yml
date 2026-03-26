@@ -21,7 +21,8 @@ services:
   ems_server:
     image: baraamohamed/gradproj:ems_server
     container_name: ems_server
-
+    environment:
+      NODE_ENV: ${NODE_ENV}
     networks:
       - ems-net
       - db-net
@@ -33,7 +34,8 @@ services:
   ems_client:
     image: baraamohamed/gradproj:ems_client
     container_name: ems_client
-
+    environment:
+      NODE_ENV: ${NODE_ENV}
 
     networks:
       - ems-net
@@ -42,7 +44,8 @@ services:
   hospital_server:
     image: baraamohamed/gradproj:hospital_server
     container_name: hospital_server
-
+    environment:
+      NODE_ENV: ${NODE_ENV}
 
 
     networks:
@@ -58,7 +61,8 @@ services:
     container_name: hospital_client
     ports:
       - 3001:3000
-
+    environment:
+      NODE_ENV: ${NODE_ENV}
     networks:
       - hospital-net
       
