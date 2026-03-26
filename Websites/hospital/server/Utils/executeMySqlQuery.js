@@ -1,5 +1,5 @@
 
-const connectionPool = require("./connect_ems_db");
+const connectionPool = require("./connect_ems_db").getConnectionPool();
 const consoleLog = require("../Utils/consoleLog");
 
 async function executeMySqlQuery(query, paramsArray=[]) {
