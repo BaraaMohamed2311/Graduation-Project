@@ -61,7 +61,7 @@ pipeline {
                             // version is always last token e.g. "1.0.2"
                             return parts.last()
                         }
-                        // Service doesn't exist yet — use latest
+                        // Service doesn't exist yet — use latest 
                         return 'latest'
                     }
 
