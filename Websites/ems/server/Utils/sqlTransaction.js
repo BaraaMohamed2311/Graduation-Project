@@ -1,4 +1,4 @@
-const connectionPool = require("./connect_ems_db").getConnectionPool();
+const getConnectionPool = require("./connect_ems_db").getConnectionPool;
 const consoleLog = require("../Utils/consoleLog");
 
 /**
@@ -8,6 +8,7 @@ const consoleLog = require("../Utils/consoleLog");
  * @returns {Promise<boolean>}
  */
 async function sqlTransaction(queries, params = []) {
+    const connectionPool = getConnectionPool();
     return new Promise((resolve, reject) => {
         connectionPool.getConnection(async (err, connection) => {
             if (err) {

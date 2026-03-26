@@ -1,8 +1,9 @@
 
-const connectionPool = require("./connect_ems_db").getConnectionPool();
+const getConnectionPool = require("./connect_ems_db").getConnectionPool;
 const consoleLog = require("../Utils/consoleLog");
 
 async function executeMySqlQuery(query, paramsArray=[]) {
+    const connectionPool = getConnectionPool();
     try {
         // we use promise to get returned results from resolve
         const executeQuery = (query) => {

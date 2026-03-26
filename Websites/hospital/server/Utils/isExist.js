@@ -1,7 +1,8 @@
-const connectionPool = require("./connect_ems_db").getConnectionPool();
+const getConnectionPool = require("./connect_ems_db").getConnectionPool;
 const consoleLog = require("../Utils/consoleLog");
 
 async function isExist(query , paramsArray) {
+    const connectionPool = getConnectionPool();
     try {
         const result = await new Promise((resolve, reject) => {
             
