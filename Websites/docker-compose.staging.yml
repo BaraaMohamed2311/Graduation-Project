@@ -32,7 +32,7 @@ services:
     networks:
       - ems-net
       - db-net
-    secrets:
+    configs:
       - prod_ems_server_config
 
   ems_client:
@@ -61,7 +61,7 @@ services:
     networks:
       - hospital-net
       - db-net
-    secrets:
+    configs:
       - prod_hospital_server_config
       
 
@@ -95,12 +95,14 @@ networks:
   db-net:
     driver: overlay
 
+configs:
+  prod_hospital_server_config:
+    external: true
+  prod_ems_server_config:
+    external: true
+
 secrets:
   MYSQL_ROOT_PASSWORD:
     external: true
   MYSQL_PASSWORD:
-    external: true
-  prod_hospital_server_config:
-    external: true
-  prod_ems_server_config:
     external: true
