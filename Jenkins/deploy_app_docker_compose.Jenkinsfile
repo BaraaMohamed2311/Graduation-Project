@@ -57,7 +57,7 @@ pipeline {
 
                             if (!image) return 'latest'
 
-                            // Remove digest if exists
+                            // Remove digest if exists 
                             image = image.split('@')[0]
 
                             // Extract tag
