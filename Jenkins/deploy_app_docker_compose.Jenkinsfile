@@ -109,12 +109,12 @@ pipeline {
                                 docker secret inspect MYSQL_PASSWORD > /dev/null 2>&1 \
                                     || echo "$MYSQL_PASSWORD" | docker secret create MYSQL_PASSWORD -
 
-                                # File config (IMPORTANT: pass file path directly)
-                                docker config inspect prod_ems_server_config > /dev/null 2>&1 \
-                                    || docker config create prod_ems_server_config "$EMS_PRODUCTION_ENV"
+                                # File secret (IMPORTANT: pass file path directly)
+                                docker secret inspect prod_ems_server_config > /dev/null 2>&1 \
+                                    || docker secret create prod_ems_server_config "$EMS_PRODUCTION_ENV"
 
-                                docker config inspect prod_hospital_server_config > /dev/null 2>&1 \
-                                    || docker config create prod_hospital_server_config "$HOSPITAL_PRODUCTION_ENV"
+                                docker secret inspect prod_hospital_server_config > /dev/null 2>&1 \
+                                    || docker secret create prod_hospital_server_config "$HOSPITAL_PRODUCTION_ENV"
                             '''
                         } else {
                             bat '''
@@ -124,11 +124,11 @@ pipeline {
                                 docker secret inspect MYSQL_PASSWORD > nul 2>&1 ^
                                     || echo %MYSQL_PASSWORD% | docker secret create MYSQL_PASSWORD -
 
-                                docker config inspect prod_ems_server_config > nul 2>&1 ^
-                                    || docker config create prod_ems_server_config %EMS_PRODUCTION_ENV%
+                                docker secret inspect prod_ems_server_config > nul 2>&1 ^
+                                    || docker secret create prod_ems_server_config %EMS_PRODUCTION_ENV%
 
-                                docker config inspect prod_hospital_server_config > nul 2>&1 ^
-                                    || docker config create prod_hospital_server_config %HOSPITAL_PRODUCTION_ENV%
+                                docker secret inspect prod_hospital_server_config > nul 2>&1 ^
+                                    || docker secret create prod_hospital_server_config %HOSPITAL_PRODUCTION_ENV%
                             '''
                         }
                     }
