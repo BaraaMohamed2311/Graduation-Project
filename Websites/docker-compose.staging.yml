@@ -4,7 +4,7 @@ services:
 
   nginx:
     restart: on-failure
-    image: baraamohamed/gradproj:nginx
+    image: baraamohamed/gradproj:nginx_swarm
     ports:
       - target: 3050
         published: 3150
@@ -84,6 +84,9 @@ services:
       - MYSQL_PASSWORD
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/MYSQL_ROOT_PASSWORD  
+      MYSQL_PASSWORD_FILE: /run/secrets/MYSQL_PASSWORD 
+      MYSQL_USER: appuser 
     networks:
       - db-net
 
