@@ -4,3 +4,4 @@ FROM mysql:8.0
 COPY ./1_init.sql ./2_insertions.sql /docker-entrypoint-initdb.d/
 
 EXPOSE 3306
+
