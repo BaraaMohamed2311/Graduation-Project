@@ -50,14 +50,23 @@ pipeline {
         stage("Update Images Versions") {
             steps {
                 script {
-                    def imagesMap = readJSON text: params.IMAGES_VERSIONS
+                    // Handle empty IMAGES_VERSIONS parameter gracefully
+                    def imagesMap = params.IMAGES_VERSIONS?.trim() ? readJSON(text: params.IMAGES_VERSIONS) : [:]
 
                     def getCurrentVersion = { serviceName ->
                         def result = sh(
-                            script: "docker service inspect staging_stack_${serviceName} --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}' 2>/dev/null || echo ''",
+                            script: "docker service inspect staging_stack_${serviceName} --format '{{index (split .Spec.TaskTemplate.ContainerSpec.Image \":\") 1}}' 2>/dev/null || echo ''",
                             returnStdout: true
                         ).trim()
-                        return result ? result.tokenize('-').last() : "1.0.0"
+                        // result is now the full tag e.g. "ems-server-1.0.2"
+                        // extract just the version part after the last dash
+                        if (result) {
+                            def parts = result.tokenize('-')
+                            // version is always last token e.g. "1.0.2"
+                            return parts.last()
+                        }
+                        // Service doesn't exist yet — use latest
+                        return 'latest'
                     }
 
                     env.EMS_SERVER_VERSION      = imagesMap["ems-server"]      ?: getCurrentVersion("ems_server")
