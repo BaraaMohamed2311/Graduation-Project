@@ -1,0 +1,113 @@
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  font-family: Arial, sans-serif;
+  margin-top: 20px;
+}
+
+.tableWrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableWrap thead {
+  background-color: #f0f0f0;
+}
+
+.tableWrap th,
+.tableWrap td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.tableWrap th {
+  font-weight: bold;
+}
+
+.mono {
+  font-family: 'Courier New', monospace;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: white;
+}
+
+.badgeOk {
+  background-color: #4caf50;
+}
+
+.btnEdit,
+.btnDelete,
+.btnAdd {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btnEdit {
+  background-color: #2196f3;
+  color: white;
+}
+
+.btnEdit:hover {
+  background-color: #1976d2;
+}
+
+.btnDelete {
+  background-color: #f44336;
+  color: white;
+}
+
+.btnDelete:hover {
+  background-color: #d32f2f;
+}
+
+.btnAdd {
+  background-color: #4caf50;
+  color: white;
+}
+
+.btnAdd:hover {
+  background-color: #388e3c;
+}
+
+.emptyCell {
+  padding: 10px;
+  text-align: center;
+  color: #777;
+  font-style: italic;
+}
+
+.errorBanner {
+  padding: 10px;
+  background-color: #ffcccc;
+  color: #900;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.addMedForm {
+  margin-top: 20px;
+}
+
+.addMedForm input {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.addMedForm button {
+  margin-top: 4px;
+}

@@ -11,6 +11,7 @@ import ProfileEditManager from "@/components/ProfileEditManager/ProfileEditManag
 import PermsList from "@/components/PermsList/PermsList"
 import { selfEditableFields , approvalRequiredFields } from "./data";
 import AvailabilityList from "@/components/AvailabilityList/AvailabilityList"
+import Patientmedstable from "@/components/Patientmedstable/Patientmedstable"
 // ===================================================
 //            Rendering helpers
 // ===================================================
@@ -248,6 +249,8 @@ const PatientProfile = ({ user_data }) => {
         /> 
       {/* Cannot modify it urself */}
       <HealthStatus user_id={user_data.user_id} isEditable={false} />
+
+      <Patientmedstable token={user_data.token} user_id={user_data.user_id} />
     </div>
       <button className="red-button" onClick={() => setShowDeleteModal(true)}>
         Delete Account

@@ -342,6 +342,29 @@ CREATE TABLE rooms (
 );
 
 -- ====================================================================================
+--          Medicine Related Tables
+-- ====================================================================================
+
+-- Patient-medicine assignment (one row per patient+medicine pair)
+CREATE TABLE patient_meds (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    user_id  INT         NOT NULL,
+    med_id      VARCHAR(50) NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES patients(user_id) ON DELETE CASCADE
+);
+
+-- Each scheduled time for that assignment (one row per dose time)
+-- e.g. twice a day = 2 rows pointing to the same patient_meds.id
+CREATE TABLE patient_med_times (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    patient_med_id  INT     NOT NULL,
+    take_at         TIME    NOT NULL,   -- e.g. '08:00:00', '20:00:00'
+
+    FOREIGN KEY (patient_med_id) REFERENCES patient_meds(id) ON DELETE CASCADE
+);
+-- ====================================================================================
 --          INDEX For faster searching (many unique values for column)
 -- ====================================================================================
 

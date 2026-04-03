@@ -35,6 +35,8 @@ jobs:
           [[ $files == *"Websites/ems/server"* ]] && services+=("ems-server")
           [[ $files == *"Websites/hospital/client"* ]] && services+=("hospital-client")
           [[ $files == *"Websites/hospital/server"* ]] && services+=("hospital-server")
+          [[ $files == *"Websites/storage/client"* ]] && services+=("storage-client")
+          [[ $files == *"Websites/storage/server"* ]] && services+=("storage-server")
 
           joined=$(IFS=,; echo "${services[*]}")
           echo $services

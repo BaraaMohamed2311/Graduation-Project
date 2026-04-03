@@ -1,4 +1,5 @@
 
+import { global_rooms , global_floors } from "@/global_data";
 let inputs_info = [ 
     {
 
@@ -60,9 +61,35 @@ let gender_select = {
 }
 
 
-let select_def ={
-    gender_select
+let isAssignedToRoom_select = {
+    key:"isAssignedToRoom",
+    label:"Assigned to a room?",
+    name:"isAssignedToRoom",
+    options:[{value:"1", text:"True"},{value:"0", text:"False"}],
 }
+
+let floorNum_select = {
+    key:"floor_number",
+    label:"Floor Number",
+    name:"floor_number",
+    options: global_floors,
+}
+
+let RoomNum_select = {
+    key:"room_number",
+    label:"Room Number",
+    name:"room_number",
+    options: global_rooms,
+}
+
+
+let select_def ={
+    gender_select,
+    isAssignedToRoom_select,
+    floorNum_select,
+    RoomNum_select
+}
+
 
 
 export  {inputs_info ,select_def}

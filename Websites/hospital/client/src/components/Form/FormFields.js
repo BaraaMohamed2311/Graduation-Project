@@ -10,13 +10,14 @@ import { global_mapped_specialities } from "@/global_data";
 // ================================
 
 function DynamicSelect({ selectOption, userDisplayed, references, onChange, styles }) {
-
     if (!selectOption || !references || !references.selectBoxsRef) return null;
+
+    const defaultValue = userDisplayed[selectOption.name];
 
     return (
         <Select
             styles={styles}
-            defaultValue={userDisplayed && userDisplayed[selectOption.name]}
+            defaultValue={defaultValue !== undefined ? String(defaultValue) : undefined}
             select_options={selectOption}
             reference={references.selectBoxsRef}
             onChange={onChange}
@@ -77,23 +78,36 @@ function EmployeeSelectFields({ select_def, user_displayed, references, styles }
 //    Generic selct options rendering
 // ================================
 function RenderOtherSelects({ select_def, exclude = [], user_displayed, references, styles }) {
+    
+    const [isAssigned, setIsAssigned] = useState(
+        user_displayed?.isAssignedToRoom == 1
+    );
 
-    Object.entries(select_def || {})
-        .filter(([key]) => !exclude.includes(key))
-        .map(([key, selectOption]) =>console.log("RenderOtherSelects",key, selectOption));
+    return Object.entries(select_def || {})
+        .filter(([key]) => {
+            if (exclude.includes(key)) return false;
 
-    return  Object.entries(select_def || {})
-        .filter(([key]) => !exclude.includes(key))
-        .map(([key, selectOption]) =>
-            
+            if (!isAssigned && (key === "floorNum_select" || key === "RoomNum_select")) {
+                return false;
+            }
+
+            return true;
+        })
+        .map(([key, selectOption]) => (
             <DynamicSelect
                 key={key}
                 selectOption={selectOption}
                 userDisplayed={user_displayed}
                 references={references}
                 styles={styles}
+                onChange={(e) => {
+                    // detect change of isAssignedToRoom
+                    if (selectOption.name === "isAssignedToRoom") {
+                        setIsAssigned(e.target.value == 1);
+                    }
+                }}
             />
-        );
+        ));
 }
 
 

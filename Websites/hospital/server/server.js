@@ -20,6 +20,7 @@ else{
 }
 /**********Crons************/
 require("./cronjobs/markOldConsultationsCron.js")
+require("./cronjobs/Medicationreminder.js")
 /**********Init************/
 const express = require("express");
 const app = express();

@@ -10,6 +10,7 @@ const RoomsApis = require("../Routers/rooms.js");
 const BookingApis = require("../Routers/booking.js");
 const DetailsApis = require("../Routers/details.js");
 const SyncApis = require("../Routers/sync.js")
+const medsApis = require("../Routers/meds.js")
 
 function appUses(express ,app){
 
@@ -42,6 +43,7 @@ function appUses(express ,app){
   
     // Routes
     app.use("/api/list",listApis)
+    app.use("/api/meds",medsApis)
     app.use("/api/user",authApis)
     app.use("/api/files",filesApis)
     app.use("/api/mail",MailApis)

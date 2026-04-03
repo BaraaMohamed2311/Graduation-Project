@@ -64,7 +64,9 @@ pipeline {
                             "ems-client"     : [path: "Websites/ems/client",     file: "Dockerfile.frontend"],
                             "ems-server"     : [path: "Websites/ems/server",     file: "Dockerfile.backend"],
                             "hospital-client": [path: "Websites/hospital/client",file: "Dockerfile.frontend"],
-                            "hospital-server": [path: "Websites/hospital/server",file: "Dockerfile.backend"]
+                            "hospital-server": [path: "Websites/hospital/server",file: "Dockerfile.backend"],
+                            "storage-client": [path: "Websites/storage/client",file: "Dockerfile.frontend"],
+                            "storage-server": [path: "Websites/storage/server",file: "Dockerfile.backend"]
                         ]
 
                         for (svc in services) {
@@ -137,7 +139,9 @@ pipeline {
                             "ems-client"     : [path: "Websites/ems/client",     file: "Dockerfile.frontend"],
                             "ems-server"     : [path: "Websites/ems/server",     file: "Dockerfile.backend"],
                             "hospital-client": [path: "Websites/hospital/client",file: "Dockerfile.frontend"],
-                            "hospital-server": [path: "Websites/hospital/server",file: "Dockerfile.backend"]
+                            "hospital-server": [path: "Websites/hospital/server",file: "Dockerfile.backend"],
+                            "storage-client": [path: "Websites/storage/client",file: "Dockerfile.frontend"],
+                            "storage-server": [path: "Websites/storage/server",file: "Dockerfile.backend"]
                         ]
 
                         for (svc in services) {

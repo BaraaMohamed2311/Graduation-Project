@@ -1,6 +1,7 @@
 
 # EMS containers & Hospital containers are separated by different networks
 # EMS and Hospital servers are connected to the same database network to access centralized database
+# No need to map servers ports to host since we are not gonna access them directly
 services:
 
 # So host can resolve services names "ems_server" & "ems_client" 
@@ -65,10 +66,37 @@ services:
       NODE_ENV: ${NODE_ENV}
     networks:
       - hospital-net
+
+
+
+  storage_server:
+    image: baraamohamed/gradproj:storage_server
+    container_name: storage_server
+    environment:
+      NODE_ENV: ${NODE_ENV}
+
+
+    networks:
+      - storage-net
+      - db-net
+
+
+
+
+
+  storage_client:
+    image: baraamohamed/gradproj:storage_client
+    container_name: storage_client
+    ports:
+      - 3002:3000
+    environment:
+      NODE_ENV: ${NODE_ENV}
+    networks:
+      - storage-net
       
 
   mysql_db:
-    image: baraamohamed/gradproj:db
+    image: baraamohamed/gradproj:db-1.0.0
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -85,6 +113,8 @@ networks:
   ems-net :
     driver : bridge
   hospital-net :
+    driver : bridge
+  storage-net :
     driver : bridge
   db-net :
     driver : bridge

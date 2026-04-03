@@ -1,6 +1,30 @@
-Docker/
-Updated db container security to use secrets
-Created compose file for production to be deployed using swarm
-Created CD Job
-Created successfulImages variable and add try/catch blocks in the CI to track successful builds
-Enhanced printing messages at CI for better debbuging
+WEBSITES
+-----------
+Created storage app website
+Updated parsedUpdatesToObjects and parseUpdatingStringByTable to use prioritized mapping for fields
+Added meds.js route
+Added table to list meds
+Updated logic of Modify Patients Data to detect floor_number, room_number, isAssignedToRoom at client patient pages
+Added Cronjobs
+
+
+PIPELINE
+------------
+Added logic in github action for storage microservices
+Added logic in jenkins script for storage microservices 
+UPDATED with new secrets for storage
+
+DB
+------------
+
+ADDED MYSQL tables for mapping patients and meds
+
+
+DOCKER
+---------------------------
+UPDATE all the compose and stack files for new storage service
+
+NGINX
+---------------------------------
+To reverse proxy to storage services
+

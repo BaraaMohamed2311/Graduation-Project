@@ -5,6 +5,8 @@ def exportEnvVarsUnix() {
         export EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION}
         export HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION}
         export HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION}
+        export STORAGE_SERVER_VERSION=${env.STORAGE_SERVER_VERSION}
+        export STORAGE_CLIENT_VERSION=${env.STORAGE_CLIENT_VERSION}
         export NODE_ENV=${env.NODE_ENV}
         export MYSQL_DATABASE=${env.MYSQL_DATABASE}
         export MYSQL_USER=${env.MYSQL_USER}
@@ -17,6 +19,8 @@ def exportEnvVarsWindows() {
         set EMS_CLIENT_VERSION=${env.EMS_CLIENT_VERSION}
         set HOSPITAL_SERVER_VERSION=${env.HOSPITAL_SERVER_VERSION}
         set HOSPITAL_CLIENT_VERSION=${env.HOSPITAL_CLIENT_VERSION}
+        set HOSPITAL_SERVER_VERSION=${env.STORAGE_SERVER_VERSION}
+        set HOSPITAL_CLIENT_VERSION=${env.STORAGE_CLIENT_VERSION}
         set NODE_ENV=${env.NODE_ENV}
         set MYSQL_DATABASE=${env.MYSQL_DATABASE}
         set MYSQL_USER=${env.MYSQL_USER}
@@ -75,11 +79,15 @@ pipeline {
                     env.EMS_CLIENT_VERSION      = imagesMap["ems-client"]      ?: getCurrentVersion("ems_client")
                     env.HOSPITAL_SERVER_VERSION = imagesMap["hospital-server"] ?: getCurrentVersion("hospital_server")
                     env.HOSPITAL_CLIENT_VERSION = imagesMap["hospital-client"] ?: getCurrentVersion("hospital_client")
+                    env.STORAGE_SERVER_VERSION = imagesMap["storage-server"] ?: getCurrentVersion("storage_server")
+                    env.STORAGE_CLIENT_VERSION = imagesMap["storage-client"] ?: getCurrentVersion("storage_client")
 
                     echo "EMS_SERVER_VERSION: ${env.EMS_SERVER_VERSION}"
                     echo "EMS_CLIENT_VERSION: ${env.EMS_CLIENT_VERSION}"
                     echo "HOSPITAL_SERVER_VERSION: ${env.HOSPITAL_SERVER_VERSION}"
                     echo "HOSPITAL_CLIENT_VERSION: ${env.HOSPITAL_CLIENT_VERSION}"
+                    echo "STORAGE_SERVER_VERSION: ${env.STORAGE_SERVER_VERSION}"
+                    echo "STORAGE_CLIENT_VERSION: ${env.STORAGE_CLIENT_VERSION}"
                 }
             }
         }
@@ -107,6 +115,7 @@ pipeline {
                 withCredentials([
                     file(credentialsId: 'EMS_PRODUCTION_ENV', variable: 'EMS_PRODUCTION_ENV'),
                     file(credentialsId: 'HOSPITAL_PRODUCTION_ENV', variable: 'HOSPITAL_PRODUCTION_ENV'),
+                    file(credentialsId: 'STORAGE_PRODUCTION_ENV', variable: 'STORAGE_PRODUCTION_ENV'),
                     string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
                     string(credentialsId: 'MYSQL_PASSWORD', variable: 'MYSQL_PASSWORD')
                 ]) {
@@ -126,6 +135,9 @@ pipeline {
 
                                 docker secret inspect prod_hospital_server_config > /dev/null 2>&1 \
                                     || docker secret create prod_hospital_server_config "$HOSPITAL_PRODUCTION_ENV"
+
+                                docker secret inspect prod_storage_server_config > /dev/null 2>&1 \
+                                    || docker secret create prod_storage_server_config "$STORAGE_PRODUCTION_ENV"
                             '''
                         } else {
                             bat '''
@@ -140,6 +152,9 @@ pipeline {
 
                                 docker secret inspect prod_hospital_server_config > nul 2>&1 ^
                                     || docker secret create prod_hospital_server_config %HOSPITAL_PRODUCTION_ENV%
+
+                                docker secret inspect prod_storage_server_config > nul 2>&1 ^
+                                    || docker secret create prod_storage_server_config %STORAGE_PRODUCTION_ENV%
                             '''
                         }
                     }

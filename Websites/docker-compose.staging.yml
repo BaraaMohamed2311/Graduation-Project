@@ -21,12 +21,11 @@ services:
   ems_server:
     image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION:-latest}
     deploy:
-      replicas: 3
+      replicas: 2
     environment:
       NODE_ENV: production
     ports:
       - target: 5500
-        published: 5600
         protocol: tcp
         mode: ingress
     networks:
@@ -38,10 +37,9 @@ services:
   ems_client:
     image: baraamohamed/gradproj:ems-client-${EMS_CLIENT_VERSION:-latest}
     deploy:
-      replicas: 3
+      replicas: 2
     ports:
       - target: 3000
-        published: 3100
         protocol: tcp
         mode: ingress
     networks:
@@ -50,12 +48,11 @@ services:
   hospital_server:
     image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION:-latest}
     deploy:
-      replicas: 3
+      replicas: 2
     environment:
       NODE_ENV: production
     ports:
       - target: 8888
-        published: 8988
         protocol: tcp
         mode: ingress
     networks:
@@ -68,17 +65,47 @@ services:
   hospital_client:
     image: baraamohamed/gradproj:hospital-client-${HOSPITAL_CLIENT_VERSION:-latest}
     deploy:
-      replicas: 3
+      replicas: 2
     ports:
       - target: 3000
-        published: 3101
         protocol: tcp
         mode: ingress
     networks:
       - hospital-net
+  
+  storage_server:
+    image: baraamohamed/gradproj:storage-server-${STORAGE_SERVER_VERSION:-latest}
+    environment:
+      NODE_ENV: ${NODE_ENV}
+    deploy:
+      replicas: 2
+    ports:
+      - target: 5000
+        protocol: tcp
+        mode: ingress
+
+    networks:
+      - storage-net
+      - db-net
+
+
+  storage_client:
+    image: baraamohamed/gradproj:storage-client-${STORAGE_CLIENT_VERSION:-latest}
+    deploy:
+      replicas: 2
+    ports:
+      - target: 3000
+        protocol: tcp
+        mode: ingress
+    environment:
+      NODE_ENV: ${NODE_ENV}
+    networks:
+      - storage-net
+
+
 
   mysql_db:
-    image: baraamohamed/gradproj:db
+    image: baraamohamed/gradproj:db-1.0.0
     secrets:
       - MYSQL_ROOT_PASSWORD
       - MYSQL_PASSWORD
@@ -97,6 +124,8 @@ networks:
     driver: overlay
   db-net:
     driver: overlay
+  storage-net:
+    driver: overlay
 
 
 
@@ -108,4 +137,6 @@ secrets:
   prod_hospital_server_config:
     external: true
   prod_ems_server_config:
+    external: true
+  prod_storage_server_config:
     external: true

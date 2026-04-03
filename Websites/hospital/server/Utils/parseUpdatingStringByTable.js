@@ -1,14 +1,6 @@
 const { TableAliases } = require("../Tables/data");
 
-/**
- * Parse updating object from buildJoinedUpdate
- * Input: { sql: "u.user_name = ? , e.emp_salary = ? , u.user_email = ?", values: ["Ali", 5000, "a@b.com"] }
- * Output: { 
- *   users: { sql: "user_name = ?, user_email = ?", values: ["Ali", "a@b.com"] },
- *   employees: { sql: "emp_salary = ?", values: [5000] }
- * }
- */
-function parseUpdatingStringByTable(updatingObj) {
+function parseUpdatingStringByTable(updatingObj, FIELD_PRIORITY = null) {
     if (!updatingObj || typeof updatingObj !== 'object') {
         return {};
     }
@@ -19,61 +11,90 @@ function parseUpdatingStringByTable(updatingObj) {
         return {};
     }
 
-    // Create reverse map: alias -> table name
+    // alias → table
     const aliasToTable = {};
     Object.entries(TableAliases).forEach(([table, alias]) => {
         aliasToTable[alias] = table;
     });
 
     const result = {};
-    
-    // Split by comma to get individual SET clauses
-    // Each part looks like: "u.user_name = ?" or "e.emp_salary = ?"
+
+    // 🔥 track assigned fields globally (prevent remap)
+    const assignedFields = new Set();
+
     const parts = sql.split(',').map(p => p.trim());
-    
     let valueIndex = 0;
 
     parts.forEach(part => {
-        // Extract alias and field name from "u.user_name = ?"
         const match = part.match(/^([a-z]+)\.([a-z_]+)\s*=\s*\?/i);
         
         if (match && valueIndex < values.length) {
             const alias = match[1];
             const fieldName = match[2];
-            const tableName = aliasToTable[alias];
-            
+            const value = values[valueIndex];
+
+            let tableName;
+
+            // ===============================
+            // 🔥 PRIORITY LOGIC
+            // ===============================
+            if (FIELD_PRIORITY) {
+                const priorityTable = FIELD_PRIORITY[fieldName];
+
+                if (priorityTable) {
+                    tableName = priorityTable;
+
+                    // prevent duplicate assignment
+                    if (assignedFields.has(fieldName)) {
+                        valueIndex++;
+                        return;
+                    }
+                } else {
+                    // fallback but avoid remap
+                    if (assignedFields.has(fieldName)) {
+                        valueIndex++;
+                        return;
+                    }
+                    tableName = aliasToTable[alias];
+                }
+            } else {
+                // default behavior
+                tableName = aliasToTable[alias];
+            }
+
             if (tableName) {
-                // Initialize table entry if it doesn't exist
                 if (!result[tableName]) {
                     result[tableName] = {
                         fields: [],
                         values: []
                     };
                 }
-                
-                // Add field and corresponding value
+
                 result[tableName].fields.push(fieldName);
-                result[tableName].values.push(values[valueIndex]);
-                
-                valueIndex++;
+                result[tableName].values.push(value);
+
+                if (FIELD_PRIORITY) {
+                    assignedFields.add(fieldName);
+                }
             }
+
+            valueIndex++;
         }
     });
-    
-    // Convert to final format: { sql: "field1 = ?, field2 = ?", values: [...] }
+
+    // build final SQL per table
     const finalResult = {};
     Object.entries(result).forEach(([tableName, data]) => {
         const { fields, values: tableValues } = data;
-        
-        // Build SET clause for this table: "field1 = ?, field2 = ?"
+
         const setSql = fields.map(field => `${field} = ?`).join(', ');
-        
+
         finalResult[tableName] = {
             sql: setSql,
             values: tableValues
         };
     });
-    
+
     return finalResult;
 }
 

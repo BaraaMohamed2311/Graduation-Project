@@ -288,15 +288,20 @@ class PatientMethods {
         //   users: { sql: "user_name = ?, user_email = ?", values: ["Ali", "a@b.com"] },
         //   employees: { sql: "emp_salary = ?", values: [5000] }
         // }
-        const parsedUpdates = parseUpdatingStringByTable(updatingObj);
+        const FIELD_PRIORITY = {
+            floor_number: "patients"
+            }
+        const parsedUpdates = parseUpdatingStringByTable(updatingObj,FIELD_PRIORITY);
         // parsedObjects = {
         //   users: { user_name: "Ali", user_email: "a@b.com" },
         //   employees: { emp_salary: 5000 }
         // }
+
+        
         const parsedObjects = parsedUpdatesToObjects(parsedUpdates);
         const queries = [];
         const params = []
-        console.log(parsedUpdates)
+
     // 1. Ensure user exists
     if (parsedUpdates.users) {
         queries.push(`

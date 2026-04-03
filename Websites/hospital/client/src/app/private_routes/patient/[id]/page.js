@@ -19,6 +19,7 @@ import statusNotification from "@/utils/statusNotification";
 import uploadPatientFile from "@/utils/uploadPatientFile";
 import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
 import EditableSection from "@/components/EditableSection/EditableSection";
+import Patientmedstable from "@/components/Patientmedstable/Patientmedstable"
 function PatientDetailsPage() {
   const [files_meta , setFilesMeta] = useState([]);
   const [blobURL, setBlobURL] = useState("/avatar.jpg");
@@ -163,7 +164,40 @@ function PatientDetailsPage() {
             if (!actions.includes("Modify Other Patient")) actions.push("Modify Other Patient"); // Add "MD" if not already added
           }
 
-        
+          // isAssignedToRoom
+          if (selectBoxsRef.current[select_def.isAssignedToRoom_select.name] && (selectBoxsRef.current[select_def.isAssignedToRoom_select.name].value !== patient[select_def.isAssignedToRoom_select.name])) {
+              updatedPatientData[select_def.isAssignedToRoom_select.name] = selectBoxsRef.current[select_def.isAssignedToRoom_select.name].value;
+              if (!actions.includes("Modify Other Patient")) actions.push("Modify Other Patient");
+          }
+
+          // determine current isAssigned (new value if changed, otherwise old)
+          const isAssigned =
+              selectBoxsRef.current[select_def.isAssignedToRoom_select.name]
+                  ? selectBoxsRef.current[select_def.isAssignedToRoom_select.name].value == 1
+                  : patient[select_def.isAssignedToRoom_select.name] == 1;
+
+
+          // floor number (ONLY if assigned)
+          if (isAssigned) {
+              if ( (selectBoxsRef.current[select_def.floorNum_select.name] && !selectBoxsRef.current[select_def.floorNum_select.name].value) ){
+                  userNotification("error", "Input fields cannot be empty");
+                  return
+              }
+              else if (selectBoxsRef.current[select_def.floorNum_select.name] && (selectBoxsRef.current[select_def.floorNum_select.name].value !== patient[select_def.floorNum_select.name])) {
+                  updatedPatientData[select_def.floorNum_select.name] = selectBoxsRef.current[select_def.floorNum_select.name].value;
+                  if (!actions.includes("Modify Other Patient")) actions.push("Modify Other Patient");
+              }
+
+              // room number (ONLY if assigned)
+              if ( (selectBoxsRef.current[select_def.RoomNum_select.name] && !selectBoxsRef.current[select_def.RoomNum_select.name].value) ){
+                  userNotification("error", "Input fields cannot be empty");
+                  return
+              }
+              else if (selectBoxsRef.current[select_def.RoomNum_select.name] && (selectBoxsRef.current[select_def.RoomNum_select.name].value !== patient[select_def.RoomNum_select.name])) {
+                  updatedPatientData[select_def.RoomNum_select.name] = selectBoxsRef.current[select_def.RoomNum_select.name].value;
+                  if (!actions.includes("Modify Other Patient")) actions.push("Modify Other Patient");
+              }
+          }
 
       
         // Join actions array to form the action string
@@ -372,7 +406,7 @@ async function confirmDeleteAccount() {
           user_id={patient.user_id}
           modifierObj={modifierObj}
           />
-
+          <Patientmedstable token={user_data.token} user_id={patient.user_id}/>
           {/* --- Actions --- */}
           <div className={"user-details"}>
             <ul className={styles["activity-list"]}>
