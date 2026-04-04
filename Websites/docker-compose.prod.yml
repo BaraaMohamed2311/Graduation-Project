@@ -21,6 +21,7 @@ services:
     networks:
       - ems-net
       - hospital-net
+      - storage-net
 
   # ems services:
   ################## 

@@ -16,6 +16,7 @@ services:
     networks:
       - ems-net
       - hospital-net
+      - storage-net
 
 
 # server does envirmonet checking at server.js code
