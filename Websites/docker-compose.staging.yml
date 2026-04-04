@@ -18,6 +18,8 @@ services:
       - ems-net
       - hospital-net
 
+  # ems services:
+  ################## 
   ems_server:
     image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION:-latest}
     deploy:
@@ -34,6 +36,7 @@ services:
     secrets:
       - prod_ems_server_config
 
+  
   ems_client:
     image: baraamohamed/gradproj:ems-client-${EMS_CLIENT_VERSION:-latest}
     deploy:
@@ -45,6 +48,8 @@ services:
     networks:
       - ems-net
 
+  # hospital services:
+  ################## 
   hospital_server:
     image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION:-latest}
     deploy:
@@ -73,6 +78,8 @@ services:
     networks:
       - hospital-net
   
+  # storage services:
+  ################## 
   storage_server:
     image: baraamohamed/gradproj:storage-server-${STORAGE_SERVER_VERSION:-latest}
     environment:
@@ -103,7 +110,8 @@ services:
       - storage-net
 
 
-
+  # db services:
+  ################## 
   mysql_db:
     image: baraamohamed/gradproj:db-1.0.0
     secrets:
