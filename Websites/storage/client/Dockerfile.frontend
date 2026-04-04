@@ -1,0 +1,74 @@
+# Development Stage
+
+FROM node:20-alpine AS development
+
+WORKDIR /app
+
+
+
+ENV NODE_ENV=development
+
+# Install dependencies (best caching point)
+COPY package.json package-lock.json ./
+
+RUN npm i
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+
+COPY . .
+
+
+EXPOSE 3000
+
+
+CMD [ "npm" , "run" , "dev" ]
+
+# Build Stage
+
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm ci
+
+COPY . .
+
+# Set NODE_ENV=production before build
+ENV NODE_ENV=production
+
+
+
+RUN npm run build
+
+# Production Stage
+FROM node:20-alpine AS production
+
+
+# Set environment to production
+ENV NODE_ENV=production
+
+# Set working directory
+WORKDIR /app
+
+# Copy only required files for running the app
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+# Drop privileges
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# Expose port (default for Next.js)
+EXPOSE 3000
+
+# Start the Next.js production server
+CMD ["npm", "start"]
+
+# So when NODE_END is local it uses production image
+FROM production AS local
