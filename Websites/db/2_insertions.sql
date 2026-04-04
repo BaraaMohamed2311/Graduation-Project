@@ -270,7 +270,7 @@ INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_r
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (11,0,0,0,0,'DevOps Engineer','Automation');
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (12,0,0,0,0,'Doctor','Neurology (Brain)');
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (13,0,0,0,0,'Doctor','Neurology (Brain)');
-INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (14,0,0,0,0,'Developer','Front-End');
+INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (14,0,0,0,0,'Manager','Storage');
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (16,0,0,0,0,'Engineer','Front-End');
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (17,0,0,0,0,'Cloud Engineer','Cloud');
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (18,0,0,0,0,'CEO','Management');
