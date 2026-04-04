@@ -96,7 +96,7 @@ services:
       
 
   mysql_db:
-    image: baraamohamed/gradproj:db-1.0.0
+    image: baraamohamed/gradproj:db-1.0.1
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}

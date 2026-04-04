@@ -113,7 +113,7 @@ services:
   # db services:
   ################## 
   mysql_db:
-    image: baraamohamed/gradproj:db-1.0.0
+    image: baraamohamed/gradproj:db-1.0.1
     secrets:
       - MYSQL_ROOT_PASSWORD
       - MYSQL_PASSWORD
