@@ -1,6 +1,6 @@
 {
-  "name": "hospital",
-  "version": "1.0.1",
+  "name": "storage",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

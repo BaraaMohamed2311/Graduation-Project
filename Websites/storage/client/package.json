@@ -1,20 +1,28 @@
 {
-  "name": "client",
-  "version": "0.1.0",
+  "name": "hospital",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint"
   },
   "dependencies": {
-    "next": "16.2.2",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "@canvasjs/charts": "^3.10.7",
+    "@canvasjs/react-charts": "^1.0.2",
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
+    "@mui/joy": "^5.0.0-beta.48",
+    "mui": "^0.0.1",
+    "next": "14.2.5",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-toastify": "^10.0.5",
+    "recharts": "^3.2.1"
   },
   "devDependencies": {
-    "eslint": "^9",
-    "eslint-config-next": "16.2.2"
+    "eslint": "^8",
+    "eslint-config-next": "14.2.5"
   }
 }
