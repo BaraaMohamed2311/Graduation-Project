@@ -5,9 +5,6 @@ FROM node:20-alpine AS development
 WORKDIR /app
 
 
-
-ENV NODE_ENV=development
-
 # Install dependencies (best caching point)
 COPY package.json package-lock.json ./
 
@@ -38,7 +35,8 @@ RUN npm ci
 COPY . .
 
 # Set NODE_ENV=production before build
-ENV NODE_ENV=production
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+
 
 
 
@@ -49,7 +47,8 @@ FROM node:20-alpine AS production
 
 
 # Set environment to production
-ENV NODE_ENV=production
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+
 
 # Set working directory
 WORKDIR /app

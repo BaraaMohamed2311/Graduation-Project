@@ -4,7 +4,6 @@ FROM node:20-alpine AS development
 
 WORKDIR /app
 
-ENV NODE_ENV=development
 
 # Install dependencies (best caching point)
 COPY package.json package-lock.json ./

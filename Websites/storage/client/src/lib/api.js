@@ -1,4 +1,4 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
 
 function getToken() {
   if (typeof window === "undefined") return null;
@@ -22,7 +22,7 @@ function authHeaders(extra = {}) {
 
 // ── Auth ──────────────────────────────────────────────
 export async function loginUser({ user_email, password }) {
-  const res = await fetch(`${BASE}/user/login`, {
+  const res = await fetch(`${process.env.APIKEY}/user/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ user_email, password }),
@@ -35,7 +35,7 @@ export async function loginUser({ user_email, password }) {
 // ── Medicines ─────────────────────────────────────────
 export async function getMeds({ limit = 10, offset = 0, search = "" } = {}) {
   const params = new URLSearchParams({ limit, offset, search });
-  const res = await fetch(`${BASE}/meds?${params}`, {
+  const res = await fetch(`${process.env.APIKEY}/meds?${params}`, {
     headers: authHeaders(),
   });
   if (!res.ok) throw new Error("Failed to fetch medicines");
@@ -43,7 +43,7 @@ export async function getMeds({ limit = 10, offset = 0, search = "" } = {}) {
 }
 
 export async function addMed(data) {
-  const res = await fetch(`${BASE}/meds`, {
+  const res = await fetch(`${process.env.APIKEY}/meds`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(data),
@@ -54,7 +54,7 @@ export async function addMed(data) {
 }
 
 export async function updateMed(med_id, data) {
-  const res = await fetch(`${BASE}/meds/${med_id}`, {
+  const res = await fetch(`${process.env.APIKEY}/meds/${med_id}`, {
     method: "PUT",
     headers: authHeaders(),
     body: JSON.stringify(data),
