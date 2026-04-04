@@ -98,6 +98,8 @@ services:
     networks:
       - storage-net
       - db-net
+    secrets:
+      - prod_storage_server_config
 
 
   storage_client:

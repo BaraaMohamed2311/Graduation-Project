@@ -109,7 +109,8 @@ services:
         mode: ingress
     environment:
       NODE_ENV: ${NODE_ENV}
-
+    secrets:
+      - prod_storage_server_config
 
     networks:
       - storage-net
