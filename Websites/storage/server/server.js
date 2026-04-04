@@ -1,6 +1,6 @@
 // Load environment variables
 const env = process.env.NODE_ENV;
-
+ 
 if (env === 'local') {
   require('dotenv').config({ path: './.env.local' });
   console.log("Running in local environment");
