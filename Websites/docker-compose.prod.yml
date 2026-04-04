@@ -14,6 +14,10 @@ services:
         published: 3251
         protocol: tcp
         mode: ingress
+      - target: 3052
+        published: 3252
+        protocol: tcp
+        mode: ingress
     networks:
       - ems-net
       - hospital-net
