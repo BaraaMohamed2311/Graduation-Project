@@ -5,24 +5,30 @@ const IsLoginContext = createContext();
 
 const useIsLoginContext = () => useContext(IsLoginContext);
 
-function IsLoginProvider({ children }) { 
-    // to fix reseting to false when refresh we stor value in local storage
-    const initial = typeof window !== 'undefined' && localStorage.getItem("isLogin") ?
-                                                JSON.parse(localStorage.getItem("isLogin")) : false ;
-    const [isLogin, setIsLogin] = useState(initial);
+function IsLoginProvider({ children }) {
+  // null = not yet read from localStorage (hydrating)
+  // false = read and not logged in
+  // true = read and logged in
+  const [isLogin, setIsLogin] = useState(null);
 
+  // Read from localStorage only after hydration (client-side only)
+  useEffect(() => {
+    const stored = localStorage.getItem("isLogin");
+    setIsLogin(stored ? JSON.parse(stored) : false);
+  }, []);
 
-   useEffect(()=>{
+  // Persist to localStorage whenever it changes (skip null state)
+  useEffect(() => {
+    if (isLogin !== null) {
+      localStorage.setItem("isLogin", JSON.stringify(isLogin));
+    }
+  }, [isLogin]);
 
-        localStorage.setItem("isLogin",JSON.stringify(isLogin));
-        
-    },[isLogin])
-
-    return (
-        <IsLoginContext.Provider value={{ isLogin, setIsLogin }}>
-            {children}
-        </IsLoginContext.Provider>
-    );
+  return (
+    <IsLoginContext.Provider value={{ isLogin, setIsLogin }}>
+      {children}
+    </IsLoginContext.Provider>
+  );
 }
 
 export { useIsLoginContext, IsLoginProvider };
