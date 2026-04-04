@@ -7,7 +7,7 @@ if (env === 'local') {
 } 
 else if (env === 'production') {
   require('dotenv').config({
-    path: '/run/secrets/prod_ems_server_config'
+    path: '/run/secrets/prod_storage_server_config'
   });
   console.log("Running in production environment");
 } 
