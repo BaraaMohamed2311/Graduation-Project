@@ -30,6 +30,9 @@ services:
     networks:
       - monitoring
 
+# app services should be on the same network to allow Prometheus to scrape cAdvisor metrics
+# we will manually connect the app services to the monitoring network in their respective docker-compose files
 networks:
-  monitoring:
+  monitoring: 
+    name: monitoring
     driver: overlay
