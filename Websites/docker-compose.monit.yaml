@@ -27,6 +27,9 @@ services:
       placement:
         constraints:
           - node.role == manager
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml   # Path inside container
     networks:
       - monitoring
 
