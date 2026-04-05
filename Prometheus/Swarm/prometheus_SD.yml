@@ -11,6 +11,12 @@ scrape_configs:
       - source_labels: [__meta_dockerswarm_service_name]
         regex: .*cadvisor.*
         action: keep
+
+      # Override the port — cAdvisor listens on 8080
+      - source_labels: [__address__]
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '$1:8080'
+        target_label: __address__
       # Nice label to identify the node
       - source_labels: [__meta_dockerswarm_node_hostname]
         target_label: instance
