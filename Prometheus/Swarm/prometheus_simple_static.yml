@@ -1,0 +1,19 @@
+# How it works: Prometheus scrapes a single endpoint (cadvisor:8080) using Docker DNS.
+# Why use it: Works immediately in simple Docker Compose setups with no discovery needed.
+# Limitation: Only scrapes one node (service VIP) and misses per-node metrics.
+# Uses Docker DNS → cadvisor
+
+
+scrape_configs:
+- job_name: cadvisor
+  metrics_path: /metrics
+  scheme: http
+  static_configs:
+  - targets:
+    - cadvisor:8080
+  relabel_configs:
+  - separator: ;
+    regex: (.*)
+    target_label: instance
+    replacement: cadvisor
+    action: replace

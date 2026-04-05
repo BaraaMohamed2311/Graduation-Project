@@ -1,0 +1,25 @@
+# How it works: Prometheus asks Docker for all tasks in the Swarm, filters only the cAdvisor containers, and scrapes each one individually.
+# Why use it: You get metrics from every node in the cluster, not just one.
+# Requirement: Prometheus must be attached to the same overlay network as the tasks, otherwise it can see them in the socket but can’t reach their IPs
+scrape_configs:
+  - job_name: swarm-cadvisor
+    dockerswarm_sd_configs:
+      - host: unix:///var/run/docker.sock
+        role: tasks
+    relabel_configs:
+      # Only keep cAdvisor tasks
+      - source_labels: [__meta_dockerswarm_service_name]
+        regex: .*cadvisor.*
+        action: keep
+      # Only scrape running tasks (not shutdown/failed replicas)
+      - source_labels: [__meta_dockerswarm_task_state]
+        regex: running
+        action: keep
+      # Override the port — cAdvisor listens on 8080
+      - source_labels: [__address__]
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '$1:8080'
+        target_label: __address__
+      # Nice label to identify the node
+      - source_labels: [__meta_dockerswarm_node_hostname]
+        target_label: instance
