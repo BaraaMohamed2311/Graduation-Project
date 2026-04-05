@@ -1,0 +1,39 @@
+scrape_configs:
+  - job_name: swarm-cadvisor
+    dockerswarm_sd_configs:
+      - host: unix:///var/run/docker.sock ## This is the default path for the Docker socket
+        role: tasks # Prometheus discovers individual tasks/replicas. This ensures per-replica metrics are scraped.
+    relabel_configs:
+      - source_labels: [__meta_dockerswarm_service_name]
+        regex: .*cadvisor.*
+        action: keep
+
+  - job_name: swarm-staging
+    dockerswarm_sd_configs:
+      - host: unix:///var/run/docker.sock
+        role: tasks
+    relabel_configs:
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_scrape]
+        regex: true
+        action: keep
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_env]
+        regex: staging
+        action: keep
+      - source_labels: [__address__, __meta_dockerswarm_service_label_prometheus_port]
+        target_label: __address__
+        replacement: $1:$2 # This constructs the target address by combining the task's IP and the port specified in the label
+
+  - job_name: swarm-production
+    dockerswarm_sd_configs:
+      - host: unix:///var/run/docker.sock
+        role: tasks
+    relabel_configs:
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_scrape]
+        regex: true
+        action: keep
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_env]
+        regex: production
+        action: keep
+      - source_labels: [__address__, __meta_dockerswarm_service_label_prometheus_port]
+        target_label: __address__
+        replacement: $1:$2 # This constructs the target address by combining the task's IP and the port specified in the label
