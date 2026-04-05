@@ -12,7 +12,7 @@ scrape_configs:
         regex: .*cadvisor.*
         action: keep
 
-      # Override the port — cAdvisor listens on 8080
+      # Force the scrape port to 8080 (cAdvisor's actual port)
       - source_labels: [__address__]
         regex: '([^:]+)(?::\d+)?'
         replacement: '$1:8080'

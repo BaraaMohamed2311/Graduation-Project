@@ -21,6 +21,7 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
+    user: root # Prometheus needs root to read the Docker socket
     ports:
     - target: 9090
       published: 9090
