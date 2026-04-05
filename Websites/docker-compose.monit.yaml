@@ -8,9 +8,14 @@ services:
           memory: 256M
     volumes:
       - /:/rootfs:ro
-      - /var/run:/var/run:ro
+      - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - target: 8080
+        published: 8088
+        protocol: tcp
+        mode: ingress
     networks:
       - monitoring
 
@@ -37,8 +42,6 @@ services:
 # we will manually connect the app services to the monitoring network in their respective docker-compose files
 networks:
   monitoring: 
-    name: monitoring
-    external: true
     driver: overlay
 
 configs:

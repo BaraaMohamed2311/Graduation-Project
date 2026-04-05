@@ -29,10 +29,7 @@ services:
     image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION:-latest}
     deploy:
       replicas: 3
-      labels:
-        prometheus.scrape: "true"
-        prometheus.port: "9090"
-        prometheus.env: "production"
+
     environment:
       NODE_ENV: production
     ports:
@@ -42,7 +39,7 @@ services:
     networks:
       - ems-net
       - db-net
-      - monitoring
+
     secrets:
       - prod_ems_server_config
 
@@ -50,17 +47,14 @@ services:
     image: baraamohamed/gradproj:ems-client-${EMS_CLIENT_VERSION:-latest}
     deploy:
       replicas: 3
-      labels:
-        prometheus.scrape: "true"
-        prometheus.port: "9090"
-        prometheus.env: "production"
+
     ports:
       - target: 3000
         protocol: tcp
         mode: ingress
     networks:
       - ems-net
-      - monitoring
+
 
   # hospital services:
   ################## 
@@ -68,10 +62,7 @@ services:
     image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION:-latest}
     deploy:
       replicas: 3
-      labels:
-        prometheus.scrape: "true"
-        prometheus.port: "9090"
-        prometheus.env: "production"
+
     environment:
       NODE_ENV: production
     ports:
@@ -81,7 +72,7 @@ services:
     networks:
       - hospital-net
       - db-net
-      - monitoring
+
     secrets:
       - prod_hospital_server_config
 
@@ -90,17 +81,14 @@ services:
     image: baraamohamed/gradproj:hospital-client-${HOSPITAL_CLIENT_VERSION:-latest}
     deploy:
       replicas: 3
-      labels:
-        prometheus.scrape: "true"
-        prometheus.port: "9090"
-        prometheus.env: "production"
+
     ports:
       - target: 3000
         protocol: tcp
         mode: ingress
     networks:
       - hospital-net
-      - monitoring
+
 
 
  # storage services:
@@ -110,10 +98,7 @@ services:
     image: baraamohamed/gradproj:storage-client-${STORAGE_CLIENT_VERSION:-latest}
     deploy:
       replicas: 3
-      labels:
-        prometheus.scrape: "true"
-        prometheus.port: "9090"
-        prometheus.env: "production"
+
     ports:
       - target: 3000
         protocol: tcp
@@ -122,17 +107,14 @@ services:
       NODE_ENV: ${NODE_ENV}
     networks:
       - storage-net
-      - monitoring
+
 
 
   storage_server:
     image: baraamohamed/gradproj:storage-server-${STORAGE_SERVER_VERSION:-latest}
     deploy:
       replicas: 3
-      labels:
-        prometheus.scrape: "true"
-        prometheus.port: "9090"
-        prometheus.env: "production"
+
     ports:
       - target: 5000
         protocol: tcp
@@ -145,7 +127,7 @@ services:
     networks:
       - storage-net
       - db-net
-      - monitoring
+
 
 
 
@@ -158,10 +140,7 @@ services:
     image: baraamohamed/gradproj:db-1.0.1
     deploy:
       replicas: 1
-      labels:
-        prometheus.scrape: "true"
-        prometheus.port: "9090"
-        prometheus.env: "production"
+
     secrets:
       - MYSQL_ROOT_PASSWORD
       - MYSQL_PASSWORD
@@ -172,7 +151,7 @@ services:
       MYSQL_USER: appuser 
     networks:
       - db-net
-      - monitoring
+
 
 networks:
   ems-net:
@@ -183,10 +162,7 @@ networks:
     driver: overlay
   storage-net:
     driver: overlay
-  monitoring:
-    external: true
-    name: monitoring
-    driver: overlay
+
 
 secrets:
   MYSQL_ROOT_PASSWORD:
