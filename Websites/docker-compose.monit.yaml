@@ -40,3 +40,7 @@ networks:
     name: monitoring
     external: true
     driver: overlay
+
+configs:
+  prometheus_config:
+    external: true
