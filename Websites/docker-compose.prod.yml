@@ -184,6 +184,8 @@ networks:
   storage-net:
     driver: overlay
   monitoring:
+    external: true
+    name: monitoring
     driver: overlay
 
 secrets:
