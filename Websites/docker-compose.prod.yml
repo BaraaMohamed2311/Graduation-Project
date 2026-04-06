@@ -150,7 +150,7 @@ services:
       MYSQL_PASSWORD_FILE: /run/secrets/MYSQL_PASSWORD 
       MYSQL_USER: appuser 
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data_prod:/var/lib/mysql
     configs:
     - source: mysql_init_schema
       target: /docker-entrypoint-initdb.d/1_init.sql
@@ -160,8 +160,8 @@ services:
       - db-net
 
 volumes:
-  db_data:
-    name: db_data
+  db_data_prod:
+    name: db_data_prod
 
 configs:
   mysql_init_schema:
