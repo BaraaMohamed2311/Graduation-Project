@@ -147,6 +147,7 @@ services:
 
 volumes:
   db_data:
+    name: db_data
 
 networks:
   ems-net:
