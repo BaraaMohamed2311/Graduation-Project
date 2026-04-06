@@ -141,8 +141,10 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     configs:
-    - source: mysql_init_sql
-      target: /docker-entrypoint-initdb.d/init.sql
+    - source: mysql_init_schema
+      target: /docker-entrypoint-initdb.d/1_init.sql
+    - source: mysql_init_seed
+      target: /docker-entrypoint-initdb.d/2_insertions.sql
     networks:
       - db-net
       
@@ -152,7 +154,9 @@ volumes:
     name: db_data 
 
 configs:
-  mysql_init_sql:
+  mysql_init_schema:
+    external: true
+  mysql_init_seed:
     external: true
 
 networks:
