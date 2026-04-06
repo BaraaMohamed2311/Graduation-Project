@@ -20,7 +20,10 @@ class CompanyUserFactory {
         "intern",
         "nurse",
         "scientist",
-        "surgeon"
+        "surgeon",
+        "manager",
+        "salesperson",
+        "marketer",
     ]);
 
     // ========================================
