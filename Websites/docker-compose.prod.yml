@@ -137,7 +137,7 @@ services:
   ################## 
 
   mysql_db:
-    image: baraamohamed/gradproj:db-1.0.1
+    image: mysql:8
     deploy:
       replicas: 1
 
@@ -149,9 +149,14 @@ services:
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/MYSQL_ROOT_PASSWORD  
       MYSQL_PASSWORD_FILE: /run/secrets/MYSQL_PASSWORD 
       MYSQL_USER: appuser 
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
     networks:
       - db-net
 
+volumes:
+  db_data:
 
 networks:
   ems-net:
