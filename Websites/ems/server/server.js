@@ -8,7 +8,7 @@ if (dev === 'local') {
   const result = require('dotenv').config({
     path: '/run/secrets/prod_ems_server_config'
   });   // Load production environment variables
-  console.log("Running in production environment" , result.parsed);
+  console.log("Running in production environment" );
 }
 else if(dev === 'production-kube') {
   require('dotenv').config({ path: './.env.prod.kube' });   // Load production environment variables
