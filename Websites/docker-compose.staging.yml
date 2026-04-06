@@ -140,7 +140,9 @@ services:
       MYSQL_USER: appuser 
     volumes:
       - db_data:/var/lib/mysql
-      - ./db/init:/docker-entrypoint-initdb.d
+    configs:
+    - source: mysql_init_sql
+      target: /docker-entrypoint-initdb.d/init.sql
     networks:
       - db-net
       
@@ -148,6 +150,10 @@ services:
 volumes:
   db_data:
     name: db_data 
+
+configs:
+  mysql_init_sql:
+    external: true
 
 networks:
   ems-net:
