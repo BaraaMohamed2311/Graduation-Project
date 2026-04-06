@@ -43,7 +43,7 @@ const generalUserMethods = require("../Utils/methods/generalUserMethods.js");
                     if(!isCompanyUser && userIsEmployee){
                         return res.status(404).json({
                             success:false,
-                            message : "You Must Register As Patient First"
+                            message : "Your title doesn't have access to this system"
                         });
                     }
             
