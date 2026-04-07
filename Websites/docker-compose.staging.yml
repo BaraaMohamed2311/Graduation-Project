@@ -154,12 +154,14 @@ services:
     configs:
       - source: mysql_init_test_seed
         target: /seed.sql
+    secrets:
+    - MYSQL_ROOT_PASSWORD
     entrypoint: >
       sh -c "
-      until mysql -h mysql_db -uroot -proot -e 'SELECT 1'; do
-        echo 'waiting for db...'; sleep 2;
+      until mysql -h mysql_db -uroot -p$(cat /run/secrets/MYSQL_ROOT_PASSWORD) -e 'SELECT 1'; do
+      echo 'waiting for db...'; sleep 2;
       done;
-      mysql -h mysql_db -uroot -proot < /seed.sql;
+      mysql -h mysql_db -uroot -p$(cat /run/secrets/MYSQL_ROOT_PASSWORD) < /seed.sql;
       "
     networks:
       - db-net
