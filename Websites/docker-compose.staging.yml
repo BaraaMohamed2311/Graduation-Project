@@ -153,7 +153,7 @@ services:
       - mysql_db
     volumes:
       - mysql_init_test_seed:/seed.sql
-      # Keeps trying to connect to MySQL using (until/do loop) until it's ready, then runs the seed script
+      # Keeps trying to connect to MySQL using (until/do loop) until it's ready, then runs the seed script 
     entrypoint: >
       sh -c "
       until mysql -h mysql_db -uroot -proot -e 'SELECT 1'; do
