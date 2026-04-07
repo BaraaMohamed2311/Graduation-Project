@@ -147,15 +147,19 @@ services:
       target: /docker-entrypoint-initdb.d/2_insertions.sql
     networks:
       - db-net
+      
   db-seeder:
     image: mysql:8
     depends_on:
       - mysql_db
+    deploy:
+      restart_policy:
+        condition: none        # <-- run once and stop
     configs:
       - source: mysql_init_test_seed
         target: /seed.sql
     secrets:
-    - MYSQL_ROOT_PASSWORD
+      - MYSQL_ROOT_PASSWORD
     entrypoint: >
       sh -c "
       until mysql -h mysql_db -uroot -p$$(cat /run/secrets/MYSQL_ROOT_PASSWORD) -D ems_db -e 'SELECT 1'; do
