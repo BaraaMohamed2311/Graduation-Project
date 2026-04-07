@@ -24,13 +24,13 @@ const USERS = [
 ];
 
 function login(baseUrl, user) {
-  const res = http.post(`${baseUrl}/api/auth/login`, JSON.stringify({
-    email: user.email,
+  const res = http.post(`${baseUrl}/api/user/login`, JSON.stringify({
+    user_email: user.email,
     password: user.password,
   }), {
     headers: { 'Content-Type': 'application/json' },
   });
-
+  console.log(`Login response from ${baseUrl} for ${user.email} | ${res.status}: ${res.body}`);
   check(res, {
     'login success': (r) => r.status === 200,
     'token received': (r) => r.json('token') !== undefined,
@@ -39,23 +39,30 @@ function login(baseUrl, user) {
   return res.json('token');
 }
 
+
 export default function () {
   BASE_URLS.forEach((baseUrl) => {
     USERS.forEach((user) => {
       const token = login(baseUrl, user);
 
-      const res = http.get(`${baseUrl}/api/list/employees`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // Example pagination: page=1, size=10
+      for (let page = 1; page <= 3; page++) {
+        const size = 10; // adjust as needed
+        const url = `${baseUrl}/api/list/employees?pagination=${page}&size=${size}`;
 
-      check(res, {
-        'employees fetched': (r) => r.status === 200,
-        'response not empty': (r) => r.body.length > 0,
-      });
+        const res = http.get(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log(`Employees list from ${baseUrl}, user ${user.email}, page ${page}: ${res.body}`);
+
+        check(res, {
+          'employees fetched': (r) => r.status === 200,
+          'response not empty': (r) => r.json().length > 0,
+        });
+      }
+
+      sleep(1);
     });
   });
-
-  sleep(1);
 }

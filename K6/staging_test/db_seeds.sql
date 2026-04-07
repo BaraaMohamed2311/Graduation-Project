@@ -36,7 +36,7 @@ BEGIN
         SET @u1 = LAST_INSERT_ID();
 
         INSERT INTO employees (emp_id, emp_salary, emp_title)
-        VALUES (@u1, 10000, 'Manager')
+        VALUES (@u1, 10000, 'Doctor')
         ON DUPLICATE KEY UPDATE emp_id=emp_id;
 
         INSERT INTO roles (emp_id, role_name)
@@ -68,7 +68,7 @@ BEGIN
 
         SET @u2 = LAST_INSERT_ID();
 
-        INSERT INTO employees VALUES (@u2, 10000, 0,0,0, 'Manager', NULL)
+        INSERT INTO employees VALUES (@u2, 10000, 0,0,0, 'Surgeon', NULL)
         ON DUPLICATE KEY UPDATE emp_id=emp_id;
 
         INSERT INTO roles VALUES (@u2, 'SuperAdmin')
@@ -78,7 +78,7 @@ BEGIN
         SELECT perm_id, @u2 FROM perms
         ON DUPLICATE KEY UPDATE emp_id=emp_id;
 
-        INSERT INTO employees_hospital VALUES (@u2, @u2, 'Doctor')
+        INSERT INTO employees_hospital VALUES (@u2, @u2, 'Surgeon')
         ON DUPLICATE KEY UPDATE emp_id=emp_id;
 
         INSERT INTO hospital_roles VALUES (@u2, 'SuperAdmin')
@@ -97,7 +97,7 @@ BEGIN
 
         SET @u3 = LAST_INSERT_ID();
 
-        INSERT INTO employees VALUES (@u3, 5000, 0,0,0, 'Manager', NULL)
+        INSERT INTO employees VALUES (@u3, 5000, 0,0,0, 'Nurse', NULL)
         ON DUPLICATE KEY UPDATE emp_id=emp_id;
 
         INSERT INTO roles VALUES (@u3, 'Admin')
