@@ -36,9 +36,9 @@ export function setup() {
         'token received': (r) => r.json('body')?.token !== undefined,
       });
 
-      const responseBody = res.json(); // full JSON
-      const token = responseBody.body?.token; // correct path
-      const user_id = responseBody.body?.user_id; // correct path
+        const responseBody = res.json();
+        const { token, user_id } = responseBody?.body ?? {};
+        console.log("RAW:", res.body); // always log the raw string first
 
       if (!TOKENS[baseUrl]) TOKENS[baseUrl] = {};
       TOKENS[baseUrl][user.email] = { token, user_email: user.email, user_id };
@@ -55,15 +55,19 @@ export default function (TOKENS) {
   BASE_URLS.forEach((baseUrl) => {
     USERS.forEach((user) => {
       const token = TOKENS[baseUrl][user.email].token;
-
+        console.log(`Using token for ${user.email} at ${baseUrl}: ${token}`);
       for (let page = 1; page <= 3; page++) {
+        if(!token) {
+          console.error(`No token for ${user.email} at ${baseUrl}, skipping request.`);
+          continue; // skip this iteration if token is missing
+        }
         const size = 10;
         const url = `${baseUrl}/api/list/employees?pagination=${page}&size=${size}&user_id=${TOKENS[baseUrl][user.email].user_id}`;
 
         const res = http.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(`Fetched ${url} with status ${res.body}, token: ${token}`);
+
         check(res, {
           'employees fetched': (r) => r.status === 200,
           'response not empty': (r) => r.json('body').length > 0,

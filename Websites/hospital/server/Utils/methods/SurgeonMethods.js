@@ -273,7 +273,7 @@ class SurgeonMethods {
     const result = await executeMySqlQuery(query);
     return result;
     }
-    static async getSurgeonSpecificData(user_id){
+    static async getSurgeonSpecificData(emp_id){
         const query = `
         SELECT 
             -- from users
