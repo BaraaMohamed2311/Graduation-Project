@@ -161,7 +161,8 @@ services:
       done;
       mysql -h mysql_db -uroot -proot < /seed.sql;
       "
-      
+    networks:
+      - db-net
 
 volumes:
   db_data_staging:
