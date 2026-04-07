@@ -7,58 +7,66 @@ export const options = {
 };
 
 const BASE_URLS = [
-  'http://84.8.107.143:3150',
-  'http://84.8.107.143:3151',
+
+ 'http://84.8.107.143:3151',
 ];
 
-// SuperAdmins
+
+
 const USERS = [
-  {
-    email: 'super1@test.com',
-    password: '123456', // match your backend expectation
-  },
-  {
-    email: 'super2@test.com',
-    password: '123456',
-  },
+  { email: 'super1@test.com', password: '123456' },
+  { email: 'super2@test.com', password: '123456' },
 ];
 
-function login(baseUrl, user) {
-  const res = http.post(`${baseUrl}/api/user/login`, JSON.stringify({
-    user_email: user.email,
-    password: user.password,
-  }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  console.log(`Login response from ${baseUrl} for ${user.email} | ${res.status}: ${res.body}`);
-  check(res, {
-    'login success': (r) => r.status === 200,
-    'token received': (r) => r.json('token') !== undefined,
-  });
+// setup function returns tokens for all users per base URL
+export function setup() {
+  const TOKENS = {};
 
-  return res.json('token');
-}
-
-
-export default function () {
   BASE_URLS.forEach((baseUrl) => {
     USERS.forEach((user) => {
-      const token = login(baseUrl, user);
+      const res = http.post(`${baseUrl}/api/user/login`, JSON.stringify({
+        user_email: user.email,
+        password: user.password,
+      }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
 
-      // Example pagination: page=1, size=10
+      check(res, {
+        'login success': (r) => r.status === 200,
+        'token received': (r) => r.json('body')?.token !== undefined,
+      });
+
+      const responseBody = res.json(); // full JSON
+      const token = responseBody.body?.token; // correct path
+      const user_id = responseBody.body?.user_id; // correct path
+
+      if (!TOKENS[baseUrl]) TOKENS[baseUrl] = {};
+      TOKENS[baseUrl][user.email] = { token, user_email: user.email, user_id };
+
+      console.log(`Logged in ${user.email} to ${baseUrl}, token: ${token}, user_id: ${user_id}`);
+      console.log("ASSIGNED TOKENS:", JSON.stringify(TOKENS));
+    });
+  });
+
+  return TOKENS;
+}
+
+export default function (TOKENS) {
+  BASE_URLS.forEach((baseUrl) => {
+    USERS.forEach((user) => {
+      const token = TOKENS[baseUrl][user.email].token;
+
       for (let page = 1; page <= 3; page++) {
-        const size = 10; // adjust as needed
-        const url = `${baseUrl}/api/list/employees?pagination=${page}&size=${size}`;
+        const size = 10;
+        const url = `${baseUrl}/api/list/employees?pagination=${page}&size=${size}&user_id=${TOKENS[baseUrl][user.email].user_id}`;
 
         const res = http.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        console.log(`Employees list from ${baseUrl}, user ${user.email}, page ${page}: ${res.body}`);
-
+        console.log(`Fetched ${url} with status ${res.body}, token: ${token}`);
         check(res, {
           'employees fetched': (r) => r.status === 200,
-          'response not empty': (r) => r.json().length > 0,
+          'response not empty': (r) => r.json('body').length > 0,
         });
       }
 

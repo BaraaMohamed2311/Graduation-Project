@@ -25,14 +25,32 @@ function appUses(express ,app){
   /**********************Security***********************************/ 
 
 
-    app.set('trust proxy', true);
+    app.set('trust proxy', 1) // trust first proxy;
     // limits requests and status 429 if too many
         const limiter = rateLimit({
-            windowMs: 15 * 60 * 1000, // 15 minutes
-            limit: 1000, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
-            standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
-            legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
-            keyGenerator: (req) => req.ip, // real user IP now
+            windowMs: 15 * 60 * 1000,
+            limit: 1000,
+            standardHeaders: 'draft-7',
+            legacyHeaders: false,
+            keyGenerator: (req) => {
+                // Use authenticated user ID if available
+                const authHeader = req.headers['authorization'];
+                if (authHeader && authHeader.startsWith('Bearer ')) {
+                    try {
+                        const token = authHeader.split(' ')[1];
+                        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                        return `user:${decoded.user_id}`;
+                    } catch {
+                        // Invalid token — fall back to IP
+                    }
+                }
+                // Unauthenticated routes (login, register) — use IP
+                return `ip:${req.ip}`;
+            },
+            skip: (req) => {
+                // Don't rate limit health checks
+                return req.path === '/health';
+            }
         })
     app.use(limiter)
     // http poluution prevention
