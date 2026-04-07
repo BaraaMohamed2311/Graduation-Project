@@ -158,10 +158,10 @@ services:
     - MYSQL_ROOT_PASSWORD
     entrypoint: >
       sh -c "
-      until mysql -h mysql_db -uroot -p$$(cat /run/secrets/MYSQL_ROOT_PASSWORD) -e 'SELECT 1'; do
+      until mysql -h mysql_db -uroot -p$$(cat /run/secrets/MYSQL_ROOT_PASSWORD) -D ems_db -e 'SELECT 1'; do
       echo 'waiting for db...'; sleep 2;
       done;
-      mysql -h mysql_db -uroot -p$$(cat /run/secrets/MYSQL_ROOT_PASSWORD) < /seed.sql;
+      mysql -h mysql_db -uroot -p$$(cat /run/secrets/MYSQL_ROOT_PASSWORD) -D ems_db < /seed.sql;
       "
     networks:
       - db-net
