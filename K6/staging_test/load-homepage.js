@@ -16,8 +16,8 @@ export let options = {
 
 // ----- Main load function -----
 export default function () {
-    const ems_res = http.get('http://84.8.113.218:3050');
-    const hospital_res = http.get('http://84.8.113.218:3051');
+    const ems_res = http.get('http://84.8.107.143:3150');
+    const hospital_res = http.get('http://84.8.107.143:3151');
 
     check(ems_res, {
         'status is 200': (r) => r.status === 200,
