@@ -1,4 +1,4 @@
-# PORTS in staging are different from production to avoid conflict between them if they are on the same host staging_ports = production_ports + 100 
+# PORTS in staging are different from production to avoid conflict between them if they are on the same host staging_ports = production_ports + 100
 
 services:
 
@@ -147,7 +147,7 @@ services:
       target: /docker-entrypoint-initdb.d/2_insertions.sql
     networks:
       - db-net
-      
+
   db-seeder:
     image: mysql:8
     depends_on:
