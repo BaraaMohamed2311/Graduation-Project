@@ -121,7 +121,7 @@ pipeline {
                 ]) {
                     script {
                         if (isUnix()) {
-                            sh '''
+                            sh ''' 
                                 # String secrets
                                 docker secret inspect MYSQL_ROOT_PASSWORD > /dev/null 2>&1 \
                                     || echo "$MYSQL_ROOT_PASSWORD" | docker secret create MYSQL_ROOT_PASSWORD -
