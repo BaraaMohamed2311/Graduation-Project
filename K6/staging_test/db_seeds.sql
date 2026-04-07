@@ -7,10 +7,10 @@
 -- SUPER ADMIN 1
 -- ==========================================
 INSERT INTO users (user_email, user_name, user_password, user_type)
-VALUES ('super1@test.com', 'Super Admin 1', '$2b$12$9jdiU3koAn009OlfW8ZyIeBABsQpPbGxnqtEBrz0LRJw9NLlm63ae', 'employee')
-ON DUPLICATE KEY UPDATE user_id=LAST_INSERT_ID(user_id);
+SELECT 'super1@test.com', 'Super Admin 1', '$2b$12$9jdiU3koAn009OlfW8ZyIeBABsQpPbGxnqtEBrz0LRJw9NLlm63ae', 'employee'
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE user_email = 'super1@test.com');
 
-SET @u1 = LAST_INSERT_ID();
+SET @u1 = (SELECT user_id FROM users WHERE user_email = 'super1@test.com');
 
 INSERT INTO employees (emp_id, emp_salary, emp_title)
 VALUES (@u1, 10000, 'Manager')
@@ -41,10 +41,10 @@ ON DUPLICATE KEY UPDATE hosp_emp_id=hosp_emp_id;
 -- SUPER ADMIN 2
 -- ==========================================
 INSERT INTO users (user_email, user_name, user_password, user_type)
-VALUES ('super2@test.com', 'Super Admin 2', '$2b$12$9jdiU3koAn009OlfW8ZyIeBABsQpPbGxnqtEBrz0LRJw9NLlm63ae', 'employee')
-ON DUPLICATE KEY UPDATE user_id=LAST_INSERT_ID(user_id);
+SELECT 'super2@test.com', 'Super Admin 2', '$2b$12$9jdiU3koAn009OlfW8ZyIeBABsQpPbGxnqtEBrz0LRJw9NLlm63ae', 'employee'
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE user_email = 'super2@test.com');
 
-SET @u2 = LAST_INSERT_ID();
+SET @u2 = (SELECT user_id FROM users WHERE user_email = 'super2@test.com');
 
 INSERT INTO employees VALUES (@u2, 10000, 0,0,0, 'Manager', NULL)
 ON DUPLICATE KEY UPDATE emp_id=emp_id;
@@ -71,10 +71,10 @@ ON DUPLICATE KEY UPDATE hosp_emp_id=hosp_emp_id;
 -- ADMIN
 -- ==========================================
 INSERT INTO users (user_email, user_name, user_password, user_type)
-VALUES ('admin@test.com', 'Admin User', '$2b$12$9jdiU3koAn009OlfW8ZyIeBABsQpPbGxnqtEBrz0LRJw9NLlm63ae', 'employee')
-ON DUPLICATE KEY UPDATE user_id=LAST_INSERT_ID(user_id);
+SELECT 'admin@test.com', 'Admin User', '$2b$12$9jdiU3koAn009OlfW8ZyIeBABsQpPbGxnqtEBrz0LRJw9NLlm63ae', 'employee'
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE user_email = 'admin@test.com');
 
-SET @u3 = LAST_INSERT_ID();
+SET @u3 = (SELECT user_id FROM users WHERE user_email = 'admin@test.com');
 
 INSERT INTO employees VALUES (@u3, 5000, 0,0,0, 'Manager', NULL)
 ON DUPLICATE KEY UPDATE emp_id=emp_id;
@@ -101,10 +101,10 @@ ON DUPLICATE KEY UPDATE hosp_emp_id=hosp_emp_id;
 -- PATIENT
 -- ==========================================
 INSERT INTO users (user_email, user_name, user_password, user_type)
-VALUES ('patient@test.com', 'Normal Patient', '$2b$12$9jdiU3koAn009OlfW8ZyIeBABsQpPbGxnqtEBrz0LRJw9NLlm63ae', 'patient')
-ON DUPLICATE KEY UPDATE user_id=LAST_INSERT_ID(user_id);
+SELECT 'patient@test.com', 'Normal Patient', '$2b$12$9jdiU3koAn009OlfW8ZyIeBABsQpPbGxnqtEBrz0LRJw9NLlm63ae', 'patient'
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE user_email = 'patient@test.com');
 
-SET @u4 = LAST_INSERT_ID();
+SET @u4 = (SELECT user_id FROM users WHERE user_email = 'patient@test.com');
 
 INSERT INTO patients (user_id, patient_phone, patient_address, patient_gender)
 VALUES (@u4, '01000000000', 'Test Address', 'Male')
