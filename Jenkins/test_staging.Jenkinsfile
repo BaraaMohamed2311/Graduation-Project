@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Define any environment variables if needed
-        METRIC_PATH = "/home/jenkins/k6_metrics"
+        METRIC_PATH = "/var/jenkins_k6_metrics"
     }
 
     stages {
@@ -21,7 +21,10 @@ pipeline {
                         script {
                             def files = findFiles(glob: '*.js')
 
-                            sh "mkdir -p ${env.METRIC_PATH}/results"
+                            sh "
+                                sudo mkdir -p ${env.METRIC_PATH}/results \
+                                sudo chown -R jenkins:jenkins /var/jenkins_k6_metrics
+                            "
 
                             files.each { file ->
                                 def name = file.name.replace('.js','')
