@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Define any environment variables if needed
-        METRIC_PATH = "/var/jenkins_k6_metrics"
+        METRIC_PATH = "/home/jenkins/k6_metrics"
     }
 
     stages {
