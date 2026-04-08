@@ -10,7 +10,7 @@ export const options = {
 };
 
 const BASE_URLS = [
-  'http://84.8.107.143:3150',
+
   'http://84.8.107.143:3151',
 ];
 
