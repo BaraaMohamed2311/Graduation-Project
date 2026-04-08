@@ -11,9 +11,10 @@ pipeline {
         }
 
         stage('Run K6 Tests') {
-            // so pwd refers to that path and we can mount it to docker
-            dir("K6/staging_test/scripts") {
-                    steps {
+            
+                steps {
+                    // so pwd refers to that path and we can mount it to docker
+                    dir("K6/staging_test/scripts") {
                         script {
                             def files = findFiles(glob: '*.js')
 
