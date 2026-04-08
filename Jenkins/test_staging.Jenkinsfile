@@ -12,10 +12,12 @@ pipeline {
 
         stage('Run K6 Tests') {
             steps {
-                // Assuming K6 test files are in the repo under ./K6
-                def files = findFiles(glob: 'K6/staging_test/scripts/*.js')
-                files.each { file ->
-                    sh "echo ${file.path}"
+                script {
+                    // Assuming K6 test files are in the repo under ./K6
+                    def files = findFiles(glob: 'K6/staging_test/scripts/*.js')
+                    files.each { file ->
+                        sh "echo ${file.path}"
+                    }
                 }
             }
         }
