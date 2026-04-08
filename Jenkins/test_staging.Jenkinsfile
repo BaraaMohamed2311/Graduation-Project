@@ -21,10 +21,10 @@ pipeline {
                         script {
                             def files = findFiles(glob: '*.js')
 
-                            sh "
+                            sh """
                                 sudo mkdir -p ${env.METRIC_PATH}/results \
                                 sudo chown -R jenkins:jenkins /var/jenkins_k6_metrics
-                            "
+                            """
 
                             files.each { file ->
                                 def name = file.name.replace('.js','')
