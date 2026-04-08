@@ -28,6 +28,7 @@ pipeline {
                                 docker run --rm \
                                 -v \$(pwd):/scripts \
                                 -w /scripts \
+                                --user \$(id -u):\$(id -g) \
                                 grafana/k6 run ${file.path} \
                                     --summary-export=/scripts/results/${name}-summary.json \
                                 """
