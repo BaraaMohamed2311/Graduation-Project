@@ -31,7 +31,6 @@ pipeline {
                                 -w /scripts \
                                 grafana/k6 run ${file.path} \
                                     --summary-export=/scripts/results/${name}-summary.json \
-                                    --log-output=/scripts/results/${name}.log
                                 """
                             }
                         }
