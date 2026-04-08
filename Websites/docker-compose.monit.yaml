@@ -19,6 +19,24 @@ services:
     networks:
       - monitoring
 
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: ingress
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager  # Must be on manager — needs stable storage
+    networks:
+      - monitoring
+
   prometheus:
     image: prom/prometheus:latest
     user: root # Prometheus needs root to read the Docker socket
@@ -48,3 +66,6 @@ networks:
 configs:
   prometheus_config:
     external: true
+    
+volumes:
+  grafana-data:
