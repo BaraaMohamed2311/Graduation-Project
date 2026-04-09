@@ -169,7 +169,7 @@ pipeline {
         stage("Deploy Stack to Staging") {
             when {
                 // Full redeploy only when no targeted images provided, which means changes are in stack files only
-                expression { return !params.IMAGES_VERSIONS?.trim() }
+                expression { return params.IMAGES_VERSIONS?.isEmpty() }
             }
             steps {
                 dir('Websites') {
@@ -254,7 +254,7 @@ pipeline {
 
         stage("Deploy Stack to Production") {
             when {
-                expression { return !params.IMAGES_VERSIONS?.isEmpty() }
+                expression { return params.IMAGES_VERSIONS?.isEmpty() }
             }
             steps {
                 dir('Websites') {
