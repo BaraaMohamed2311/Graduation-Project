@@ -39,7 +39,7 @@ services:
 
 
 
-# client has to be provided with enviroment or by default it will build development env
+# client has to be provided with enviroment or by default it will build development env 
   ems_client:
     build: 
       context: ./ems/client
