@@ -29,6 +29,10 @@ services:
     image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION:-latest}
     deploy:
       replicas: 2
+      resources:           
+        limits:            
+          cpus: '0.50'
+          memory: 50M
     environment:
       NODE_ENV: production
     ports:

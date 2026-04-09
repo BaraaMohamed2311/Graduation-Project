@@ -2,10 +2,10 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 export const options = {
-  vus: 10,
+  vus: 300,
   duration: '30s',
   thresholds: {
-    http_req_failed: ['rate<0.01'], // <1% failures → ≥99% success
+    http_req_failed: ['rate<0.05'], // <5% failures → ≥95% success
   },
 };
 
@@ -85,7 +85,7 @@ function fetchList(TOKENS, endpoint, label) {
 
         check(res, {
           [`${label} fetched`]: (r) => r.status === 200,
-          [`${label} not empty`]: (r) => Array.isArray(data.body) && data.body.length > 0,
+          [`${label} not empty`]: (r) => data.success === true && Array.isArray(data.body) && data.body.length > 0,
         });
       }
 

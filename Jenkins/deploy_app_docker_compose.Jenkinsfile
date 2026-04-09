@@ -209,6 +209,26 @@ pipeline {
             }
         }
 
+        stage('Done with Stagging - Approve to Delete Staging') {
+            steps {
+                script {
+                    def userInput = input(
+                        id: 'approveTests',
+                        message: "Approve to delete staging?",
+                        parameters: [booleanParam(defaultValue: true, description: '', name: 'Yes')]
+                    )
+                    // || true If the previous command fails, run true to prevent pipeline from breaking, since we want to proceed even if stack is already removed or was never created
+                    if (userInput) {
+                        if (isUnix()) {
+                            sh "docker stack rm staging_stack || true"
+                        } else {
+                            bat 'docker stack rm staging_stack || true'
+                        }
+                    }
+                }
+            }
+        }
+
         stage("Approval to Deploy Production") {
             steps {
                 timeout(time: 24, unit: 'HOURS') {

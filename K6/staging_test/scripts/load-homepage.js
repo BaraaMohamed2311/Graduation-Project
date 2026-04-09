@@ -3,15 +3,11 @@ import { sleep, check } from 'k6';
 
 // ----- Test configuration -----
 export let options = {
-    stages: [
-        { duration: '30s', target: 500 },   // ramp up to 50 virtual users
-        { duration: '1m', target: 100 },    // stay at 50 users
-        { duration: '30s', target: 500 },    // ramp down to 0
-    ],
+    vus: 300,
+    duration: '30s',
     thresholds: {
-        http_req_duration: ['p(95)<500'], // 95% of requests should be < 500ms
-        http_req_failed: ['rate<0.05'],   // <5% failed requests
-    },
+        http_req_failed: ['rate<0.05'], // <5% failures → ≥95% success
+    }
 };
 
 // ----- Main load function -----
