@@ -74,6 +74,8 @@ pipeline {
         stage("Update Image Versions") {
             steps {
                 script {
+                    // At first IMAGES_VERSIONS is string so we use trim to check if it's empty or not
+                    // then we parse it to JSON map. If it's empty, we will fallback to inspecting current running services to get the versions
                     def imagesMap = params.IMAGES_VERSIONS?.trim() ? readJSON(text: params.IMAGES_VERSIONS) : [:]
 
                     def getCurrentVersion = { serviceName ->
@@ -196,7 +198,7 @@ pipeline {
 
         stage("Targeted Update: Staging") {
             when {
-                expression { return params.IMAGES_VERSIONS?.trim() }
+                expression { return params.IMAGES_VERSIONS?.isEmpty() }
             }
             steps {
                 script {
@@ -252,7 +254,7 @@ pipeline {
 
         stage("Deploy Stack to Production") {
             when {
-                expression { return !params.IMAGES_VERSIONS?.trim() }
+                expression { return !params.IMAGES_VERSIONS?.isEmpty() }
             }
             steps {
                 dir('Websites') {
@@ -281,7 +283,7 @@ pipeline {
 
         stage("Targeted Update: Production") {
             when {
-                expression { return params.IMAGES_VERSIONS?.trim() }
+                expression { return params.IMAGES_VERSIONS?.isEmpty() }
             }
             steps {
                 script {
