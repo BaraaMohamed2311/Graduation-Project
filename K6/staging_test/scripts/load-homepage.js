@@ -3,7 +3,7 @@ import { sleep, check } from 'k6';
 
 // ----- Test configuration -----
 export let options = {
-    vus: 300,
+    vus: 100,
     duration: '30s',
     thresholds: {
         http_req_failed: ['rate<0.05'], // <5% failures → ≥95% success

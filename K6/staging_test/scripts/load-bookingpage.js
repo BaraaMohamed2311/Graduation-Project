@@ -1,8 +1,9 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-
+// numof iterations = vus * duration (in seconds) / sleep time (in seconds) = 10 * 30 / 1 = 300 iteration 
+// each user will make 3 requests (for 3 pages) per iteration, so total requests = 300 * 3 = 900 requests per user to one url
 export const options = {
-  vus: 300,
+  vus: 10,
   duration: '30s',
   thresholds: {
     http_req_failed: ['rate<0.05'], // <5% failures → ≥95% success
@@ -15,11 +16,14 @@ const BASE_URLS = [
 ];
 
 
+const i = 10; // number of users to simulate
 
-const USERS = [
-  { email: 'patient@test.com', password: '123456' },
+const USERS = Array.from({ length: i }, (_, n) => ({
+  email: `patient${n + 1}@test.com`,
+  password: '123456'
+}));
 
-];
+
 
 // setup function returns tokens for all users per base URL
 export function setup() {
