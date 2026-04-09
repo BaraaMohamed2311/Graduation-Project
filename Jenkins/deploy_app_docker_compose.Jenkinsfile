@@ -158,7 +158,7 @@ pipeline {
             steps {
                 script {
                    echo """
-                        params.IMAGES_VERSIONS: ${params.IMAGES_VERSIONS}
+                        params.IMAGES_VERSIONS: ${params.IMAGES_VERSIONS} Type: ${params.IMAGES_VERSIONS?.getClass()}
                     """
                 }
             }
