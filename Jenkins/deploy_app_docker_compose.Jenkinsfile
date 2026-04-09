@@ -151,6 +151,17 @@ pipeline {
             }
         }
 
+
+        stage("Check Parameters") {
+            steps {
+                script {
+                   echo """
+                        params.IMAGES_VERSIONS: ${params.IMAGES_VERSIONS}
+                    """
+                }
+            }
+        }
+
         // ── STAGING ────────────────────────────────────────────────────────────
 
         stage("Deploy Stack to Staging") {
