@@ -16,6 +16,9 @@ function getConnectionPool() {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       connectionLimit: 25,
+      waitForConnections: true,
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 0,
     });
 
     console.log("MySQL pool created for host:", process.env.DB_HOST);
