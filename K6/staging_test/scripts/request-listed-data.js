@@ -31,49 +31,49 @@ const adminUsers = Array.from({ length: i }, (_, n) => ({
 
 
 const USERS = [...superUsers, ...adminUsers];
-
-// setup function returns tokens for all users per base URL
 export function setup() {
   const TOKENS = {};
 
   BASE_URLS.forEach((baseUrl) => {
+    TOKENS[baseUrl] = {};
+    console.log(`Logging in users for ${baseUrl}...`);
+
     USERS.forEach((user) => {
-      const res = http.post(`${baseUrl}/api/user/login`, JSON.stringify({
-        user_email: user.email,
-        password: user.password,
-      }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const res = http.post(
+        `${baseUrl}/api/user/login`,
+        JSON.stringify({ user_email: user.email, password: user.password }),
+        { headers: { 'Content-Type': 'application/json' } }
+      );
 
-      check(res, {
-        'login success': (r) => r.status === 200,
-        'token received': (r) => r.json('body')?.token !== undefined,
-      });
 
-       let responseBody;
-        try {
-          responseBody = res.json();
-        } catch (e) {
-          console.error("Invalid JSON response:", res.body);
-          return;
-        }
+      if (res.status !== 200) {
+        console.error(`Login HTTP error for ${user.email}: ${res.status}`);
+        return;
+      }
 
-        if (!responseBody?.success || !responseBody?.body?.token) {
-          console.error("Login failed:", res.body);
-          return;
-        }
+      let responseBody;
+      try {
+        responseBody = res.json();
+      } catch (e) {
+        console.error(`Invalid JSON for ${user.email}: ${res.body}`);
+        return;
+      }
 
-        const token = responseBody.body.token;
-        const user_id = responseBody.body.user_id;
+      if (!responseBody?.success || !responseBody?.body?.token) {
+        console.error(`Login failed for ${user.email}:`, JSON.stringify(responseBody));
+        return;
+      }
 
-      console.log(`Logged in ${user.email} to ${baseUrl}, token: ${token}, user_id: ${user_id}`);
-      console.log("ASSIGNED TOKENS:", JSON.stringify(TOKENS));
+      const { token, user_id } = responseBody.body;
+      TOKENS[baseUrl][user.email] = { token, user_id };
+      console.log(`✅ Logged in ${user.email} — user_id=${user_id}`);
+
+      
     });
   });
 
   return TOKENS;
 }
-
 
 export default function (TOKENS) {
   BASE_URLS.forEach((baseUrl) => {

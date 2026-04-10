@@ -26,7 +26,6 @@ def exportEnvVarsWindows() {
     """
 }
 
-// Single reusable function for both stacks
 def updateServices(String stackPrefix, Map imagesMap) {
     def serviceMap = [
         "ems-server"      : "ems_server",
@@ -50,11 +49,21 @@ def updateServices(String stackPrefix, Map imagesMap) {
     }
 }
 
+def stackDeploy(String composeFile, String stackName, String resolvedFile) {
+    sh """
+        ${exportEnvVarsUnix()}
+        docker compose -f ${composeFile} pull
+        envsubst < ${composeFile} > ${resolvedFile}
+        docker stack deploy -c ${resolvedFile} ${stackName}
+        rm ${resolvedFile}
+    """
+}
+
 pipeline {
     agent any
 
     parameters {
-        string(name: 'IMAGES_VERSIONS', defaultValue: '', description: 'JSON map of image → version to update selectively')
+        string(name: 'IMAGES_VERSIONS', defaultValue: '', description: 'JSON map of image → version. Empty = full stack deploy (infra change). Partial = targeted service update.')
     }
 
     environment {
@@ -71,13 +80,27 @@ pipeline {
             }
         }
 
-        stage("Update Image Versions") {
+        stage("Resolve Versions & Stack State") {
             steps {
                 script {
-                    // At first IMAGES_VERSIONS is string so we use trim to check if it's empty or not
-                    // then we parse it to JSON map. If it's empty, we will fallback to inspecting current running services to get the versions
                     def imagesMap = params.IMAGES_VERSIONS?.trim() ? readJSON(text: params.IMAGES_VERSIONS) : [:]
+                    def noImagesProvided = !params.IMAGES_VERSIONS?.trim() || params.IMAGES_VERSIONS == '{}'
 
+                    // ── Stack existence ──────────────────────────────────────
+                    // We check stack existence first because if stack doesn't exist, we know for sure it's a full deploy and all versions will be resolved to either provided or 'latest' → no need to inspect services at all
+                    env.STAGING_STACK_EXISTS = sh(
+                        script: "docker stack ls --format '{{.Name}}' | grep -qw staging_stack && echo yes || echo no",
+                        returnStdout: true
+                    ).trim()
+
+                    env.PRODUCTION_STACK_EXISTS = sh(
+                        script: "docker stack ls --format '{{.Name}}' | grep -qw production_stack && echo yes || echo no",
+                        returnStdout: true
+                    ).trim()
+
+                    // ── Version resolution ───────────────────────────────────
+                    // Priority: provided in param → currently running on staging → 'latest'
+                    // When stack doesn't exist, inspect returns '' so fallback hits 'latest' automatically
                     def getCurrentVersion = { serviceName ->
                         def image = sh(
                             script: "docker service inspect staging_stack_${serviceName} --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}' 2>/dev/null || echo ''",
@@ -98,12 +121,18 @@ pipeline {
                     env.STORAGE_CLIENT_VERSION  = imagesMap["storage-client"]  ?: getCurrentVersion("storage_client")
 
                     echo """
+                        ── Stack State ──────────────────────────────
+                        STAGING_STACK_EXISTS:    ${env.STAGING_STACK_EXISTS}
+                        PRODUCTION_STACK_EXISTS: ${env.PRODUCTION_STACK_EXISTS}
+                        ── Resolved Versions ────────────────────────
                         EMS_SERVER_VERSION:      ${env.EMS_SERVER_VERSION}
                         EMS_CLIENT_VERSION:      ${env.EMS_CLIENT_VERSION}
                         HOSPITAL_SERVER_VERSION: ${env.HOSPITAL_SERVER_VERSION}
                         HOSPITAL_CLIENT_VERSION: ${env.HOSPITAL_CLIENT_VERSION}
                         STORAGE_SERVER_VERSION:  ${env.STORAGE_SERVER_VERSION}
                         STORAGE_CLIENT_VERSION:  ${env.STORAGE_CLIENT_VERSION}
+                        ── Deployment Path ──────────────────────────
+                        IMAGES_VERSIONS param:   ${params.IMAGES_VERSIONS ?: '(empty)'}
                     """
                 }
             }
@@ -124,28 +153,20 @@ pipeline {
         stage("Setup Swarm Secrets") {
             steps {
                 withCredentials([
-                    file(credentialsId: 'EMS_PRODUCTION_ENV',      variable: 'EMS_PRODUCTION_ENV'),
-                    file(credentialsId: 'HOSPITAL_PRODUCTION_ENV', variable: 'HOSPITAL_PRODUCTION_ENV'),
-                    file(credentialsId: 'STORAGE_PRODUCTION_ENV',  variable: 'STORAGE_PRODUCTION_ENV'),
-                    string(credentialsId: 'MYSQL_ROOT_PASSWORD',   variable: 'MYSQL_ROOT_PASSWORD'),
-                    string(credentialsId: 'MYSQL_PASSWORD',        variable: 'MYSQL_PASSWORD')
+                    file(credentialsId: 'EMS_PRODUCTION_ENV',        variable: 'EMS_PRODUCTION_ENV'),
+                    file(credentialsId: 'HOSPITAL_PRODUCTION_ENV',   variable: 'HOSPITAL_PRODUCTION_ENV'),
+                    file(credentialsId: 'STORAGE_PRODUCTION_ENV',    variable: 'STORAGE_PRODUCTION_ENV'),
+                    string(credentialsId: 'MYSQL_ROOT_PASSWORD',     variable: 'MYSQL_ROOT_PASSWORD'),
+                    string(credentialsId: 'MYSQL_PASSWORD',          variable: 'MYSQL_PASSWORD')
                 ]) {
                     script {
                         if (isUnix()) {
                             sh '''
-                                docker secret inspect MYSQL_ROOT_PASSWORD      > /dev/null 2>&1 || echo "$MYSQL_ROOT_PASSWORD"  | docker secret create MYSQL_ROOT_PASSWORD -
-                                docker secret inspect MYSQL_PASSWORD            > /dev/null 2>&1 || echo "$MYSQL_PASSWORD"       | docker secret create MYSQL_PASSWORD -
-                                docker secret inspect prod_ems_server_config    > /dev/null 2>&1 || docker secret create prod_ems_server_config    "$EMS_PRODUCTION_ENV"
+                                docker secret inspect MYSQL_ROOT_PASSWORD         > /dev/null 2>&1 || echo "$MYSQL_ROOT_PASSWORD"     | docker secret create MYSQL_ROOT_PASSWORD -
+                                docker secret inspect MYSQL_PASSWORD              > /dev/null 2>&1 || echo "$MYSQL_PASSWORD"          | docker secret create MYSQL_PASSWORD -
+                                docker secret inspect prod_ems_server_config      > /dev/null 2>&1 || docker secret create prod_ems_server_config      "$EMS_PRODUCTION_ENV"
                                 docker secret inspect prod_hospital_server_config > /dev/null 2>&1 || docker secret create prod_hospital_server_config "$HOSPITAL_PRODUCTION_ENV"
                                 docker secret inspect prod_storage_server_config  > /dev/null 2>&1 || docker secret create prod_storage_server_config  "$STORAGE_PRODUCTION_ENV"
-                            '''
-                        } else {
-                            bat '''
-                                docker secret inspect MYSQL_ROOT_PASSWORD > nul 2>&1 || echo %MYSQL_ROOT_PASSWORD% | docker secret create MYSQL_ROOT_PASSWORD -
-                                docker secret inspect MYSQL_PASSWORD > nul 2>&1      || echo %MYSQL_PASSWORD%      | docker secret create MYSQL_PASSWORD -
-                                docker secret inspect prod_ems_server_config > nul 2>&1      || docker secret create prod_ems_server_config      %EMS_PRODUCTION_ENV%
-                                docker secret inspect prod_hospital_server_config > nul 2>&1 || docker secret create prod_hospital_server_config %HOSPITAL_PRODUCTION_ENV%
-                                docker secret inspect prod_storage_server_config > nul 2>&1  || docker secret create prod_storage_server_config  %STORAGE_PRODUCTION_ENV%
                             '''
                         }
                     }
@@ -153,30 +174,16 @@ pipeline {
             }
         }
 
-
-        stage("Check Parameters") {
-            steps {
-                script {
-                   echo """
-                        params.IMAGES_VERSIONS: ${params.IMAGES_VERSIONS} Type: ${params.IMAGES_VERSIONS?.getClass()}
-                    """
-                }
-            }
-        }
-
         // ── STAGING ────────────────────────────────────────────────────────────
-
+        // Scenario: stack running + no images → full stack deploy as it assume change was in stack configuration
+        // Scenario: stack not running → full stack deploy (fresh or first time)
         stage("Deploy Stack to Staging") {
             when {
-                // Full redeploy only when no targeted images provided, which means changes are in stack files only
                 expression {
-                    def noImagesProvided = params.IMAGES_VERSIONS?.trim() == '' || params.IMAGES_VERSIONS == null || params.IMAGES_VERSIONS == '{}'
-                    def stackExists = sh(
-                        script: "docker stack ls --format '{{.Name}}' | grep -qw staging_stack && echo yes || echo no",
-                        returnStdout: true
-                    ).trim() == 'yes'
-                    // Full redeploy only when no targeted images provided AND stack doesn't exist yet
-                    return noImagesProvided && !stackExists
+                    def noImagesProvided = !params.IMAGES_VERSIONS?.trim() || params.IMAGES_VERSIONS == '{}'
+                    // Run when: stack not running (any scenario without images)
+                    //        OR: stack running but no images provided (infra-only change)
+                    return env.STAGING_STACK_EXISTS == 'no' || noImagesProvided
                 }
             }
             steps {
@@ -204,17 +211,12 @@ pipeline {
             }
         }
 
-        // we inverse the empty check here, because if it's not empty, it means we have specific images to update, so we skip full redeploy and go to targeted update stage
+        // Scenario: stack running + specific images provided → targeted service update only
         stage("Targeted Update: Staging") {
             when {
                 expression {
-                    def imagesProvided = !(params.IMAGES_VERSIONS?.trim() == '' || params.IMAGES_VERSIONS == null || params.IMAGES_VERSIONS == '{}')
-                    def stackExists = sh(
-                        script: "docker stack ls --format '{{.Name}}' | grep -qw staging_stack && echo yes || echo no",
-                        returnStdout: true
-                    ).trim() == 'yes'
-                    // Targeted update when specific images provided OR stack already exists (just update running services)
-                    return imagesProvided || stackExists
+                    def imagesProvided = params.IMAGES_VERSIONS?.trim() && params.IMAGES_VERSIONS != '{}'
+                    return env.STAGING_STACK_EXISTS == 'yes' && imagesProvided
                 }
             }
             steps {
@@ -239,21 +241,16 @@ pipeline {
             }
         }
 
-        stage('Done with Stagging - Approve to Delete Staging') {
+        stage('Done with Staging - Approve to Delete Staging') {
             steps {
                 script {
                     def userInput = input(
-                        id: 'approveTests',
+                        id: 'approveStagingDelete',
                         message: "Approve to delete staging?",
                         parameters: [booleanParam(defaultValue: true, description: '', name: 'Yes')]
                     )
-                    // || true If the previous command fails, run true to prevent pipeline from breaking, since we want to proceed even if stack is already removed or was never created
                     if (userInput) {
-                        if (isUnix()) {
-                            sh "docker stack rm staging_stack || true"
-                        } else {
-                            bat 'docker stack rm staging_stack || true'
-                        }
+                        sh "docker stack rm staging_stack || true"
                     }
                 }
             }
@@ -268,10 +265,14 @@ pipeline {
         }
 
         // ── PRODUCTION ─────────────────────────────────────────────────────────
-
+        //
+        // Same logic mirrors staging exactly
         stage("Deploy Stack to Production") {
             when {
-                expression { return params.IMAGES_VERSIONS?.trim() == ''  || params.IMAGES_VERSIONS == null  || params.IMAGES_VERSIONS == '{}' }
+                expression {
+                    def noImagesProvided = !params.IMAGES_VERSIONS?.trim() || params.IMAGES_VERSIONS == '{}'
+                    return env.PRODUCTION_STACK_EXISTS == 'no' || noImagesProvided
+                }
             }
             steps {
                 dir('Websites') {
@@ -301,13 +302,8 @@ pipeline {
         stage("Targeted Update: Production") {
             when {
                 expression {
-                    def imagesProvided = !(params.IMAGES_VERSIONS?.trim() == '' || params.IMAGES_VERSIONS == null || params.IMAGES_VERSIONS == '{}')
-                    def stackExists = sh(
-                        script: "docker stack ls --format '{{.Name}}' | grep -qw staging_stack && echo yes || echo no",
-                        returnStdout: true
-                    ).trim() == 'yes'
-                    // Targeted update when specific images provided OR stack already exists (just update running services)
-                    return imagesProvided || stackExists
+                    def imagesProvided = params.IMAGES_VERSIONS?.trim() && params.IMAGES_VERSIONS != '{}'
+                    return env.PRODUCTION_STACK_EXISTS == 'yes' && imagesProvided
                 }
             }
             steps {
