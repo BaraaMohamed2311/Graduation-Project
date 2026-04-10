@@ -25,7 +25,7 @@ BEGIN
         WHILE @i <= 10 DO
 
             INSERT INTO users (user_email, user_name, user_password, user_type)
-            VALUES (CONCAT('super1_', @i, '@test.com'), 'Super Admin 1',
+            VALUES (CONCAT('super_', @i, '@test.com'), 'Super Admin 1',
             '$2b$12$9jdiU3koAn009OlfW8ZyIeBABsQpPbGxnqtEBrz0LRJw9NLlm63ae', 'employee');
 
             SET @u = LAST_INSERT_ID();
@@ -58,40 +58,6 @@ BEGIN
         END WHILE;
 
 
-        -- ==========================================
-        -- SUPER ADMIN 2 (10 USERS)
-        -- ==========================================
-        SET @i = 1;
-        WHILE @i <= 10 DO
-
-            INSERT INTO users (user_email, user_name, user_password, user_type)
-            VALUES (CONCAT('super2_', @i, '@test.com'), 'Super Admin 2',
-            '$2b$12$9jdiU3koAn009OlfW8ZyIeBABsQpPbGxnqtEBrz0LRJw9NLlm63ae', 'employee');
-
-            SET @u = LAST_INSERT_ID();
-
-            INSERT INTO employees VALUES (@u, 10000, 0,0,0, 'Surgeon', NULL)
-            ON DUPLICATE KEY UPDATE emp_id=emp_id;
-
-            INSERT INTO roles VALUES (@u, 'SuperAdmin')
-            ON DUPLICATE KEY UPDATE role_name=role_name;
-
-            INSERT INTO employee_perms (perm_id, emp_id)
-            SELECT perm_id, @u FROM perms
-            ON DUPLICATE KEY UPDATE emp_id=emp_id;
-
-            INSERT INTO employees_hospital VALUES (@u, @u, 'Surgeon')
-            ON DUPLICATE KEY UPDATE emp_id=emp_id;
-
-            INSERT INTO hospital_roles VALUES (@u, 'SuperAdmin')
-            ON DUPLICATE KEY UPDATE role_name=role_name;
-
-            INSERT INTO hospital_emp_perms (perm_id, hosp_emp_id)
-            SELECT perm_id, @u FROM hospital_perms
-            ON DUPLICATE KEY UPDATE hosp_emp_id=hosp_emp_id;
-
-            SET @i = @i + 1;
-        END WHILE;
 
 
         -- ==========================================

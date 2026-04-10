@@ -19,11 +19,18 @@ const BASE_URLS = [
 
 const i = 10; // number of users to simulate
 
-const USERS = Array.from({ length: i }, (_, n) => ({
-  email: `super${n + 1}@test.com`,
+const superUsers = Array.from({ length: i }, (_, n) => ({
+  email: `super_${n + 1}@test.com`,
   password: '123456'
 }));
 
+const adminUsers = Array.from({ length: i }, (_, n) => ({
+  email: `admin_${n + 1}@test.com`,
+  password: '123456'
+}))
+
+
+const USERS = [...superUsers, ...adminUsers];
 
 // setup function returns tokens for all users per base URL
 export function setup() {

@@ -19,7 +19,7 @@ const BASE_URLS = [
 const i = 10; // number of users to simulate
 
 const USERS = Array.from({ length: i }, (_, n) => ({
-  email: `patient${n + 1}@test.com`,
+  email: `patient_${n + 1}@test.com`,
   password: '123456'
 }));
 
