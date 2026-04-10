@@ -199,7 +199,7 @@ pipeline {
         // we inverse the empty check here, because if it's not empty, it means we have specific images to update, so we skip full redeploy and go to targeted update stage
         stage("Targeted Update: Staging") {
             when {
-                { return !(params.IMAGES_VERSIONS?.trim() == ''  || params.IMAGES_VERSIONS == null  || params.IMAGES_VERSIONS == '{}') }
+                expression { return !(params.IMAGES_VERSIONS?.trim() == ''  || params.IMAGES_VERSIONS == null  || params.IMAGES_VERSIONS == '{}') }
             }
             steps {
                 script {
