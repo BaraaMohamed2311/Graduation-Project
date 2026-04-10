@@ -59,6 +59,7 @@ const generalUserMethods = require("../Utils/methods/generalUserMethods.js");
             const isCompanyEmployee = CompanyUsersMethods.isCompanyUser(user_title)
             // get user's general data first , isLogin=true to get password as well
             user = await generalUserMethods.getUserData(user_id , true);
+
             // get user's employee data if he's employee
             const empData = await generalUserMethods.getUserEmpData(user_id);
             user = empData ? {...user , ...empData} : user;
@@ -81,7 +82,12 @@ const generalUserMethods = require("../Utils/methods/generalUserMethods.js");
                 user.emp_perms =  Array.from(await User.getSetUserperms(user_id));
                 user.role_name = await User.getUserRole(user_id)
             }
-
+            if (!user || !user.user_password) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid credentials'
+                });
+            }
             match = await bcrypt.compare(password, user.user_password);
             
             // Compare request's password with hashed password

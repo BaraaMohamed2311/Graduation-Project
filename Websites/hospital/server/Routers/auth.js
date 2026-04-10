@@ -75,6 +75,12 @@ const stringifyFields = require("../Utils/stringifyFields.js");
                 user.role_name = await User.getUserRole(user_id)
             }
 
+            if (!user || !user.user_password) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid credentials'
+                });
+            }
             match = await bcrypt.compare(password, user.user_password);
             
             // Compare request's password with hashed password
