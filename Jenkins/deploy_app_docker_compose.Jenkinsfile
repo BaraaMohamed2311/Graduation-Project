@@ -169,7 +169,15 @@ pipeline {
         stage("Deploy Stack to Staging") {
             when {
                 // Full redeploy only when no targeted images provided, which means changes are in stack files only
-                expression { return params.IMAGES_VERSIONS?.trim() == ''  || params.IMAGES_VERSIONS == null  || params.IMAGES_VERSIONS == '{}' }
+                expression {
+                    def noImagesProvided = params.IMAGES_VERSIONS?.trim() == '' || params.IMAGES_VERSIONS == null || params.IMAGES_VERSIONS == '{}'
+                    def stackExists = sh(
+                        script: "docker stack ls --format '{{.Name}}' | grep -qw staging_stack && echo yes || echo no",
+                        returnStdout: true
+                    ).trim() == 'yes'
+                    // Full redeploy only when no targeted images provided AND stack doesn't exist yet
+                    return noImagesProvided && !stackExists
+                }
             }
             steps {
                 dir('Websites') {
@@ -199,7 +207,15 @@ pipeline {
         // we inverse the empty check here, because if it's not empty, it means we have specific images to update, so we skip full redeploy and go to targeted update stage
         stage("Targeted Update: Staging") {
             when {
-                expression { return !(params.IMAGES_VERSIONS?.trim() == ''  || params.IMAGES_VERSIONS == null  || params.IMAGES_VERSIONS == '{}') }
+                expression {
+                    def imagesProvided = !(params.IMAGES_VERSIONS?.trim() == '' || params.IMAGES_VERSIONS == null || params.IMAGES_VERSIONS == '{}')
+                    def stackExists = sh(
+                        script: "docker stack ls --format '{{.Name}}' | grep -qw staging_stack && echo yes || echo no",
+                        returnStdout: true
+                    ).trim() == 'yes'
+                    // Targeted update when specific images provided OR stack already exists (just update running services)
+                    return imagesProvided || stackExists
+                }
             }
             steps {
                 script {
@@ -284,7 +300,15 @@ pipeline {
 
         stage("Targeted Update: Production") {
             when {
-                expression { return !(params.IMAGES_VERSIONS?.trim() == ''  || params.IMAGES_VERSIONS == null  || params.IMAGES_VERSIONS == '{}') }
+                expression {
+                    def imagesProvided = !(params.IMAGES_VERSIONS?.trim() == '' || params.IMAGES_VERSIONS == null || params.IMAGES_VERSIONS == '{}')
+                    def stackExists = sh(
+                        script: "docker stack ls --format '{{.Name}}' | grep -qw staging_stack && echo yes || echo no",
+                        returnStdout: true
+                    ).trim() == 'yes'
+                    // Targeted update when specific images provided OR stack already exists (just update running services)
+                    return imagesProvided || stackExists
+                }
             }
             steps {
                 script {
