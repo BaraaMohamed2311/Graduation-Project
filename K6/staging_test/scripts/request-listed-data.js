@@ -50,12 +50,21 @@ export function setup() {
         'token received': (r) => r.json('body')?.token !== undefined,
       });
 
-        const responseBody = res.json();
-        const { token, user_id } = responseBody?.body ?? {};
-        console.log("RAW:", res.body); // always log the raw string first
+       let responseBody;
+        try {
+          responseBody = res.json();
+        } catch (e) {
+          console.error("Invalid JSON response:", res.body);
+          return;
+        }
 
-      if (!TOKENS[baseUrl]) TOKENS[baseUrl] = {};
-      TOKENS[baseUrl][user.email] = { token, user_email: user.email, user_id };
+        if (!responseBody?.success || !responseBody?.body?.token) {
+          console.error("Login failed:", res.body);
+          return;
+        }
+
+        const token = responseBody.body.token;
+        const user_id = responseBody.body.user_id;
 
       console.log(`Logged in ${user.email} to ${baseUrl}, token: ${token}, user_id: ${user_id}`);
       console.log("ASSIGNED TOKENS:", JSON.stringify(TOKENS));
