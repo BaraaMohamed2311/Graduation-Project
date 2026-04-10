@@ -44,7 +44,7 @@ def updateServices(String stackPrefix, Map imagesMap) {
             return
         }
         def fullService = "${stackPrefix}_${serviceSuffix}"
-        def newImage = "baraamohamed/gradproj-${imageName}:production-${version}"
+        def newImage = "baraamohamed/gradproj:${imageName}-${version}"
         echo "Updating ${fullService} → ${newImage}"
         sh "docker service update --image ${newImage} --with-registry-auth ${fullService}"
     }
