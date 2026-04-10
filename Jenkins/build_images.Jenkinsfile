@@ -1,4 +1,4 @@
-def successfulImages = [:] // global groovy variable to store successfully built images and their versions for later use in deployment
+def successfulImages = [:] // global groovy variable to store successfully built images and their versions for later use in deployment 
 pipeline {
     agent any
     
