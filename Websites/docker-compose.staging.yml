@@ -30,7 +30,9 @@ services:
     image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION:-latest}
     deploy:
       replicas: 2
-
+      resources:
+        limits:
+          memory: 165M
     environment:
       NODE_ENV: production
     ports:
@@ -49,6 +51,9 @@ services:
     image: baraamohamed/gradproj:ems-client-${EMS_CLIENT_VERSION:-latest}
     deploy:
       replicas: 2
+      resources:
+        limits:
+          memory: 255M
     ports:
       - target: 3000
         protocol: tcp
@@ -63,6 +68,9 @@ services:
     image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION:-latest}
     deploy:
       replicas: 2
+      resources:
+        limits:
+          memory: 275M
     environment:
       NODE_ENV: production
     ports:
@@ -81,6 +89,9 @@ services:
     image: baraamohamed/gradproj:hospital-client-${HOSPITAL_CLIENT_VERSION:-latest}
     deploy:
       replicas: 2
+      resources:
+        limits:
+          memory: 342M
     ports:
       - target: 3000
         protocol: tcp
@@ -97,6 +108,9 @@ services:
       NODE_ENV: ${NODE_ENV}
     deploy:
       replicas: 2
+      resources:
+        limits:
+          memory: 130M
     ports:
       - target: 5000
         protocol: tcp
@@ -114,6 +128,9 @@ services:
     image: baraamohamed/gradproj:storage-client-${STORAGE_CLIENT_VERSION:-latest}
     deploy:
       replicas: 2
+      resources:
+        limits:
+          memory: 105M
     ports:
       - target: 3000
         protocol: tcp
@@ -132,6 +149,9 @@ services:
     image: mysql:8
     deploy:
       replicas: 1
+      resources:
+        limits:
+          memory: 930M
     secrets:
       - MYSQL_ROOT_PASSWORD
       - MYSQL_PASSWORD
