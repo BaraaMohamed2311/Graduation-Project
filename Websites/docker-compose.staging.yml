@@ -4,7 +4,7 @@ services:
 
   nginx:
     restart: on-failure
-    image: nginx:latest
+    image: baraamohamed/gradproj:nginx_swarm
     ports:
       - target: 3050
         published: 3150
@@ -18,8 +18,7 @@ services:
         published: 3152
         protocol: tcp
         mode: ingress
-    volumes:
-      - ./nginx/swarm/default.conf:/etc/nginx/conf.d/default.conf:ro
+
     networks:
       - ems-net
       - hospital-net
