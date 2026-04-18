@@ -229,7 +229,7 @@ pipeline {
                         ── Deployment Path ──────────────────────────
                         IMAGES_VERSIONS param:   ${params.IMAGES_VERSIONS ?: '(empty)'}
                         Services to update:      ${resolvedVersions.keySet().join(', ') ?: 'None'}
-                        Services to create:      ${servicesToCreate.keySet().join(', ') ?: 'None
+                        Services to create:      ${servicesToCreate.keySet().join(', ') ?: 'None'}
                     """
                 }
             }
