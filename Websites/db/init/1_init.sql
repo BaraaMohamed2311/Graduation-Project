@@ -62,7 +62,7 @@ CREATE TABLE unregistered_employees (
 DROP TABLE IF EXISTS roles;
 CREATE TABLE roles (
     emp_id INT NOT NULL,
-    role_name ENUM('Employee', 'SuperAdmin', 'Admin') NOT NULL,
+    role_name ENUM('NormalUser', 'SuperAdmin', 'Admin') NOT NULL,
     PRIMARY KEY (emp_id, role_name),
     FOREIGN KEY (emp_id) REFERENCES employees(emp_id)
         ON DELETE CASCADE ON UPDATE CASCADE

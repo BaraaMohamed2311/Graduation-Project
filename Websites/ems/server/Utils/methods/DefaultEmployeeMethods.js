@@ -107,6 +107,7 @@ class DefaultEmployeeMethods {
      * Get all employees with a specific (unknown) title
      */
     static async getAllDefaultEmployeesFullData(limit = 10, offset = 0, whereClause = '', perms_CONDITION = '') {
+        console.log("Getting all default employees with whereClause:", whereClause, "and perms_CONDITION:", perms_CONDITION);
         const perms_CONDITION_CLAUSE = perms_CONDITION 
             ? `HAVING FIND_IN_SET('${perms_CONDITION}', GROUP_CONCAT(DISTINCT p.perm_name)) > 0` 
             : "";

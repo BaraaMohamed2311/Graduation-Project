@@ -54,8 +54,13 @@ router.get("/employees",jwtVerify,async (req,res)=>{
         if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
         // perms have there separate filtiring conditing using "HAVING" not "WHERE"
-        const filtering_string = Object.keys(restFilters).length > 0 || filter_role_name ? padBoth(buildJoinedFilters({ role_name: filter_role_name,  ...restFilters}),1) :null;
+        // we use custom condition to handle NormalUser role because it's named NormalUser not Employee in roles table and also it can be null because normal users have no role record in roles table
+        const role_filtering_string = filter_role_name === "NormalUser" ? "(hr.role_name IS NULL OR hr.role_name = 'NormalUser')" : filter_role_name
+                                        ? `hr.role_name = '${filter_role_name}'` : null;
 
+        const rest_filtering_string = Object.keys(restFilters || {}).length > 0 ? padBoth(buildJoinedFilters({ ...restFilters }), 1) : null;
+
+        const filtering_string = [rest_filtering_string, role_filtering_string].filter(Boolean).join(" AND ");
 
         // get cached count 
         const EmployeesCount = await cacheCountNodeCache("totalNumOfEmployees",HospitalUsersMethods.getAllHospitalEmployeesCOUNT,filtering_string)

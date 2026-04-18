@@ -18,6 +18,7 @@ function getConnectionPool() {
       connectionLimit: 25,
       waitForConnections: true,
       enableKeepAlive: true,
+      idleTimeout: 60000,             // to fix reusing a dead MySQL connection from the pool. drop the connection after 60 seconds of inactivity
       keepAliveInitialDelay: 0,
     });
 

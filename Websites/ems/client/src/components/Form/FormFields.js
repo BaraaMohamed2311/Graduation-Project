@@ -116,7 +116,7 @@ export default function UpdateUserFormFields({
             {/* Render all remaining selects dynamically */}
             <RenderOtherSelects
                 select_def={select_def}
-                exclude={["select_title_options", "select_role_options"]}  // keep OCP
+                exclude={["select_title_options","select_specialty_options", "select_role_options"]}  // keep OCP
                 user_displayed={user_displayed}
                 references={references}
                 styles={styles}
@@ -160,7 +160,7 @@ function RegisterFormFields({
             {/* Render all remaining selects dynamically */}
             <RenderOtherSelects
                 select_def={select_def}
-                exclude={["select_title_options", "select_role_options"]}  // keep OCP
+                exclude={["select_title_options","select_specialty_options", "select_role_options"]}  // keep OCP
                 references={references}
                 styles={styles}
             />

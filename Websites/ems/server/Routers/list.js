@@ -34,8 +34,13 @@ router.get("/employees",jwtVerify,async (req,res)=>{
         const Modifier_role = await User.getUserRole(user_id);
         const Modifier_perms = await User.getSetUserperms(user_id);
         // perms have there separate filtiring conditing using "HAVING" not "WHERE"
-        const filtering_string = Object.keys(restFilters).length > 0 || filter_role_name ? padBoth(buildJoinedFilters({ role_name: filter_role_name,  ...restFilters}),1) :null;
+        // we use custom condition to handle NormalUser role because it's named NormalUser not Employee in roles table and also it can be null because normal users have no role record in roles table
+        const role_filtering_string = filter_role_name === "NormalUser" ? "(r.role_name IS NULL OR r.role_name = 'NormalUser')" : filter_role_name
+                                        ? `r.role_name = '${filter_role_name}'` : null;
 
+        const rest_filtering_string = Object.keys(restFilters || {}).length > 0 ? padBoth(buildJoinedFilters({ ...restFilters }), 1) : null;
+
+        const filtering_string = [rest_filtering_string, role_filtering_string].filter(Boolean).join(" AND ");
         
         if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
@@ -356,15 +361,11 @@ router.post("/registered-approve/accept",jwtVerify,async (req,res)=>{
 
         const { user_password , emp_title , emp_specialty } = registering_user_data[0];
 
-
-        // hash password before inserting
-        const hashed_password = await User.hashPassword(user_password);
-        
         
         const queries = []
         // INSERT TO USERS , EMPLOYEES , EMPLOYEES_HOSPITAL TABLES
         // INSERT TO USERS TABLE
-        const intsertToUsers_query = `INSERT INTO users (user_id , user_email, user_name , user_password,user_type) VALUES (${registering_user_id},"${user_email}","${user_name}","${hashed_password}",'employee')`
+        const intsertToUsers_query = `INSERT INTO users (user_id , user_email, user_name , user_password,user_type) VALUES (${registering_user_id},"${user_email}","${user_name}","${user_password}",'employee')`
         queries.push(intsertToUsers_query);
         // INSERT TO EMPLOYEES TABLE
         const insertToEmployees_query = `INSERT INTO employees (emp_id ,emp_title,emp_specialty, emp_salary , emp_bonus , emp_abscence , emp_rate) VALUES (${registering_user_id},"${emp_title}","${emp_specialty}",0, 0 , 0 , 0 )`

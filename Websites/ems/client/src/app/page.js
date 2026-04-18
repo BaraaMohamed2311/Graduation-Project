@@ -140,13 +140,13 @@ export default function Home() {
                         <Image
                             priority={false}
                             className={styles["role-image"]}
-                            src={"/Employee.svg"}
+                            src={"/NormalUser.svg"}
                             width={100}
                             height={100}
                             alt="EMS Role Image"
                         />
                         <div className={styles["role-text"]}>
-                            <h2 className={styles["role-text-h2"]}>Employee Role</h2>
+                            <h2 className={styles["role-text-h2"]}>Normal User Role</h2>
                         </div>
                         <ul className={styles["role-perms"]}>
                             <li className={`role-box_opacity`}>

@@ -24,6 +24,7 @@ class CompanyUserFactory {
         "manager",
         "salesperson",
         "marketer",
+        "default", // catch-all for unknown titles
     ]);
 
     // ========================================
@@ -33,7 +34,7 @@ class CompanyUserFactory {
         "Doctor": DoctorMethods,
         "Surgeon": SurgeonMethods,
         "Nurse": NurseMethods,
-        "DEFAULT": DefaultEmployeeMethods,
+        "default": DefaultEmployeeMethods,
     };
 
     // ========================================
@@ -43,7 +44,7 @@ class CompanyUserFactory {
         "Doctor": DoctorMethods.getDoctorSpecificData,
         "Surgeon": SurgeonMethods.getSurgeonSpecificData,
         "Nurse": NurseMethods.getNurseSpecificData,
-        "DEFAULT": DefaultEmployeeMethods.getDefaultEmployeeSpecificData,
+        "default": DefaultEmployeeMethods.getDefaultEmployeeSpecificData,
     };
 
     // ========================================
@@ -53,7 +54,7 @@ class CompanyUserFactory {
         "Doctor": DoctorMethods.getDoctorFullData,
         "Surgeon": SurgeonMethods.getSurgeonFullData,
         "Nurse": NurseMethods.getNurseFullData,
-        "DEFAULT": DefaultEmployeeMethods.getDefaultEmployeeFullData,
+        "default": DefaultEmployeeMethods.getDefaultEmployeeFullData,
     };
 
     // ========================================
@@ -63,7 +64,7 @@ class CompanyUserFactory {
         "Doctor": DoctorMethods.getAllDoctorsFullData,
         "Surgeon": SurgeonMethods.getAllSurgeonsFullData,
         "Nurse": NurseMethods.getAllNursesFullData,
-        "DEFAULT": DefaultEmployeeMethods.getAllDefaultEmployeesFullData,
+        "default": DefaultEmployeeMethods.getAllDefaultEmployeesFullData,
     };
 
     // ========================================
@@ -71,7 +72,7 @@ class CompanyUserFactory {
     // ========================================
     static #countMethods = {
         
-        "DEFAULT": DefaultEmployeeMethods.getAllDefaultEmployeesCOUNT,
+        "default": DefaultEmployeeMethods.getAllDefaultEmployeesCOUNT,
     };
 
 
@@ -82,7 +83,7 @@ class CompanyUserFactory {
         "Doctor": DoctorMethods.updateDoctorFullCore,
         "Surgeon": SurgeonMethods.updateSurgeonFullCore,
         "Nurse": NurseMethods.updateNurseFullCore,
-        "DEFAULT": DefaultEmployeeMethods.updateDefaultEmployeeFullCore,
+        "default": DefaultEmployeeMethods.updateDefaultEmployeeFullCore,
     };
 
     // ========================================
@@ -108,10 +109,10 @@ class CompanyUserFactory {
     }
 
     /**
-     * Get user title or return DEFAULT if not found
+     * Get user title or return default if not found
      */
     static #normalizeUserTitle(user_title) {
-        if (!user_title) return "DEFAULT";
+        if (!user_title) return "default";
         
         // Check if title exists in map
         if (this.#methodClassMap[user_title]) {
@@ -119,8 +120,8 @@ class CompanyUserFactory {
         }
         
         // Log unknown title for monitoring
-        console.warn(`Unknown user title: "${user_title}". Using DEFAULT handler.`);
-        return "DEFAULT";
+        console.warn(`Unknown user title: "${user_title}". Using default handler.`);
+        return "default";
     }
 
     /**

@@ -95,6 +95,7 @@ class CompanyUsersMethods {
      * Get all company employees with full data and optional filters
      */
   static async getAllCompanyEmployeesFullData(limit = 10, offset = 0, filtering_string = null, emp_perms = null) { 
+    console.log("Getting all company employees with filters:", filtering_string, "and permissions:", emp_perms);
     const perms_CONDITION = emp_perms 
         ? `HAVING FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT p.perm_name)) > 0` 
         : "";

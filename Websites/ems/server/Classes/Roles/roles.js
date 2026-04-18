@@ -1,6 +1,6 @@
 class roles {
     // because no need to create instances we make them static and access through class
-    static roles = new Map([["SuperAdmin",100],["Admin",50],["Employee",0]]);
+    static roles = new Map([["SuperAdmin",100],["Admin",50],["NormalUser",0]]);
     
     static getRolePriority(userRole){
  

@@ -82,6 +82,7 @@ const generalUserMethods = require("../Utils/methods/generalUserMethods.js");
                 user.emp_perms =  Array.from(await User.getSetUserperms(user_id));
                 user.role_name = await User.getUserRole(user_id)
             }
+
             if (!user || !user.user_password) {
                 return res.status(401).json({
                     success: false,
@@ -89,7 +90,7 @@ const generalUserMethods = require("../Utils/methods/generalUserMethods.js");
                 });
             }
             match = await bcrypt.compare(password, user.user_password);
-            
+
             // Compare request's password with hashed password
             if (!match) {
                 return res.status(401).json({
@@ -146,6 +147,7 @@ const generalUserMethods = require("../Utils/methods/generalUserMethods.js");
                 /* If user is not staged or registered before we start registering it */
 
             // assign hashed to user before preparing for inserting into db 
+
             user["user_password"] = await User.hashPassword(user["user_password"]);
 
             // make entries array of hashed user

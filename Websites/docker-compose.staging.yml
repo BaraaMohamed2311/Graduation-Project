@@ -3,7 +3,7 @@
 services:
 
   nginx:
-    restart: on-failure
+    restart: on-failure ## to ensure one replica is always running to route traffic to the clients
     image: baraamohamed/gradproj:nginx_swarm
     ports:
       - target: 3050
@@ -33,6 +33,7 @@ services:
       resources:
         limits:
           memory: 165M
+          cpus: '0.060'
     environment:
       NODE_ENV: production
     ports:
@@ -54,6 +55,7 @@ services:
       resources:
         limits:
           memory: 255M
+          cpus: '0.30'
     ports:
       - target: 3000
         protocol: tcp
@@ -71,6 +73,7 @@ services:
       resources:
         limits:
           memory: 275M
+          cpus: '0.12'
     environment:
       NODE_ENV: production
     ports:
@@ -92,6 +95,7 @@ services:
       resources:
         limits:
           memory: 342M
+          cpus: '0.30'
     ports:
       - target: 3000
         protocol: tcp
@@ -107,10 +111,11 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV}
     deploy:
-      replicas: 2
+      replicas: 1
       resources:
         limits:
-          memory: 130M
+          memory: 220M
+          cpus: '0.090'
     ports:
       - target: 5000
         protocol: tcp
@@ -127,10 +132,11 @@ services:
   storage_client:
     image: baraamohamed/gradproj:storage-client-${STORAGE_CLIENT_VERSION:-latest}
     deploy:
-      replicas: 2
+      replicas: 1
       resources:
         limits:
-          memory: 105M
+          memory: 300M
+          cpus: '0.30'
     ports:
       - target: 3000
         protocol: tcp
@@ -152,6 +158,7 @@ services:
       resources:
         limits:
           memory: 930M
+          cpus: '0.060'
     secrets:
       - MYSQL_ROOT_PASSWORD
       - MYSQL_PASSWORD
