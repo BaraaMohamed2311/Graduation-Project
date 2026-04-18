@@ -28,9 +28,9 @@ def exportEnvVarsWindows() {
         set MYSQL_USER=${env.MYSQL_USER}
     """
 }
-// Set Jenkins env to versions 
-def setEnvVersions(versions){
 
+// Set Jenkins env to versions
+def setEnvVersions(versions) {
     def envMapping = [
         EMS_SERVER_VERSION      : 'ems-server',
         EMS_CLIENT_VERSION      : 'ems-client',
@@ -41,86 +41,67 @@ def setEnvVersions(versions){
     ]
 
     envMapping.each { envKey, imageKey ->
-    // sets env object in Jenkinsfile context to the version if exist in versions map or empty string if not found (to avoid nulls)
         env[envKey] = versions[imageKey] ?: ''
     }
-
-} 
+}
 
 // Deployment logic functions
-def updateServices(String stackPrefix, Map resolvedVersions , Map servicesToCreate, Map imageNameToServiceName) {
+def updateServices(String stackPrefix, Map resolvedVersions, Map servicesToCreate, Map imageNameToServiceName) {
 
-        // check if service exists before trying to update
-        resolvedVersions.each { image, version ->
-                def serviceSuffix = imageNameToServiceName[image]
-                if (!serviceSuffix) {
-                    echo "No service mapping found for image ${image}, skipping update for this image"
-                    return
-                }
-            sh """
-                docker service inspect ${stackPrefix}_${serviceSuffix} > /dev/null 2>&1 && \
-                docker service update --image ${image}-${version} ${stackPrefix}_${serviceSuffix}
-
-            """
+    // check if service exists before trying to update
+    resolvedVersions.each { image, version ->
+        def serviceSuffix = imageNameToServiceName[image]
+        if (!serviceSuffix) {
+            echo "No service mapping found for image ${image}, skipping update for this image"
+            return
         }
-        
-        // service is known but not running, then deploy it as new with the provided version
-        servicesToCreate.each { image, version ->
-                def serviceSuffix = imageNameToServiceName[image]
-                if (!serviceSuffix) {
-                    echo "No service mapping found for image ${image}, skipping deploy for this image"
-                    return
-                }
-                // --label com.docker.stack.namespace= is needed to make sure the service is part of the stack 
-            sh """
-                docker service inspect ${stackPrefix}_${serviceSuffix} > /dev/null 2>&1 || \
-                docker service create --name ${stackPrefix}_${serviceSuffix} --label com.docker.stack.namespace=${stackPrefix} ${image}-${version}
-            """
+        sh """
+            docker service inspect ${stackPrefix}_${serviceSuffix} > /dev/null 2>&1 && \
+            docker service update --image ${image}-${version} ${stackPrefix}_${serviceSuffix}
+        """
+    }
+
+    // service is known but not running, deploy it as new with the provided version
+    servicesToCreate.each { image, version ->
+        def serviceSuffix = imageNameToServiceName[image]
+        if (!serviceSuffix) {
+            echo "No service mapping found for image ${image}, skipping deploy for this image"
+            return
         }
-
-
+        // --label com.docker.stack.namespace= is needed to make sure the service is part of the stack
+        sh """
+            docker service inspect ${stackPrefix}_${serviceSuffix} > /dev/null 2>&1 || \
+            docker service create --name ${stackPrefix}_${serviceSuffix} --label com.docker.stack.namespace=${stackPrefix} ${image}-${version}
+        """
+    }
 }
 
-def stackDeploy(String composeFile, String stackName, String resolvedFile) {
-    sh """
-        ${exportEnvVarsUnix()}
-        docker compose -f ${composeFile} pull
-        envsubst < ${composeFile} > ${resolvedFile}
-        docker stack deploy -c ${resolvedFile} ${stackName}
-        rm ${resolvedFile}
-    """
-}
 // uses helper function getCurrentVersion to just get current running version
 def checkVersions(Map imagesMapFromParam, String stackPrefix, Map currentRunningVersion) {
-    
-    def resolvedVersions  = [:]  // image → resolved version (param or service)
-    def servicesToCreate  = [:]   // images with no version from either source
-    // Param is the source of truth so we loop on it
+    def resolvedVersions = [:]
+    def servicesToCreate = [:]
+
     imagesMapFromParam.each { image, version ->
         def fromParam   = version
         def fromService = currentRunningVersion[image]
-        // add version to resolvedVersions if found at both parameter and current running service
-        // this includes the case where they are the same (targeted update) or different (full stack deploy with param override) but param takes precedence in both cases
-        // we redeploy if they are the same since it was explicitly provided in the param which means we want to ensure that version is running even if it was already running (e.g. redeploying same version with new stack config)
+
         if (fromParam && fromService) {
-            resolvedVersions[image] = version  // param takes precedence
-        }
-        // if  only param exist then we will deploy service with the provided version
-        else if (fromParam && !fromService) {
+            resolvedVersions[image] = version
+        } else if (fromParam && !fromService) {
             servicesToCreate[image] = version
         }
     }
 
     return [resolvedVersions: resolvedVersions, servicesToCreate: servicesToCreate]
 }
+
 // uses services to get current image version of each mapped as imageName -> version
 def getCurrentRunningVersions(String stackPrefix, List services) {
-    
     def currentVersions = [:]
-    services.each { serviceSuffix -> 
+    services.each { serviceSuffix ->
         def image = sh(
-        script: "docker service inspect ${stackPrefix}_${serviceSuffix} --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}' 2>/dev/null || echo ''",
-        returnStdout: true
+            script: "docker service inspect ${stackPrefix}_${serviceSuffix} --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}' 2>/dev/null || echo ''",
+            returnStdout: true
         ).trim()
         if (!image) return null
         image = image.split('@')[0]
@@ -129,13 +110,13 @@ def getCurrentRunningVersions(String stackPrefix, List services) {
         currentVersions[image] = parts[1].tokenize('-').last()
     }
     return currentVersions
-    
 }
+
 // -------------------------------------------------------
 // Global Variables
-def resolvedVersions = [:]  // image → resolved version (param or service)  
-def servicesToCreate =  [:]   // images -> version of service not running and will be deployed as new if provided in param
-def imageNameToServiceName = [  // to map image name to service name for update command
+def resolvedVersions = [:]
+def servicesToCreate = [:]
+def imageNameToServiceName = [
     "ems-server"      : "ems_server",
     "ems-client"      : "ems_client",
     "hospital-server" : "hospital_server",
@@ -202,17 +183,11 @@ pipeline {
             }
         }
 
-
-
-    stage("Check Versions and Stack State") {
+        stage("Check Versions and Stack State") {
             steps {
                 script {
-                    // read image versoion map from param if provided
                     def imagesMapParam = params.IMAGES_VERSIONS?.trim() ? readJSON(text: params.IMAGES_VERSIONS) : [:]
 
-
-                    // ── Check Stack existence And Store as env ──────────────────────────────────────
-                    //  list all stacks, grep -q quite check do not return anything -w word match, echo yeso and return to env, trim to remove newlines
                     env.STAGING_STACK_EXISTS = sh(
                         script: "docker stack ls --format '{{.Name}}' | grep -qw staging_stack && echo yes || echo no",
                         returnStdout: true
@@ -223,25 +198,22 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-
-                    // ── Check what we have vs what's missing ───────────────────────
                     def services = [
-                            "ems_server",
-                            "ems_client",
-                            "hospital_server",
-                            "hospital_client",
-                            "storage_server" ,
-                            "storage_client" ,
-                        ]
+                        "ems_server",
+                        "ems_client",
+                        "hospital_server",
+                        "hospital_client",
+                        "storage_server",
+                        "storage_client",
+                    ]
 
-                        def currentRunningVersions = getCurrentRunningVersions("staging_stack", services)
-                        def result = checkVersions(imagesMapParam, "staging_stack", currentRunningVersions)
+                    def currentRunningVersions = getCurrentRunningVersions("staging_stack", services)
+                    def result = checkVersions(imagesMapParam, "staging_stack", currentRunningVersions)
 
-                        resolvedVersions = result.resolvedVersions   
-                        servicesToCreate = result.servicesToCreate
+                    resolvedVersions = result.resolvedVersions
+                    servicesToCreate = result.servicesToCreate
 
-                        // Set Jenkins env vars for versions to be used in stack deploy (for both full stack and targeted updates)
-                        setEnvVersions(resolvedVersions + servicesToCreate)  // merge maps to set all versions in env, resolvedVersions take precedence over servicesToCreate if any overlap (should not happen as they are mutually exclusive by logic)
+                    setEnvVersions(resolvedVersions + servicesToCreate)
 
                     echo """
                         ── Stack State ──────────────────────────────
@@ -257,22 +229,17 @@ pipeline {
                         ── Deployment Path ──────────────────────────
                         IMAGES_VERSIONS param:   ${params.IMAGES_VERSIONS ?: '(empty)'}
                     """
-
-                    }
-
-                    
                 }
             }
-        
+        }
+
         // ── STAGING ────────────────────────────────────────────────────────────
-        // Scenario: stack running + no images → full stack deploy as it assume change was in stack configuration
+        // Scenario: stack running + no images → full stack deploy (infra change)
         // Scenario: stack not running → full stack deploy (fresh or first time)
         stage("Deploy Stack to Staging") {
             when {
                 expression {
                     def noImagesProvided = !params.IMAGES_VERSIONS?.trim() || params.IMAGES_VERSIONS == '{}'
-                    // Run when: stack not running (any scenario without images)
-                    //        OR: stack running but no images provided (infra-only change)
                     return env.STAGING_STACK_EXISTS == 'no' || noImagesProvided
                 }
             }
@@ -301,7 +268,7 @@ pipeline {
             }
         }
 
-        // Scenario: stack running + specific images provided → targeted service update only
+        // Scenario: stack running + specific images provided → targeted service update only or create service if not exists 
         stage("Targeted Update/Deployment: Staging") {
             when {
                 expression {
@@ -311,7 +278,7 @@ pipeline {
             }
             steps {
                 script {
-                    updateServices("staging_stack", resolvedVersions, servicesToCreate,imageNameToServiceName)
+                    updateServices("staging_stack", resolvedVersions, servicesToCreate, imageNameToServiceName)
                 }
             }
         }
@@ -355,8 +322,8 @@ pipeline {
         }
 
         // ── PRODUCTION ─────────────────────────────────────────────────────────
-        //
-        // Same logic mirrors staging exactly
+        // Scenario: stack not running  → full stack deploy 
+        // Scenario: stack running + no images → full stack deploy (infra change)
         stage("Deploy Stack to Production") {
             when {
                 expression {
@@ -387,24 +354,25 @@ pipeline {
                     }
                 }
             }
-        
+        }
 
-            stage("Targeted Update: Production") {
-                when {
-                    expression {
-                        def imagesProvided = params.IMAGES_VERSIONS?.trim() && params.IMAGES_VERSIONS != '{}'
-                        return env.PRODUCTION_STACK_EXISTS == 'yes' && imagesProvided
-                    }
+
+        // Scenario: stack running + specific images provided → targeted service update only
+        stage("Targeted Update: Production") {
+            when {
+                expression {
+                    def imagesProvided = params.IMAGES_VERSIONS?.trim() && params.IMAGES_VERSIONS != '{}'
+                    return env.PRODUCTION_STACK_EXISTS == 'yes' && imagesProvided
                 }
-                steps {
-                    script {
-                        updateServices("production_stack", resolvedVersions, servicesToCreate,imageNameToServiceName)
-                    }
+            }
+            steps {
+                script {
+                    updateServices("production_stack", resolvedVersions, servicesToCreate, imageNameToServiceName)
                 }
             }
         }
+
     }
-    
 
     post {
         failure { echo "Pipeline failed — production was NOT updated" }
