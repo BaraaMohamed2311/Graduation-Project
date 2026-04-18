@@ -263,7 +263,7 @@ pipeline {
                     
                 }
             }
-        }
+        
         // ── STAGING ────────────────────────────────────────────────────────────
         // Scenario: stack running + no images → full stack deploy as it assume change was in stack configuration
         // Scenario: stack not running → full stack deploy (fresh or first time)
@@ -387,24 +387,28 @@ pipeline {
                     }
                 }
             }
-        }
+        
 
-        stage("Targeted Update: Production") {
-            when {
-                expression {
-                    def imagesProvided = params.IMAGES_VERSIONS?.trim() && params.IMAGES_VERSIONS != '{}'
-                    return env.PRODUCTION_STACK_EXISTS == 'yes' && imagesProvided
+            stage("Targeted Update: Production") {
+                when {
+                    expression {
+                        def imagesProvided = params.IMAGES_VERSIONS?.trim() && params.IMAGES_VERSIONS != '{}'
+                        return env.PRODUCTION_STACK_EXISTS == 'yes' && imagesProvided
+                    }
                 }
-            }
-            steps {
-                script {
-                    updateServices("production_stack", resolvedVersions, servicesToCreate,imageNameToServiceName)
+                steps {
+                    script {
+                        updateServices("production_stack", resolvedVersions, servicesToCreate,imageNameToServiceName)
+                    }
                 }
             }
         }
     }
+    
 
     post {
         failure { echo "Pipeline failed — production was NOT updated" }
         success { echo "Successfully deployed to production" }
     }
+
+}
