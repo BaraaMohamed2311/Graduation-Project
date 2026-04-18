@@ -41,7 +41,7 @@ def setEnvVersions(versions) {
     ]
 
     envMapping.each { envKey, imageKey ->
-        env[envKey] = versions[imageKey] ?: ''
+            env.setProperty(envKey, versions[imageKey] ?: '')
     }
 }
 
