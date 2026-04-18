@@ -208,6 +208,8 @@ pipeline {
                     ]
 
                     def currentRunningVersions = getCurrentRunningVersions("staging_stack", services)
+                    echo "Current running versions in staging_stack: ${currentRunningVersions}"
+                    
                     def result = checkVersions(imagesMapParam, "staging_stack", currentRunningVersions)
 
                     resolvedVersions = result.resolvedVersions
