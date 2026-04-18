@@ -46,7 +46,7 @@ def setEnvVersions(versions) {
 }
 
 // Deployment logic functions
-def updateServices(String stackPrefix, Map resolvedVersions, Map servicesToCreate, Map imageNameToServiceName) {
+def updateServices(String stackPrefix, Map resolvedVersions, Map servicesToCreate, Map imageNameToServiceName = imageNameToServiceName) {
 
     // check if service exists before trying to update
     resolvedVersions.each { image, version ->
@@ -96,19 +96,37 @@ def checkVersions(Map imagesMapFromParam, String stackPrefix, Map currentRunning
 }
 
 // uses services to get current image version of each mapped as imageName -> version
-def getCurrentRunningVersions(String stackPrefix, List services) {
+def getCurrentRunningVersions(
+    String stackPrefix,
+    List services
+) {
     def currentVersions = [:]
+
     services.each { serviceSuffix ->
+
         def image = sh(
             script: "docker service inspect ${stackPrefix}_${serviceSuffix} --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}' 2>/dev/null || echo ''",
             returnStdout: true
         ).trim()
-        if (!image) return null
-        image = image.split('@')[0]
-        def parts = image.tokenize(':')
-        if (parts.size() < 2) return null
-        currentVersions[image] = parts[1].tokenize('-').last()
+
+        if (!image) return
+
+        // remove digest
+        def clean = image.split('@')[0]
+
+        // get index of last ':' in username/repository:tag and extract tag (version)
+        def idx = clean.lastIndexOf(':')
+        if (idx == -1) return
+
+        def tag = clean.substring(idx + 1)
+
+        // extract version (last part after '-')
+        // since format is imageName-version, we can split by '-' and take last part as version, this is more robust in case imageName contains '-'
+        def version = tag.tokenize('-').last()
+
+        currentVersions[serviceSuffix] = version
     }
+
     return currentVersions
 }
 
@@ -124,6 +142,7 @@ def imageNameToServiceName = [
     "storage-server"  : "storage_server",
     "storage-client"  : "storage_client"
 ]
+
 
 // -------------------------------------------------------
 pipeline {
@@ -209,7 +228,7 @@ pipeline {
 
                     def currentRunningVersions = getCurrentRunningVersions("staging_stack", services)
                     echo "Current running versions in staging_stack: ${currentRunningVersions}"
-                    
+
                     def result = checkVersions(imagesMapParam, "staging_stack", currentRunningVersions)
 
                     resolvedVersions = result.resolvedVersions
