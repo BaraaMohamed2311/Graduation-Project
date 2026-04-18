@@ -84,7 +84,7 @@ def checkVersions(Map imagesMapFromParam, String stackPrefix, Map currentRunning
     imagesMapFromParam.each { image, version ->
         def fromParam   = version
         def fromService = currentRunningVersion[image]
-
+        echo "Checking image ${image}: fromParam=${fromParam}, fromService=${fromService}"
         if (fromParam && fromService) {
             resolvedVersions[image] = version
         } else if (fromParam && !fromService) {
