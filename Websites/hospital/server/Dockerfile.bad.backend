@@ -1,0 +1,30 @@
+FROM node:20-alpine
+
+
+WORKDIR /app
+
+# BAD: install system deps in separate layers
+RUN apk add --no-cache python3
+RUN apk add --no-cache make
+RUN apk add --no-cache g++
+
+# BAD: no .dockerignore → copies EVERYTHING (node_modules, .git, etc.)
+COPY . .
+
+# BAD: install deps AFTER copying everything → breaks caching
+RUN npm install
+
+
+
+# BAD: create user in separate layers
+RUN addgroup -S appgroup
+RUN adduser -S appuser -G appgroup
+
+# BAD: switch user late
+USER appuser
+
+# BAD: expose random port
+EXPOSE 8888
+
+# BAD: use shell form (adds extra layer + worse signal handling)
+CMD npm run start

@@ -80,7 +80,7 @@ def updateServices(String stackPrefix, Map resolvedVersions, Map servicesToCreat
 def checkVersions(Map imagesMapFromParam, String stackPrefix, Map currentRunningVersion) {
     def resolvedVersions = [:]
     def servicesToCreate = [:]
-
+    // when imagesMapFromParam is empty??
     imagesMapFromParam.each { image, version ->
         def fromParam   = version
         def fromService = currentRunningVersion[image]
@@ -123,8 +123,9 @@ def getCurrentRunningVersions(
         // extract version (last part after '-')
         // since format is imageName-version, we can split by '-' and take last part as version, this is more robust in case imageName contains '-'
         def version = tag.tokenize('-').last()
+        def imageName = clean.substring(0, idx)
 
-        currentVersions[serviceSuffix] = version
+        currentVersions[imageName] = version
     }
 
     return currentVersions

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import styles from "./PatientMedsTable.module.css";
+import styles from "./Patientmedstable.module.css";
 import userNotification from "@/utils/userNotification";
 
 export default function PatientMedsTable({ token, user_id }) {
