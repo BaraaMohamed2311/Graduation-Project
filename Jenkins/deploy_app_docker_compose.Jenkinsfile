@@ -32,12 +32,12 @@ def exportEnvVarsWindows() {
 // Set Jenkins env to versions
 def setEnvVersions(versions) {
     def envMapping = [
-        EMS_SERVER_VERSION      : 'ems-server',
-        EMS_CLIENT_VERSION      : 'ems-client',
-        HOSPITAL_SERVER_VERSION : 'hospital-server',
-        HOSPITAL_CLIENT_VERSION : 'hospital-client',
-        STORAGE_SERVER_VERSION  : 'storage-server',
-        STORAGE_CLIENT_VERSION  : 'storage-client'
+        EMS_SERVER_VERSION      : 'baraamohamed/gradproj:ems-server',
+        EMS_CLIENT_VERSION      : 'baraamohamed/gradproj:ems-client',
+        HOSPITAL_SERVER_VERSION : 'baraamohamed/gradproj:hospital-server',
+        HOSPITAL_CLIENT_VERSION : 'baraamohamed/gradproj:hospital-client',
+        STORAGE_SERVER_VERSION  : 'baraamohamed/gradproj:storage-server',
+        STORAGE_CLIENT_VERSION  : 'baraamohamed/gradproj:storage-client'
     ]
 
     envMapping.each { envKey, imageKey ->
@@ -112,13 +112,8 @@ def getCurrentRunningVersions(
         if (!image) return
 
         // remove digest
-        def clean = image.split('@')[0]
+        def tag = image.split('@')[0]
 
-        // get index of last ':' in username/repository:tag and extract tag (version)
-        def idx = clean.lastIndexOf(':')
-        if (idx == -1) return
-
-        def tag = clean.substring(idx + 1)
         // separate name from ems-server-1.0.0 → ems and server and 1.0.0
         def parts = tag.tokenize('-')
         // version is always last part
@@ -137,12 +132,12 @@ def getCurrentRunningVersions(
 def resolvedVersions = [:]
 def servicesToCreate = [:]
 def imageNameToServiceName = [
-    "ems-server"      : "ems_server",
-    "ems-client"      : "ems_client",
-    "hospital-server" : "hospital_server",
-    "hospital-client" : "hospital_client",
-    "storage-server"  : "storage_server",
-    "storage-client"  : "storage_client"
+    "baraamohamed/gradproj:ems-server"      : "ems_server",
+    "baraamohamed/gradproj:ems-client"      : "ems_client",
+    "baraamohamed/gradproj:hospital-server" : "hospital_server",
+    "baraamohamed/gradproj:hospital-client" : "hospital_client",
+    "baraamohamed/gradproj:storage-server"  : "storage_server",
+    "baraamohamed/gradproj:storage-client"  : "storage_client"
 ]
 
 

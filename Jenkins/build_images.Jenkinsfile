@@ -174,7 +174,7 @@ pipeline {
                                         --push
                                 """
                                 // store successful build
-                                successfulImages[svc.trim()] = version
+                                successfulImages["baraamohamed/gradproj:${svcName}"] = version
                             } catch (err) {
                                 echo "Failed to build ${svcName}: ${err}"
                                 continue
