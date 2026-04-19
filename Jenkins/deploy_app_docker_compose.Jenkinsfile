@@ -119,11 +119,12 @@ def getCurrentRunningVersions(
         if (idx == -1) return
 
         def tag = clean.substring(idx + 1)
-
-        // extract version (last part after '-')
-        // since format is imageName-version, we can split by '-' and take last part as version, this is more robust in case imageName contains '-'
-        def version = tag.tokenize('-').last()
-        def imageName = clean.substring(0, idx)
+        // separate name from ems-server-1.0.0 → ems and server and 1.0.0
+        def parts = tag.tokenize('-')
+        // version is always last part
+        def version = parts.last()
+        // name is everything except version part joined with '-' again to support names with dashes like ems-server
+        def imageName = parts.init().join('-')  // everything except last
 
         currentVersions[imageName] = version
     }
