@@ -124,7 +124,7 @@ def getCurrentRunningVersions(
         // version is always last part
         def version = parts.last()
         // name is everything except version part joined with '-' again to support names with dashes like ems-server
-        def imageName = parts.init().join('-')  // everything except last
+        def imageName = parts.subList(0, parts.size() - 1).join('-')  // everything except last
 
         currentVersions[imageName] = version
     }
