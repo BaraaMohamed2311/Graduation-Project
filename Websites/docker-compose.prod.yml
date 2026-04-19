@@ -28,8 +28,11 @@ services:
   ems_server:
     image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION:-latest}
     deploy:
-      replicas: 3
-
+      replicas: 2
+      resources:
+        limits:
+          memory: 165M
+          cpus: '0.060'
     environment:
       NODE_ENV: production
     ports:
@@ -46,7 +49,11 @@ services:
   ems_client:
     image: baraamohamed/gradproj:ems-client-${EMS_CLIENT_VERSION:-latest}
     deploy:
-      replicas: 3
+      replicas: 2
+      resources:
+        limits:
+          memory: 255M
+          cpus: '0.30'
 
     ports:
       - target: 3000
@@ -62,7 +69,10 @@ services:
     image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION:-latest}
     deploy:
       replicas: 3
-
+      resources:
+        limits:
+          memory: 275M
+          cpus: '0.12'
     environment:
       NODE_ENV: production
     ports:
@@ -81,7 +91,10 @@ services:
     image: baraamohamed/gradproj:hospital-client-${HOSPITAL_CLIENT_VERSION:-latest}
     deploy:
       replicas: 3
-
+      resources:
+        limits:
+          memory: 342M
+          cpus: '0.30'
     ports:
       - target: 3000
         protocol: tcp
@@ -97,8 +110,11 @@ services:
   storage_client:
     image: baraamohamed/gradproj:storage-client-${STORAGE_CLIENT_VERSION:-latest}
     deploy:
-      replicas: 3
-
+      replicas: 1
+      resources:
+        limits:
+          memory: 300M
+          cpus: '0.30'
     ports:
       - target: 3000
         protocol: tcp
@@ -113,8 +129,11 @@ services:
   storage_server:
     image: baraamohamed/gradproj:storage-server-${STORAGE_SERVER_VERSION:-latest}
     deploy:
-      replicas: 3
-
+      replicas: 1
+      resources:
+        limits:
+          memory: 220M
+          cpus: '0.090'
     ports:
       - target: 5000
         protocol: tcp
@@ -140,7 +159,10 @@ services:
     image: mysql:8
     deploy:
       replicas: 1
-
+      resources:
+        limits:
+          memory: 930M
+          cpus: '0.060'
     secrets:
       - MYSQL_ROOT_PASSWORD
       - MYSQL_PASSWORD
