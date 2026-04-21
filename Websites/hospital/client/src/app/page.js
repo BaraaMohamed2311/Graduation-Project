@@ -57,7 +57,7 @@ export default function Home() {
                 <Image
                     className="home-main-img"
                     priority={true}
-                    src={"/busunessman2.PNG"}
+                    src={"/busunessman2.png"}
                     width={500}
                     height={500}
                     alt="Main Section Home Page Image"

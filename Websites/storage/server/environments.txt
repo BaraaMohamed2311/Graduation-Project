@@ -1,0 +1,25 @@
+
+PORT=
+MONGO_URI=
+EMAIL_USER=
+EMAIL_PASS=
+ALERT_EMAIL=
+SECRET_KEY=
+
+# Name of the MySQL database
+DB_NAME=
+
+
+# Database password for MySQL
+DB_PASSWORD=
+
+# MySQL user
+DB_USER=
+
+# MySQL port
+DB_PORT=
+
+DB_HOST= # service name 
+
+
+
