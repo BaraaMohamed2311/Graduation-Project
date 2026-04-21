@@ -338,16 +338,18 @@ pipeline {
                             }
                         }
 
-                        // ask only for missing ones
                         if (missing) {
                             def inputs = input(
                                 message: "Provide missing image versions",
                                 parameters: missing.keySet().collect { key ->
-                                    string(name: key, description: "Enter version for ${key}")
+                                    string(
+                                        name: key,
+                                        defaultValue: '',
+                                        description: "Enter version for ${key}"
+                                    )
                                 }
                             )
 
-                            // set them to env
                             missing.keySet().each { key ->
                                 env.setProperty(key, inputs[key])
                             }
