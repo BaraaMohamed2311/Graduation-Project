@@ -283,13 +283,16 @@ pipeline {
 
             steps {
                 // require input for versions and set then to env variables
-                imageNameToENV.each { image, envVar ->
+                script{
+                    imageNameToENV.each { image, envVar ->
                     def userInput = input(
                         id: "input_${envVar}",
                         message: "Enter version for ${image}:",
                         parameters: [string(defaultValue: '', description: '', name: envVar)]
                     )
                     env.setProperty(envVar, userInput)
+                }
+                
                 }
                 // deploy full stack
                 dir('Websites') {
