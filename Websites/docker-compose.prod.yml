@@ -26,7 +26,7 @@ services:
   # ems services:
   ################## 
   ems_server:
-    image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION:-latest}
+    image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION}
     deploy:
       replicas: 2
       resources:
@@ -47,7 +47,7 @@ services:
       - prod_ems_server_config
 
   ems_client:
-    image: baraamohamed/gradproj:ems-client-${EMS_CLIENT_VERSION:-latest}
+    image: baraamohamed/gradproj:ems-client-${EMS_CLIENT_VERSION}
     deploy:
       replicas: 2
       resources:
@@ -66,7 +66,7 @@ services:
   # hospital services:
   ################## 
   hospital_server:
-    image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION:-latest}
+    image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION}
     deploy:
       replicas: 3
       resources:
@@ -88,7 +88,7 @@ services:
 
 
   hospital_client:
-    image: baraamohamed/gradproj:hospital-client-${HOSPITAL_CLIENT_VERSION:-latest}
+    image: baraamohamed/gradproj:hospital-client-${HOSPITAL_CLIENT_VERSION}
     deploy:
       replicas: 3
       resources:
@@ -108,7 +108,7 @@ services:
  ################## 
 
   storage_client:
-    image: baraamohamed/gradproj:storage-client-${STORAGE_CLIENT_VERSION:-latest}
+    image: baraamohamed/gradproj:storage-client-${STORAGE_CLIENT_VERSION}
     deploy:
       replicas: 1
       resources:
@@ -127,7 +127,7 @@ services:
 
 
   storage_server:
-    image: baraamohamed/gradproj:storage-server-${STORAGE_SERVER_VERSION:-latest}
+    image: baraamohamed/gradproj:storage-server-${STORAGE_SERVER_VERSION}
     deploy:
       replicas: 1
       resources:

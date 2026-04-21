@@ -85,10 +85,17 @@ def checkVersions(Map imagesMapFromParam, String stackPrefix, Map currentRunning
         def fromParam   = version
         def fromService = currentRunningVersion[image]
         echo "Checking image ${image}: fromParam=${fromParam}, fromService=${fromService}"
+        // Logic: 
+        // - if image version provided in param → use it (update or create)
+        // - else if image version not provided in param but service is running → use running version (no change)
+        // This is important so env vars are always set to something and we don't accidentally set them to empty which would break the stack deploy if we do a full stack deploy later without providing versions in param
         if (fromParam && fromService) {
             resolvedVersions[image] = version
         } else if (fromParam && !fromService) {
             servicesToCreate[image] = version
+        }
+        else if (!fromParam && fromService) {
+            resolvedVersions[image] = fromService
         }
     }
 
@@ -138,6 +145,15 @@ def imageNameToServiceName = [
     "baraamohamed/gradproj:hospital-client" : "hospital_client",
     "baraamohamed/gradproj:storage-server"  : "storage_server",
     "baraamohamed/gradproj:storage-client"  : "storage_client"
+]
+
+def imageNameToENV = [
+    'baraamohamed/gradproj:ems-server'       : 'EMS_SERVER_VERSION',
+    'baraamohamed/gradproj:ems-client'       : 'EMS_CLIENT_VERSION',
+    'baraamohamed/gradproj:hospital-server'  : 'HOSPITAL_SERVER_VERSION',
+    'baraamohamed/gradproj:hospital-client'  : 'HOSPITAL_CLIENT_VERSION',
+    'baraamohamed/gradproj:storage-server'   : 'STORAGE_SERVER_VERSION',
+    'baraamohamed/gradproj:storage-client'   : 'STORAGE_CLIENT_VERSION'  
 ]
 
 
@@ -198,7 +214,7 @@ pipeline {
                 }
             }
         }
-
+        // We don't ask for missing versions in this stage as there is a scenarion when stack is running and we only want to update specific services or create specific services
         stage("Check Versions and Stack State") {
             steps {
                 script {
@@ -254,16 +270,28 @@ pipeline {
         }
 
         // ── STAGING ────────────────────────────────────────────────────────────
-        // Scenario: stack running + no images → full stack deploy (infra change)
-        // Scenario: stack not running → full stack deploy (fresh or first time)
-        stage("Deploy Stack to Staging") {
+        // Scenario: Stack not running + no images provided → Ask user for versions and full stack deploy (first time deploy)
+        // Scenario: Stack not running + images provided → 
+        // Scenario: Stack running update or create services based on provided versions in param
+        stage("Deploy Stack to Staging | If both conditions are met: stack not running AND no specific images provided "){
             when {
                 expression {
                     def noImagesProvided = !params.IMAGES_VERSIONS?.trim() || params.IMAGES_VERSIONS == '{}'
-                    return env.STAGING_STACK_EXISTS == 'no' || noImagesProvided
+                    return env.STAGING_STACK_EXISTS == 'no' && noImagesProvided
                 }
             }
+
             steps {
+                // require input for versions and set then to env variables
+                imageNameToENV.each { image, envVar ->
+                    def userInput = input(
+                        id: "input_${envVar}",
+                        message: "Enter version for ${image}:",
+                        parameters: [string(defaultValue: '', description: '', name: envVar)]
+                    )
+                    env.setProperty(envVar, userInput)
+                }
+                // deploy full stack
                 dir('Websites') {
                     script {
                         if (isUnix()) {
@@ -287,6 +315,65 @@ pipeline {
                 }
             }
         }
+
+        stage("Deploy Stack to Staging | When only one condition is met: stack not running OR no specific images provided") {
+            when {
+                expression {
+                    def noImagesProvided = !params.IMAGES_VERSIONS?.trim() || params.IMAGES_VERSIONS == '{}'
+                    // not stack but param is provided → deploy with provided versions in param (could be partial or full)
+                    return env.STAGING_STACK_EXISTS == 'no' && !noImagesProvided
+                }
+            }
+            steps {
+                script {
+
+                        def missing = [:]
+                        // detect missing env vars
+                        imageNameToENV.each { _, envVar ->
+                            if (!env[envVar]?.trim()) {
+                                missing[envVar] = ''
+                            }
+                        }
+
+                        // ask only for missing ones
+                        if (missing) {
+                            def inputs = input(
+                                message: "Provide missing image versions",
+                                parameters: missing.keySet().collect { key ->
+                                    string(name: key, description: "Enter version for ${key}")
+                                }
+                            )
+
+                            // set them to env
+                            missing.keySet().each { key ->
+                                env.setProperty(key, inputs[key])
+                            }
+                        }
+                }
+                dir('Websites') {
+                    script {
+                        if (isUnix()) {
+                            sh """
+                                ${exportEnvVarsUnix()}
+                                docker compose -f docker-compose.staging.yml pull
+                                envsubst < docker-compose.staging.yml > /tmp/resolved-staging.yml
+                                docker stack deploy -c /tmp/resolved-staging.yml staging_stack
+                                rm /tmp/resolved-staging.yml
+                            """
+                        } else {
+                            bat """
+                                ${exportEnvVarsWindows()}
+                                docker compose -f docker-compose.staging.yml pull
+                                docker compose -f docker-compose.staging.yml config > resolved-staging.yml
+                                docker stack deploy -c resolved-staging.yml staging_stack
+                                del resolved-staging.yml
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
 
         // Scenario: stack running + specific images provided → targeted service update only or create service if not exists 
         stage("Targeted Update/Deployment: Staging") {
@@ -342,13 +429,13 @@ pipeline {
         }
 
         // ── PRODUCTION ─────────────────────────────────────────────────────────
-        // Scenario: stack not running  → full stack deploy 
-        // Scenario: stack running + no images → full stack deploy (infra change)
+        // Already uses set of env variables used for staging
+        // Scenario: Stack not running using versions from staging 
+        // Scenario: Stack is running update or create services based on provided versions in param (same logic as staging)
         stage("Deploy Stack to Production") {
             when {
                 expression {
-                    def noImagesProvided = !params.IMAGES_VERSIONS?.trim() || params.IMAGES_VERSIONS == '{}'
-                    return env.PRODUCTION_STACK_EXISTS == 'no' || noImagesProvided
+                    return env.PRODUCTION_STACK_EXISTS == 'no' 
                 }
             }
             steps {
