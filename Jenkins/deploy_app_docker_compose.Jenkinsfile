@@ -333,7 +333,7 @@ pipeline {
                         def missing = [:]
                         // detect missing env vars
                         imageNameToENV.each { _, envVar ->
-                            if (!env[envVar]?.trim()) {
+                            if (!env.getProperty(envVar)?.trim()) {
                                 missing[envVar] = ''
                             }
                         }
