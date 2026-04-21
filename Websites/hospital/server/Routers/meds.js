@@ -6,6 +6,7 @@ const executeQuery = require("../Utils/executeMySqlQuery");
 // Returns every assignment with its scheduled times aggregated
 router.get("/patient-meds", async (req, res) => {
   try {
+    const {user_id} = req.query
     const rows = await executeQuery(`
       SELECT
         pm.id             AS assignment_id,
@@ -22,10 +23,10 @@ router.get("/patient-meds", async (req, res) => {
       JOIN patients  p   ON pm.user_id      = p.user_id
       JOIN users     u   ON p.user_id        = u.user_id
       LEFT JOIN patient_med_times pmt ON pmt.patient_med_id = pm.id
-      WHERE p.isAssignedToRoom = 1
+      WHERE p.isAssignedToRoom = 1 AND u.user_id = ?
       GROUP BY pm.id
       ORDER BY pm.user_id, pm.med_id
-    `);
+    `,[user_id]);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ success:false ,message: err.message });
