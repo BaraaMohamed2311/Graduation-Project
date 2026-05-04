@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import styles from "./Patientmedstable.module.css";
 import userNotification from "@/utils/userNotification";
 
-export default function PatientMedsTable({ token, user_id }) {
+export default function PatientMedsTable({ token, user_id , setPatientMedsParent}) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -23,6 +23,7 @@ export default function PatientMedsTable({ token, user_id }) {
       }
 
       setRows(data); // or data.rows if your API returns { success, rows }
+      setPatientMedsParent(data);
     } catch (err) {
       setError(err.message);
       userNotification("error", err.message);

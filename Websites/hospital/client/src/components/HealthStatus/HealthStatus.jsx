@@ -5,7 +5,7 @@ import { useState , useEffect ,useRef} from "react";
 import userNotification from "@/utils/userNotification";
 import statusNotification from "@/utils/statusNotification";
 
-export default function HealthState({user_id , modifierObj , isEditable=true}) {
+export default function HealthState({user_id , modifierObj , isEditable=true , setHealthStatusParent}) {
     const [healthStatus, setHealthStatus] = useState(null);
   const {
     patient_allergic = [],
@@ -61,7 +61,7 @@ useEffect(() => {
 
             if(data?.success){
               setHealthStatus(data.body)
-              
+              setHealthStatusParent(data.body)
             }
             userNotification(data?.success ? "success" :"error" , data.message)
           })

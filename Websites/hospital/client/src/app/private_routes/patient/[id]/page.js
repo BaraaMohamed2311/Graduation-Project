@@ -20,6 +20,7 @@ import uploadPatientFile from "@/utils/uploadPatientFile";
 import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
 import EditableSection from "@/components/EditableSection/EditableSection";
 import Patientmedstable from "@/components/Patientmedstable/Patientmedstable"
+import ExportPdfButton from "@/components/ExportPdfButton/ExportPdfButton";
 function PatientDetailsPage() {
   const [files_meta , setFilesMeta] = useState([]);
   const [blobURL, setBlobURL] = useState("/avatar.jpg");
@@ -31,6 +32,8 @@ function PatientDetailsPage() {
   const selectBoxsRef = useRef({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [ healthStatus, setHealthStatusParent] = useState(null);
+  const [ patientMeds, setPatientMedsParent] = useState([]);
 
   // Efficiently find the patient from cache
   
@@ -352,7 +355,10 @@ async function confirmDeleteAccount() {
   const can_modify_unrelated_patient = user_data?.emp_perms?.has('Modify Other Patient');
   
 
-
+  const filteredMeds = (patientMeds || []).map(({ med_id, scheduled_times }) => ({
+  med_id,
+  scheduled_times,
+}));
 
 
   return (
@@ -405,8 +411,11 @@ async function confirmDeleteAccount() {
           <HealthStatus 
           user_id={patient.user_id}
           modifierObj={modifierObj}
+          setHealthStatusParent={setHealthStatusParent}
           />
-          <Patientmedstable token={user_data.token} user_id={patient.user_id}/>
+          
+          <Patientmedstable token={user_data.token} user_id={patient.user_id} setPatientMedsParent={setPatientMedsParent}/>
+          <ExportPdfButton data={Object.assign({}, {main:patient} || {}, {healthStatus: healthStatus} || {},  {patientMeds: filteredMeds} || {}) } filename={`export_${patient.user_id}.pdf`} />
           {/* --- Actions --- */}
           <div className={"user-details"}>
             <ul className={styles["activity-list"]}>

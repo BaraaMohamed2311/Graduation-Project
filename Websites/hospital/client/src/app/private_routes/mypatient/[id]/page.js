@@ -19,6 +19,7 @@ import uploadPatientFile from "@/utils/uploadPatientFile";
 import EditableSection from "@/components/EditableSection/EditableSection";
 import Patientmedstable from "@/components/Patientmedstable/Patientmedstable"
 import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
+import ExportPdfButton from "@/components/ExportPdfButton/ExportPdfButton";
 function PatientDetailsPage() {
   const [files_meta , setFilesMeta] = useState([]);
   const [blobURL, setBlobURL] = useState("/avatar.jpg");
@@ -28,6 +29,8 @@ function PatientDetailsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const router = useRouter();
+  const [ healthStatus, setHealthStatusParent] = useState(null);
+  const [ patientMeds, setPatientMedsParent] = useState([]);
   // Define references at page level
     const inputsBoxsRef = useRef({});
     const selectBoxsRef = useRef({});
@@ -340,6 +343,11 @@ function PatientDetailsPage() {
     return <div>Your Patient not found in cache</div>;
   }
   const is_authorized_to_modify_my_patents_data = user_data?.emp_perms?.has('Modify My Patient');
+  const filteredMeds = (patientMeds || []).map(({ med_id, scheduled_times }) => ({
+  med_id,
+  scheduled_times,
+}));
+
   return (
     <main className={styles["page-main"]}>
       
@@ -386,15 +394,17 @@ function PatientDetailsPage() {
             patient={mypatient}
             files_meta ={files_meta}
             setFilesMeta ={setFilesMeta}
+            
           />
 
           <HealthStatus  
           user_id={mypatient.user_id}
           modifierObj={modifierObj}
+          setHealthStatusParent={setHealthStatusParent}
           />
 
-          <Patientmedstable token={user_data.token} user_id={mypatient.user_id}/>
-
+          <Patientmedstable token={user_data.token} user_id={mypatient.user_id} setPatientMedsParent={setPatientMedsParent}/>
+          <ExportPdfButton data={Object.assign({}, {main:mypatient} || {}, {healthStatus: healthStatus} || {},  {patientMeds: filteredMeds} || {}) } filename={`export_${mypatient.user_id}.pdf`} />
           {/* --- Actions --- */}
           <div className={"user-details"}>
             <ul className={styles["activity-list"]}>
