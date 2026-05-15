@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ems-server-deployment
-  namespace: testing
+  namespace: staging
   labels:
     app: ems-server
 spec:
@@ -45,7 +45,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ems-client-deployment
-  namespace: testing
+  namespace: staging
   labels:
     app: ems-client
 spec:
@@ -72,7 +72,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hospital-server-deployment
-  namespace: testing
+  namespace: staging
   labels:
     app: hospital-server
 spec:
@@ -113,7 +113,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hospital-client-deployment
-  namespace: testing
+  namespace: staging
   labels:
     app: hospital-client
 spec:
@@ -208,7 +208,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: db-deployment
-  namespace: testing
+  namespace: staging
   labels:
     app: db
 spec:
@@ -241,7 +241,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
-  namespace: testing
+  namespace: staging
   labels:
     app: nginx
 spec:
