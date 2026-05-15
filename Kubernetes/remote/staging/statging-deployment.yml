@@ -9,10 +9,7 @@ metadata:
     app: ems-server
 spec:
   replicas: 2
-  volumes:
-    - name: app-secrets
-      secret:
-        secretName: prod-ems-server-config
+  
   selector:
     matchLabels:
       app: ems-server 
@@ -21,6 +18,10 @@ spec:
       labels:
         app: ems-server  # ← Must match selector
     spec:
+      volumes:
+      - name: app-secrets
+        secret:
+          secretName: prod-ems-server-config
       containers:
       - name: ems-server
         image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION}
@@ -85,18 +86,20 @@ metadata:
     app: hospital-server
 spec:
   replicas: 2
-  volumes:
-    - name: app-secrets
-      secret:
-        secretName: prod-hospital-server-config
+  
   selector:
     matchLabels:
       app: hospital-server
   template:
+  
     metadata:
       labels:
         app: hospital-server
     spec:
+      volumes:
+      - name: app-secrets
+        secret:
+          secretName: prod-hospital-server-config
       containers:
       - name: hospital-server
         image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION}
@@ -161,18 +164,20 @@ metadata:
     app: storage-server
 spec:
   replicas: 1
-  volumes:
-    - name: app-secrets
-      secret:
-        secretName: prod-storage-server-config
+  
   selector:
     matchLabels:
       app: storage-server
   template:
+    
     metadata:
       labels:
         app: storage-server
     spec:
+      volumes:
+      - name: app-secrets
+        secret:
+          secretName: prod-storage-server-config
       containers:
       - name: storage-server
         image: baraamohamed/gradproj:storage-server-${STORAGE_SERVER_VERSION}
