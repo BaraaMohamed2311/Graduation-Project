@@ -8,7 +8,11 @@ metadata:
   labels:
     app: ems-server
 spec:
-  replicas: 3
+  replicas: 2
+  volumes:
+    - name: app-secrets
+      secret:
+        secretName: prod-ems-server-config
   selector:
     matchLabels:
       app: ems-server 
@@ -22,6 +26,10 @@ spec:
         image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION}
         ports:
         - containerPort: 5500
+        volumeMounts:
+        - name: app-secrets
+          mountPath: /run/secrets
+          readOnly: true
         env:
         - name: NODE_ENV
           value: "kube-production"
@@ -49,7 +57,7 @@ metadata:
   labels:
     app: ems-client
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: ems-client
@@ -76,7 +84,11 @@ metadata:
   labels:
     app: hospital-server
 spec:
-  replicas: 3
+  replicas: 2
+  volumes:
+    - name: app-secrets
+      secret:
+        secretName: prod-hospital-server-config
   selector:
     matchLabels:
       app: hospital-server
@@ -90,6 +102,10 @@ spec:
         image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION}
         ports:
         - containerPort: 8888
+        volumeMounts:
+        - name: app-secrets
+          mountPath: /run/secrets
+          readOnly: true
         env:
         - name: NODE_ENV
           value: "kube-production"
@@ -117,7 +133,7 @@ metadata:
   labels:
     app: hospital-client
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: hospital-client
@@ -145,6 +161,10 @@ metadata:
     app: storage-server
 spec:
   replicas: 1
+  volumes:
+    - name: app-secrets
+      secret:
+        secretName: prod-storage-server-config
   selector:
     matchLabels:
       app: storage-server
@@ -157,6 +177,10 @@ spec:
       - name: storage-server
         image: baraamohamed/gradproj:storage-server-${STORAGE_SERVER_VERSION}
         imagePullPolicy: Always
+        volumeMounts:
+        - name: app-secrets
+          mountPath: /run/secrets
+          readOnly: true
         ports:
         - containerPort: 5000
         env:
@@ -224,6 +248,7 @@ spec:
       containers:
       - name: db
         image: baraamohamed/gradproj:db
+        
         ports:
         - containerPort: 3306  
         env:
@@ -245,7 +270,7 @@ metadata:
   labels:
     app: nginx
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: nginx
