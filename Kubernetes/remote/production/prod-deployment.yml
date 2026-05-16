@@ -35,7 +35,7 @@ spec:
         - containerPort: 5500
         env:
         - name: NODE_ENV
-          value: "kube-production"
+          value: "production"
         - name: DB_HOST
           value: "db-service"  # ← Add database connection
         - name: DB_PORT
@@ -113,7 +113,7 @@ spec:
         - containerPort: 8888
         env:
         - name: NODE_ENV
-          value: "kube-production"
+          value: "production"
         - name: DB_HOST
           value: "db-service"  # ← Add database connection
         - name: DB_PORT
@@ -192,7 +192,7 @@ spec:
         - containerPort: 5000
         env:
         - name: NODE_ENV
-          value: "kube-production"
+          value: "production"
         - name: DB_HOST
           value: "db-service"  # ← Add database connection
         - name: DB_PORT

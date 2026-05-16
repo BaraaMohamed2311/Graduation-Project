@@ -20,7 +20,7 @@ spec:
     spec:
       automountServiceAccountToken: false
       volumes:
-      - name: prod-ems-server-volume
+      - name: app-secrets
         secret:
           secretName: prod-ems-server-config
       containers:
@@ -29,12 +29,12 @@ spec:
         ports:
         - containerPort: 5500
         volumeMounts:
-        - name: prod-ems-server-volume
+        - name: app-secrets
           mountPath: /run/secrets
           readOnly: true
         env:
         - name: NODE_ENV
-          value: "kube-production"
+          value: "production"
         - name: DB_HOST
           value: "db-service"  # ← Add database connection
         - name: DB_PORT
@@ -113,7 +113,7 @@ spec:
           readOnly: true
         env:
         - name: NODE_ENV
-          value: "kube-production"
+          value: "production"
         - name: DB_HOST
           value: "db-service"  # ← Add database connection
         - name: DB_PORT
@@ -193,7 +193,7 @@ spec:
         - containerPort: 5000
         env:
         - name: NODE_ENV
-          value: "kube-production"
+          value: "production"
         - name: DB_HOST
           value: "db-service"  # ← Add database connection
         - name: DB_PORT
