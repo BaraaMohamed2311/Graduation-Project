@@ -18,6 +18,7 @@ spec:
       labels:
         app: ems-server  # ← Must match selector
     spec:
+      automountServiceAccountToken: false
       volumes:
       - name: app-secrets
         secret:
@@ -95,6 +96,7 @@ spec:
       labels:
         app: hospital-server
     spec:
+      automountServiceAccountToken: false
       volumes:
       - name: app-secrets
         secret:
@@ -173,6 +175,7 @@ spec:
       labels:
         app: storage-server
     spec:
+      automountServiceAccountToken: false
       volumes:
       - name: app-secrets
         secret:

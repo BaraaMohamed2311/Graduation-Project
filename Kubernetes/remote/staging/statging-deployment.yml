@@ -18,8 +18,9 @@ spec:
       labels:
         app: ems-server  # ← Must match selector
     spec:
+      automountServiceAccountToken: false
       volumes:
-      - name: app-secrets
+      - name: prod-ems-server-volume
         secret:
           secretName: prod-ems-server-config
       containers:
@@ -28,7 +29,7 @@ spec:
         ports:
         - containerPort: 5500
         volumeMounts:
-        - name: app-secrets
+        - name: prod-ems-server-volume
           mountPath: /run/secrets
           readOnly: true
         env:
@@ -96,6 +97,7 @@ spec:
       labels:
         app: hospital-server
     spec:
+      automountServiceAccountToken: false
       volumes:
       - name: app-secrets
         secret:
@@ -174,6 +176,7 @@ spec:
       labels:
         app: storage-server
     spec:
+      automountServiceAccountToken: false
       volumes:
       - name: app-secrets
         secret:
@@ -250,6 +253,7 @@ spec:
       labels:
         app: db
     spec:
+
       containers:
       - name: db
         image: baraamohamed/gradproj:db
