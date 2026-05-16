@@ -29,7 +29,6 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 3000
-      nodePort: 30100  # ← Pick a port 30000-32767
 
 ---
 # Hospital Server Service (Internal only)
@@ -62,7 +61,6 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 3000
-      nodePort: 30101  # ← Different port than EMS client
 
 ---
 # Database Service (Internal only)
