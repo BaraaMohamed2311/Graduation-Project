@@ -3,73 +3,11 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nginx-configmap
-  namespace: production  
 data:
   nginx-conf-file: |
     events {
         worker_connections 1024;
     }           
-
-    http {                # ← All upstreams and servers inside http block
-        upstream ems_client_service { server ems-client-service:80; }
-        upstream ems_server_service { server ems-server-service:80; }
-        upstream hospital_client_service { server hospital-client-service:80; }
-        upstream hospital_server_service { server hospital-server-service:80; }
-
-        server {
-            listen 82;
-
-            location / {
-                proxy_pass http://ems_client_service;
-                proxy_http_version 1.1;
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-            }
-
-            location /api {
-                proxy_pass http://ems_server_service;
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-            }
-        }
-
-        server {
-            listen 81;
-
-            location / {
-                proxy_pass http://hospital_client_service;
-                proxy_http_version 1.1;
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-            }
-
-            location /api {
-                proxy_pass http://hospital_server_service;
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-            }
-        }
-    }
----
-# ConfigMap
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-configmap
-  namespace: staging  
-data:
-  nginx-conf-file: |           # ← Key renamed to match subPath
-    events {
-        worker_connections 1024;
-    } 
 
     http {                # ← All upstreams and servers inside http block
         upstream ems_client_service { server ems-client-service:80; }
