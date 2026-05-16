@@ -46,7 +46,7 @@ def setEnvVersions(versions) {
 }
 
 // Deployment logic functions
-def updateServices(String stackPrefix, Map resolvedVersions, Map servicesToCreate, Map imageNameToServiceName = imageNameToServiceName) {
+def upsertServices(String stackPrefix, Map resolvedVersions, Map servicesToCreate, Map imageNameToServiceName = imageNameToServiceName) {
 
     // check if service exists before trying to update
     resolvedVersions.each { image, version ->
@@ -77,7 +77,7 @@ def updateServices(String stackPrefix, Map resolvedVersions, Map servicesToCreat
 }
 
 // uses helper function getCurrentVersion to just get current running version
-def checkVersions(Map imagesMapFromParam, String stackPrefix, Map currentRunningVersion) {
+def checkVersions(Map imagesMapFromParam, Map currentRunningVersion) {
     def resolvedVersions = [:]
     def servicesToCreate = [:]
     // when imagesMapFromParam is empty??
@@ -138,7 +138,7 @@ def getCurrentRunningVersions(
 // Global Variables
 def resolvedVersions = [:]
 def servicesToCreate = [:]
-def imageNameToServiceName = [
+def imageNameToDeploymentName = [
     "baraamohamed/gradproj:ems-server"      : "ems_server",
     "baraamohamed/gradproj:ems-client"      : "ems_client",
     "baraamohamed/gradproj:hospital-server" : "hospital_server",
@@ -162,7 +162,7 @@ pipeline {
     agent any
 
     parameters {
-        string(name: 'IMAGES_VERSIONS', defaultValue: '', description: 'JSON map of image → version. Empty = full stack deploy (infra change). Partial = targeted service update.')
+        string(name: 'IMAGES_VERSIONS', defaultValue: '', description: 'JSON map of image → version e.g. {"baraamohamed/gradproj:ems-server":"1.2.3"}. Empty = full stack deploy. Partial = targeted update.')
     }
 
     environment {
@@ -239,10 +239,10 @@ pipeline {
                         "storage_client",
                     ]
 
-                    def currentRunningVersions = getCurrentRunningVersions("staging_stack", services)
-                    echo "Current running versions in staging_stack: ${currentRunningVersions}"
+                    def currentRunningVersions = getCurrentRunningVersions("production_stack", services)
+                    echo "Current running versions in production_stack: ${currentRunningVersions}"
 
-                    def result = checkVersions(imagesMapParam, "staging_stack", currentRunningVersions)
+                    def result = checkVersions(imagesMapParam, currentRunningVersions)
 
                     resolvedVersions = result.resolvedVersions
                     servicesToCreate = result.servicesToCreate
@@ -271,8 +271,9 @@ pipeline {
 
         // ── STAGING ────────────────────────────────────────────────────────────
         // Scenario: Stack not running + no images provided → Ask user for versions and full stack deploy (first time deploy)
-        // Scenario: Stack not running + images provided → 
+        // Scenario: Stack not running + images provided → (Ask only for missing) we loop on the (missing) variable versions and full stack deploy 
         // Scenario: Stack running update or create services based on provided versions in param
+        // Scenario: Stack is runnig but no images provided in param -> Do nothing to avoid breaking or experiencing downtime for all services
         stage("Deploy Stack to Staging | If both conditions are met: stack not running AND no specific images provided "){
             when {
                 expression {
@@ -390,7 +391,7 @@ pipeline {
             }
             steps {
                 script {
-                    updateServices("staging_stack", resolvedVersions, servicesToCreate, imageNameToServiceName)
+                    upsertServices("staging_stack", resolvedVersions, servicesToCreate, imageNameToServiceName)
                 }
             }
         }
@@ -479,7 +480,7 @@ pipeline {
             }
             steps {
                 script {
-                    updateServices("production_stack", resolvedVersions, servicesToCreate, imageNameToServiceName)
+                    upsertServices("production_stack", resolvedVersions, servicesToCreate, imageNameToServiceName)
                 }
             }
         }
