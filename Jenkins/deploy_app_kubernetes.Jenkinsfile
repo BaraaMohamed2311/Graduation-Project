@@ -224,7 +224,7 @@ pipeline {
 
         // ── 3. Resolve Versions & Stack State ─────────────────────────────
 
-        stage('Get App Versions') {
+        stage('Setup Environment & Resolve Versions') {
             steps {
                 script {
                     def imagesMapParam = params.IMAGES_VERSIONS?.trim() && params.IMAGES_VERSIONS != '{}'

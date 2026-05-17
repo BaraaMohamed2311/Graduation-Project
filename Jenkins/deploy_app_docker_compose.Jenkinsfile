@@ -215,7 +215,7 @@ pipeline {
             }
         }
         // We don't ask for missing versions in this stage as there is a scenarion when stack is running and we only want to update specific services or create specific services
-        stage("Check Versions and Stack State") {
+        stage("Setup Environment & Resolve Versions") {
             steps {
                 script {
                     def imagesMapParam = params.IMAGES_VERSIONS?.trim() ? readJSON(text: params.IMAGES_VERSIONS) : [:]
