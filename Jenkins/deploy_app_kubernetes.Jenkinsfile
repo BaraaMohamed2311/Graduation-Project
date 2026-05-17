@@ -104,9 +104,9 @@ def checkVersions(Map imagesMapFromParam, Map currentRunningVersions) {
     return [resolvedVersions: resolvedVersions, imagesToCreate: imagesToCreate]
 }
 
-// Mirrors upsertServices() from the Swarm pipeline.
+// Mirrors upsertDeployments() from the Swarm pipeline.
 // Updates existing deployments and creates missing ones via kubectl.
-def upsertServices(
+def upsertDeployments(
     String namespace,
     Map resolvedVersions,   // image → version  (deployment already exists)
     Map imagesToCreate,     // image → version  (deployment does not exist yet)
@@ -462,7 +462,7 @@ pipeline {
             }
             steps {
                 script {
-                    upsertServices(env.STAGING_NS, resolvedVersions, imagesToCreate, imageNameToDeployment , deploymentToContainerNames)
+                    upsertDeployments(env.STAGING_NS, resolvedVersions, imagesToCreate, imageNameToDeployment , deploymentToContainerNames)
                 }
             }
         }
@@ -612,7 +612,7 @@ pipeline {
             }
             steps {
                 script {
-                    upsertServices(env.PRODUCTION_NS, resolvedVersions, imagesToCreate, imageNameToDeployment, deploymentToContainerNames)
+                    upsertDeployments(env.PRODUCTION_NS, resolvedVersions, imagesToCreate, imageNameToDeployment, deploymentToContainerNames)
                 }
             }
         }
