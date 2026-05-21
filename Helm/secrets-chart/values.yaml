@@ -1,3 +1,2 @@
-namespace: production
 secrets:
   mySecretName: my-secret

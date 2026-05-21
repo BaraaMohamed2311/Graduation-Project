@@ -6,7 +6,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ems-server-deployment
-  namespace: {{ .Values.namespace}}
+  namespace: {{ .Release.Namespace }}
   labels:
     app: ems-server
 spec:
@@ -58,7 +58,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ems-client-deployment
-  namespace: {{ .Values.namespace}}
+  namespace: {{ .Release.Namespace }}
   labels:
     app: ems-client
 spec:
@@ -86,7 +86,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hospital-server-deployment
-  namespace: {{ .Values.namespace}}
+  namespace: {{ .Release.Namespace }}
   labels:
     app: hospital-server
 spec:
@@ -137,7 +137,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hospital-client-deployment
-  namespace: {{ .Values.namespace}}
+  namespace: {{ .Release.Namespace }}
   labels:
     app: hospital-client
 spec:
@@ -165,7 +165,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: storage-server-deployment
-  namespace: {{ .Values.namespace}}
+  namespace: {{ .Release.Namespace }}
   labels:
     app: storage-server
 spec:
@@ -218,7 +218,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: storage-client-deployment
-  namespace: {{ .Values.namespace}}
+  namespace: {{ .Release.Namespace }}
   labels:
     app: storage-client
 spec:
@@ -246,7 +246,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: db-deployment
-  namespace: {{ .Values.namespace}}
+  namespace: {{ .Release.Namespace }}
   labels:
     app: db
 spec:
@@ -282,7 +282,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
-  namespace: {{ .Values.namespace}}
+  namespace: {{ .Release.Namespace }}
   labels:
     app: nginx
 spec:

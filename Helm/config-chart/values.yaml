@@ -1,3 +1,2 @@
-namespace: production
 configMap:
   nginx_configmap_name: nginx-configmap
