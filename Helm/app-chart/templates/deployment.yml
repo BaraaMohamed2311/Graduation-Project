@@ -1,3 +1,5 @@
+# ── EMS Deploymnets ──────────────────────────────────────────────────────────
+
 ---
 # EMS Server Deployment
 apiVersion: apps/v1
@@ -17,15 +19,25 @@ spec:
     metadata:
       labels:
         app: {{ .Values.deployments.ems.labels.ems_server_label}}  # ← Must match selector
+    
     spec:
+      automountServiceAccountToken: false
+      volumes:
+        - name: app-secrets
+          secret:
+            secretName: prod-ems-server-config
       containers:
       - name: ems-server
         image: {{ .Values.images.ems.images.ems_server_image}} 
+        volumeMounts:
+        - name: app-secrets
+          mountPath: /run/secrets
+          readOnly: true
         ports:
         - containerPort: {{ .Values.images.ems.ports.ems_server_container_port}} 
         env:
         - name: NODE_ENV
-          value: "kube-production"
+          value: "production"
         - name: DB_HOST
           value: "db-service"  # ← Add database connection
         - name: DB_PORT
@@ -66,6 +78,7 @@ spec:
         ports:
         - containerPort: {{ .Values.images.ems.ports.ems_client_container_port}} 
 
+# ── Hospital Deployments ──────────────────────────────────────────────────────
 
 ---
 # Hospital Server Deployment
@@ -85,16 +98,25 @@ spec:
     metadata:
       labels:
         app: {{ .Values.deployments.hospital.labels.hospital_server_label}}
+    
     spec:
+      automountServiceAccountToken: false
+      volumes:
+        - name: app-secrets
+          secret:
+            secretName: prod-hospital-server-config
       containers:
       - name: hospital-server
         image: {{ .Values.images.hospital.images.hospital_server_image}}
-
+        volumeMounts:
+        - name: app-secrets
+          mountPath: /run/secrets
+          readOnly: true
         ports:
         - containerPort: {{ .Values.images.hospital.ports.hospital_server_container_port}} 
         env:
         - name: NODE_ENV
-          value: "kube-production"
+          value: "production"
         - name: DB_HOST
           value: "db-service"  # ← Add database connection
         - name: DB_PORT
@@ -135,6 +157,88 @@ spec:
         ports:
         - containerPort: {{ .Values.images.hospital.ports.hospital_client_container_port}} 
 
+# ── Storage Deployments ──────────────────────────────────────────────────────────
+
+---
+# Storage Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-server-deployment
+  namespace: {{ .Values.namespace}}
+  labels:
+    app: storage-server
+spec:
+  replicas: {{ .Values.deployments.storage.replicas.storage_server_replicas}} 
+  
+  selector:
+    matchLabels:
+      app: {{ .Values.deployments.storage.labels.storage_server_label}}
+  template:
+    
+    metadata:
+      labels:
+        app: {{ .Values.deployments.storage.labels.storage_server_label}}
+    spec:
+      automountServiceAccountToken: false
+      volumes:
+      - name: app-secrets
+        secret:
+          secretName: prod-storage-server-config
+      containers:
+      - name: storage-server
+        image: {{ .Values.images.storage.images.storage_server_image}}
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: app-secrets
+          mountPath: /run/secrets
+          readOnly: true
+        ports:
+        - containerPort: {{ .Values.images.storage.ports.storage_server_container_port}}
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DB_HOST
+          value: "db-service"  # ← Add database connection
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "ems_db"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: MYSQL_ROOT_PASSWORD
+
+---
+# Storage Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-client-deployment
+  namespace: {{ .Values.namespace}}
+  labels:
+    app: storage-client
+spec:
+  replicas: {{ .Values.deployments.storage.replicas.storage_client_replicas}}
+  selector:
+    matchLabels:
+      app: {{ .Values.deployments.storage.labels.storage_client_label}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployments.storage.labels.storage_client_label}}
+    spec:
+      containers:
+      - name: storage-client
+        image: {{ .Values.images.storage.images.storage_client_image}}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: {{ .Values.images.storage.ports.storage_client_container_port}}
+
+# ── DB Deployment ──────────────────────────────────────────────────────────
 
 ---
 # Database Deployment (with persistence)
@@ -170,8 +274,10 @@ spec:
               name: my-secret
               key: MYSQL_ROOT_PASSWORD
 
+# ── Nginx Deployments ──────────────────────────────────────────────────────────
+
+
 ---
-# Hospital Client Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:

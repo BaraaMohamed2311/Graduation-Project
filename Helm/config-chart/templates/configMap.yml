@@ -4,6 +4,7 @@ kind: ConfigMap
 metadata:
   name: {{.Values.configMap.nginx_configmap_name}}
   namespace: {{.Values.namespace}}  
+immutable: true
 data:
   nginx-conf-file: |
     events {

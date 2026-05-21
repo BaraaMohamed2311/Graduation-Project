@@ -6,10 +6,6 @@ deployments:
     labels:
       ems_server_label: "ems-server"
       ems_client_label: "ems-client"
-    images: 
-      ems_server_image: "baraamohamed/gradproj:ems_server_kube"
-      ems_client_image: "baraamohamed/gradproj:ems_client"
-
     replicas:
       ems_server_replicas: 2
       ems_client_replicas: 1
@@ -18,12 +14,17 @@ deployments:
     labels:
       hospital_server_label: "hospital-server"
       hospital_client_label: "hospital-client"
-    images: 
-      hospital_server_image: "baraamohamed/gradproj:hospital_server_kube"
-      hospital_client_image: "baraamohamed/gradproj:hospital_client"
     replicas:
       hospital_server_replicas: 3
       hospital_client_replicas: 1
+
+  storage:
+    labels:
+      storage_server_label: "storage-server"
+      storage_client_label: "storage-client"
+    replicas:
+      storage_server_replicas: 2
+      storage_client_replicas: 1
   
   db:
     labels:
@@ -48,24 +49,19 @@ deployments:
 services: 
   nginx:
     # Must match nginx conf ports, DO NOT use 80
-    ems_nginx_port: 82   # EMS
-    hospital_nginx_port: 81   # Hospital
-    ems_nodePort: 30600 # NodePorts exposed though nginx (production only)
-    hospital_nodePort: 30601  # NodePorts exposed though nginx (production only)
-
-  
-  ems:
-    ems_client_nodePort: 30200 # NodePorts exposed though service itself, for bypassing nginx (testing only)
-    
-  hospital:
-    hospital_client_nodePort: 30201 # NodePorts exposed service itself, for bypassing nginx (testing only)
+    ems_nginx_port: 82
+    hospital_nginx_port: 81
+    storage_nginx_port: 83
+    ems_nodePort: 30082       
+    hospital_nodePort: 30081  
+    storage_nodePort: 30083 
 
 #########################################################
 images:
   ems:
     images: 
-      ems_server_image: "baraamohamed/gradproj:ems_server_kube"
-      ems_client_image: "baraamohamed/gradproj:ems_client"
+      ems_server_image: "baraamohamed/gradproj:ems-server-1.0.3"
+      ems_client_image: "baraamohamed/gradproj:ems-client-1.0.1"
     ports:
       ems_server_container_port: 5500
       ems_client_container_port: 3000
@@ -73,15 +69,23 @@ images:
 
   hospital:
     images: 
-      hospital_server_image: "baraamohamed/gradproj:hospital_server_kube"
-      hospital_client_image: "baraamohamed/gradproj:hospital_client"
+      hospital_server_image: "baraamohamed/gradproj:hospital-server-1.0.2"
+      hospital_client_image: "baraamohamed/gradproj:hospital-client-1.0.1"
     ports:
       hospital_server_container_port: 8888
       hospital_client_container_port: 3000
+
+  storage:
+    images: 
+      storage_server_image: "baraamohamed/gradproj:storage-server-1.0.0"
+      storage_client_image: "baraamohamed/gradproj:storage-client-1.0.1"
+    ports:
+      storage_server_container_port: 5000
+      storage_client_container_port: 3000
   
   db:
     images: 
-      db_image: "baraamohamed/gradproj:db"
+      db_image: "baraamohamed/gradproj:db-1.0.1"
     ports:
       db_container_port: 3306 # Keep it,if you change it you must override app-server db ports env variable "DB_PORT"
 
@@ -89,6 +93,5 @@ images:
   nginx:
     images: 
       nginx_image: "nginx"
-    ports:
-      nginx_container_port:
+
 
