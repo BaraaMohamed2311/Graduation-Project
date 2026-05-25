@@ -1,4 +1,4 @@
-# ── EMS Deploymnets ──────────────────────────────────────────────────────────
+# ── EMS Deployments ──────────────────────────────────────────────────────────
 
 ---
 # EMS Server Deployment
@@ -11,15 +11,13 @@ metadata:
     app: ems-server
 spec:
   replicas: {{ .Values.deployments.ems.replicas.ems_server_replicas}} 
-  
   selector:
     matchLabels:
-      app: {{ .Values.deployments.ems.labels.ems_server_label}}  # ← Consistent with labels below
+      app: {{ .Values.deployments.ems.labels.ems_server_label}}
   template:
     metadata:
       labels:
-        app: {{ .Values.deployments.ems.labels.ems_server_label}}  # ← Must match selector
-    
+        app: {{ .Values.deployments.ems.labels.ems_server_label}}
     spec:
       automountServiceAccountToken: false
       volumes:
@@ -28,18 +26,25 @@ spec:
             secretName: prod-ems-server-config
       containers:
       - name: ems-server
-        image: {{ .Values.images.ems.images.ems_server_image}} 
+        image: {{ .Values.images.ems.images.ems_server_image}}
         volumeMounts:
         - name: app-secrets
           mountPath: /run/secrets
           readOnly: true
         ports:
-        - containerPort: {{ .Values.images.ems.ports.ems_server_container_port}} 
+        - containerPort: {{ .Values.images.ems.ports.ems_server_container_port}}
+        resources:
+          requests:
+            memory: "110Mi"   # 165Mi / 1.5
+            cpu: "40m"        # 60m / 1.5
+          limits:
+            memory: "165Mi"
+            cpu: "60m"
         env:
         - name: NODE_ENV
           value: "production"
         - name: DB_HOST
-          value: "db-service"  # ← Add database connection
+          value: "db-service"
         - name: DB_PORT
           value: "3306"
         - name: DB_NAME
@@ -62,7 +67,7 @@ metadata:
   labels:
     app: ems-client
 spec:
-  replicas: {{ .Values.deployments.ems.replicas.ems_client_replicas}} 
+  replicas: {{ .Values.deployments.ems.replicas.ems_client_replicas}}
   selector:
     matchLabels:
       app: {{ .Values.deployments.ems.labels.ems_client_label}}
@@ -74,9 +79,15 @@ spec:
       containers:
       - name: ems-client
         image: {{ .Values.images.ems.images.ems_client_image}}
-
         ports:
-        - containerPort: {{ .Values.images.ems.ports.ems_client_container_port}} 
+        - containerPort: {{ .Values.images.ems.ports.ems_client_container_port}}
+        resources:
+          requests:
+            memory: "170Mi"   # 255Mi / 1.5
+            cpu: "200m"       # 300m / 1.5
+          limits:
+            memory: "255Mi"
+            cpu: "300m"
 
 # ── Hospital Deployments ──────────────────────────────────────────────────────
 
@@ -90,7 +101,7 @@ metadata:
   labels:
     app: hospital-server
 spec:
-  replicas: {{ .Values.deployments.hospital.replicas.hospital_server_replicas}} 
+  replicas: {{ .Values.deployments.hospital.replicas.hospital_server_replicas}}
   selector:
     matchLabels:
       app: {{ .Values.deployments.hospital.labels.hospital_server_label}}
@@ -98,7 +109,6 @@ spec:
     metadata:
       labels:
         app: {{ .Values.deployments.hospital.labels.hospital_server_label}}
-    
     spec:
       automountServiceAccountToken: false
       volumes:
@@ -113,12 +123,19 @@ spec:
           mountPath: /run/secrets
           readOnly: true
         ports:
-        - containerPort: {{ .Values.images.hospital.ports.hospital_server_container_port}} 
+        - containerPort: {{ .Values.images.hospital.ports.hospital_server_container_port}}
+        resources:
+          requests:
+            memory: "183Mi"   # 275Mi / 1.5
+            cpu: "80m"        # 120m / 1.5
+          limits:
+            memory: "275Mi"
+            cpu: "120m"
         env:
         - name: NODE_ENV
           value: "production"
         - name: DB_HOST
-          value: "db-service"  # ← Add database connection
+          value: "db-service"
         - name: DB_PORT
           value: "3306"
         - name: DB_NAME
@@ -141,7 +158,7 @@ metadata:
   labels:
     app: hospital-client
 spec:
-  replicas: {{ .Values.deployments.hospital.replicas.hospital_client_replicas}} 
+  replicas: {{ .Values.deployments.hospital.replicas.hospital_client_replicas}}
   selector:
     matchLabels:
       app: {{ .Values.deployments.hospital.labels.hospital_client_label}}
@@ -153,9 +170,15 @@ spec:
       containers:
       - name: hospital-client
         image: {{ .Values.images.hospital.images.hospital_client_image}}
-
         ports:
-        - containerPort: {{ .Values.images.hospital.ports.hospital_client_container_port}} 
+        - containerPort: {{ .Values.images.hospital.ports.hospital_client_container_port}}
+        resources:
+          requests:
+            memory: "228Mi"   # 342Mi / 1.5
+            cpu: "200m"       # 300m / 1.5
+          limits:
+            memory: "342Mi"
+            cpu: "300m"
 
 # ── Storage Deployments ──────────────────────────────────────────────────────────
 
@@ -169,13 +192,11 @@ metadata:
   labels:
     app: storage-server
 spec:
-  replicas: {{ .Values.deployments.storage.replicas.storage_server_replicas}} 
-  
+  replicas: {{ .Values.deployments.storage.replicas.storage_server_replicas}}
   selector:
     matchLabels:
       app: {{ .Values.deployments.storage.labels.storage_server_label}}
   template:
-    
     metadata:
       labels:
         app: {{ .Values.deployments.storage.labels.storage_server_label}}
@@ -195,11 +216,18 @@ spec:
           readOnly: true
         ports:
         - containerPort: {{ .Values.images.storage.ports.storage_server_container_port}}
+        resources:
+          requests:
+            memory: "147Mi"   # 220Mi / 1.5
+            cpu: "60m"        # 90m / 1.5
+          limits:
+            memory: "220Mi"
+            cpu: "90m"
         env:
         - name: NODE_ENV
           value: "production"
         - name: DB_HOST
-          value: "db-service"  # ← Add database connection
+          value: "db-service"
         - name: DB_PORT
           value: "3306"
         - name: DB_NAME
@@ -237,11 +265,18 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: {{ .Values.images.storage.ports.storage_client_container_port}}
+        resources:
+          requests:
+            memory: "200Mi"   # 300Mi / 1.5
+            cpu: "200m"       # 300m / 1.5
+          limits:
+            memory: "300Mi"
+            cpu: "300m"
 
 # ── DB Deployment ──────────────────────────────────────────────────────────
 
 ---
-# Database Deployment (with persistence)
+# Database Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -250,7 +285,7 @@ metadata:
   labels:
     app: db
 spec:
-  replicas: {{ .Values.deployments.db.replicas.db_replicas}} 
+  replicas: {{ .Values.deployments.db.replicas.db_replicas}}
   selector:
     matchLabels:
       app: {{ .Values.deployments.db.labels.db_label}}
@@ -261,10 +296,16 @@ spec:
     spec:
       containers:
       - name: db
-        image: {{ .Values.images.db.images.db_image}} 
-
+        image: {{ .Values.images.db.images.db_image}}
         ports:
-        - containerPort: {{ .Values.images.db.ports.db_container_port}} 
+        - containerPort: {{ .Values.images.db.ports.db_container_port}}
+        resources:
+          requests:
+            memory: "600Mi"
+            cpu: "100m"
+          limits:
+            memory: "930Mi"
+            cpu: "150m"
         env:
         - name: MYSQL_DATABASE
           value: "ems_db"
@@ -274,8 +315,7 @@ spec:
               name: my-secret
               key: MYSQL_ROOT_PASSWORD
 
-# ── Nginx Deployments ──────────────────────────────────────────────────────────
-
+# ── Nginx Deployment ──────────────────────────────────────────────────────────
 
 ---
 apiVersion: apps/v1
@@ -286,7 +326,7 @@ metadata:
   labels:
     app: nginx
 spec:
-  replicas: {{ .Values.deployments.nginx.replicas.nginx_replicas}} 
+  replicas: {{ .Values.deployments.nginx.replicas.nginx_replicas}}
   selector:
     matchLabels:
       app: {{ .Values.deployments.nginx.labels.nginx_label}}
@@ -297,15 +337,22 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: {{ .Values.images.nginx.images.nginx_image}} 
+        image: {{ .Values.images.nginx.images.nginx_image}}
         ports:
-        - containerPort: {{ .Values.services.nginx.ems_nginx_port}}   # EMS
-        - containerPort: {{ .Values.services.nginx.hospital_nginx_port}}    # Hospital
-        volumeMounts:                          # ← Correct way to mount ConfigMap
+        - containerPort: {{ .Values.services.nginx.ems_nginx_port}}
+        - containerPort: {{ .Values.services.nginx.hospital_nginx_port}}
+        resources:
+          requests:
+            memory: "32Mi"    # nginx is very lightweight
+            cpu: "20m"
+          limits:
+            memory: "48Mi"
+            cpu: "30m"
+        volumeMounts:
           - name: nginx-config-volume
             mountPath: /etc/nginx/nginx.conf
             subPath: nginx-conf-file
-      volumes:                                 # ← Volumes defined at pod level
+      volumes:
         - name: nginx-config-volume
           configMap:
             name: nginx-configmap

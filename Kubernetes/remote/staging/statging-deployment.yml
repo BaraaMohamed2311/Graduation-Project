@@ -1,3 +1,5 @@
+# ── EMS Deployments ──────────────────────────────────────────────────────────
+
 ---
 # EMS Server Deployment
 apiVersion: apps/v1
@@ -9,14 +11,13 @@ metadata:
     app: ems-server
 spec:
   replicas: 2
-  
   selector:
     matchLabels:
-      app: ems-server 
+      app: ems-server
   template:
     metadata:
       labels:
-        app: ems-server  # ← Must match selector
+        app: ems-server
     spec:
       automountServiceAccountToken: false
       volumes:
@@ -26,6 +27,13 @@ spec:
       containers:
       - name: ems-server
         image: baraamohamed/gradproj:ems-server-${EMS_SERVER_VERSION}
+        resources:
+          requests:
+            memory: "110Mi"
+            cpu: "40m"
+          limits:
+            memory: "165Mi"
+            cpu: "60m"
         ports:
         - containerPort: 5500
         volumeMounts:
@@ -36,7 +44,7 @@ spec:
         - name: NODE_ENV
           value: "production"
         - name: DB_HOST
-          value: "db-service"  # ← Add database connection
+          value: "db-service"
         - name: DB_PORT
           value: "3306"
         - name: DB_NAME
@@ -71,10 +79,17 @@ spec:
       containers:
       - name: ems-client
         image: baraamohamed/gradproj:ems-client-${EMS_CLIENT_VERSION}
+        resources:
+          requests:
+            memory: "170Mi"
+            cpu: "200m"
+          limits:
+            memory: "255Mi"
+            cpu: "300m"
         ports:
         - containerPort: 3000
-        env:
 
+# ── Hospital Deployments ──────────────────────────────────────────────────────────
 
 ---
 # Hospital Server Deployment
@@ -87,12 +102,10 @@ metadata:
     app: hospital-server
 spec:
   replicas: 2
-  
   selector:
     matchLabels:
       app: hospital-server
   template:
-  
     metadata:
       labels:
         app: hospital-server
@@ -105,6 +118,13 @@ spec:
       containers:
       - name: hospital-server
         image: baraamohamed/gradproj:hospital-server-${HOSPITAL_SERVER_VERSION}
+        resources:
+          requests:
+            memory: "183Mi"
+            cpu: "80m"
+          limits:
+            memory: "275Mi"
+            cpu: "120m"
         ports:
         - containerPort: 8888
         volumeMounts:
@@ -115,7 +135,7 @@ spec:
         - name: NODE_ENV
           value: "production"
         - name: DB_HOST
-          value: "db-service"  # ← Add database connection
+          value: "db-service"
         - name: DB_PORT
           value: "3306"
         - name: DB_NAME
@@ -150,10 +170,17 @@ spec:
       containers:
       - name: hospital-client
         image: baraamohamed/gradproj:hospital-client-${HOSPITAL_CLIENT_VERSION}
+        resources:
+          requests:
+            memory: "228Mi"
+            cpu: "200m"
+          limits:
+            memory: "342Mi"
+            cpu: "300m"
         ports:
         - containerPort: 3000
-        env:
 
+# ── Storage Deployments ──────────────────────────────────────────────────────────
 
 ---
 # Storage Server Deployment
@@ -166,12 +193,10 @@ metadata:
     app: storage-server
 spec:
   replicas: 1
-  
   selector:
     matchLabels:
       app: storage-server
   template:
-    
     metadata:
       labels:
         app: storage-server
@@ -185,6 +210,13 @@ spec:
       - name: storage-server
         image: baraamohamed/gradproj:storage-server-${STORAGE_SERVER_VERSION}
         imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "147Mi"
+            cpu: "60m"
+          limits:
+            memory: "220Mi"
+            cpu: "90m"
         volumeMounts:
         - name: app-secrets
           mountPath: /run/secrets
@@ -195,7 +227,7 @@ spec:
         - name: NODE_ENV
           value: "production"
         - name: DB_HOST
-          value: "db-service"  # ← Add database connection
+          value: "db-service"
         - name: DB_PORT
           value: "3306"
         - name: DB_NAME
@@ -231,11 +263,20 @@ spec:
       - name: storage-client
         image: baraamohamed/gradproj:storage-client-${STORAGE_CLIENT_VERSION}
         imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "200Mi"
+            cpu: "200m"
+          limits:
+            memory: "300Mi"
+            cpu: "300m"
         ports:
         - containerPort: 3000
 
+# ── DB Deployment ──────────────────────────────────────────────────────────
+
 ---
-# Database Deployment (with persistence)
+# Database Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -244,7 +285,7 @@ metadata:
   labels:
     app: db
 spec:
-  replicas: 1  # ← Only 1 replica for MySQL
+  replicas: 1
   selector:
     matchLabels:
       app: db
@@ -253,13 +294,18 @@ spec:
       labels:
         app: db
     spec:
-
       containers:
       - name: db
         image: baraamohamed/gradproj:db
-        
+        resources:
+          requests:
+            memory: "600Mi"
+            cpu: "100m"
+          limits:
+            memory: "930Mi"
+            cpu: "150m"
         ports:
-        - containerPort: 3306  
+        - containerPort: 3306
         env:
         - name: MYSQL_DATABASE
           value: "ems_db"
@@ -269,8 +315,9 @@ spec:
               name: my-secret
               key: MYSQL_ROOT_PASSWORD
 
+# ── Nginx Deployment ──────────────────────────────────────────────────────────
+
 ---
-# Hospital Client Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -292,14 +339,21 @@ spec:
       - name: nginx
         image: nginx
         ports:
-        - containerPort: 82   # EMS
-        - containerPort: 81   # Hospital
-        - containerPort: 80   # nginx do not use it for other purposes
-        volumeMounts:                          # ← Correct way to mount ConfigMap
+        - containerPort: 82
+        - containerPort: 81
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "20m"
+          limits:
+            memory: "48Mi"
+            cpu: "30m"
+        volumeMounts:
           - name: nginx-config-volume
             mountPath: /etc/nginx/nginx.conf
             subPath: nginx-conf-file
-      volumes:                                 # ← Volumes defined at pod level
+      volumes:
         - name: nginx-config-volume
           configMap:
             name: nginx-configmap

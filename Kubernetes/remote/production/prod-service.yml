@@ -1,3 +1,4 @@
+# ── EMS Services ──────────────────────────────────────────────────────────
 ---
 # EMS Server Service (Internal only)
 apiVersion: v1
@@ -29,7 +30,7 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 3000
-
+# ── Hospital Services ──────────────────────────────────────────────────────────
 ---
 # Hospital Server Service (Internal only)
 apiVersion: v1
@@ -62,6 +63,40 @@ spec:
       port: 80
       targetPort: 3000
 
+# ── Storage Services ──────────────────────────────────────────────────────────
+---
+# Storage Server Service (Internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: storage-server-service
+  namespace: production
+spec:
+  type: ClusterIP  # ← Internal only
+  selector:
+    app: storage-server  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+
+---
+# Storage Client Service (Public access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: storage-client-service
+  namespace: production
+spec:
+  type: NodePort  # ← Publicly accessible
+  selector:
+    app: storage-client  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+
+# ── DB Services ──────────────────────────────────────────────────────────
 ---
 # Database Service (Internal only)
 apiVersion: v1
@@ -78,6 +113,7 @@ spec:
       port: 3306  # ← MySQL standard port
       targetPort: 3306  # ← Container port (NOT 9376!)
 
+# ── Nginx Services ──────────────────────────────────────────────────────────
 ---
 # nginx Service 
 apiVersion: v1
