@@ -36,7 +36,7 @@ spec:
         resources:
           requests:
             memory: "110Mi"   # 165Mi / 1.5
-            cpu: "40m"        # 60m / 1.5
+
           limits:
             memory: "165Mi"
             cpu: "60m"
@@ -83,8 +83,8 @@ spec:
         - containerPort: {{ .Values.images.ems.ports.ems_client_container_port}}
         resources:
           requests:
-            memory: "170Mi"   # 255Mi / 1.5
-            cpu: "200m"       # 300m / 1.5
+            memory: "170Mi"   # 255Mi 
+
           limits:
             memory: "255Mi"
             cpu: "300m"
@@ -127,7 +127,7 @@ spec:
         resources:
           requests:
             memory: "183Mi"   # 275Mi / 1.5
-            cpu: "80m"        # 120m / 1.5
+  
           limits:
             memory: "275Mi"
             cpu: "120m"
@@ -175,7 +175,7 @@ spec:
         resources:
           requests:
             memory: "228Mi"   # 342Mi / 1.5
-            cpu: "200m"       # 300m / 1.5
+  
           limits:
             memory: "342Mi"
             cpu: "300m"
@@ -219,7 +219,7 @@ spec:
         resources:
           requests:
             memory: "147Mi"   # 220Mi / 1.5
-            cpu: "60m"        # 90m / 1.5
+
           limits:
             memory: "220Mi"
             cpu: "90m"
@@ -268,7 +268,7 @@ spec:
         resources:
           requests:
             memory: "200Mi"   # 300Mi / 1.5
-            cpu: "200m"       # 300m / 1.5
+
           limits:
             memory: "300Mi"
             cpu: "300m"
@@ -302,7 +302,7 @@ spec:
         resources:
           requests:
             memory: "600Mi"
-            cpu: "100m"
+
           limits:
             memory: "930Mi"
             cpu: "150m"
@@ -344,7 +344,7 @@ spec:
         resources:
           requests:
             memory: "32Mi"    # nginx is very lightweight
-            cpu: "20m"
+
           limits:
             memory: "48Mi"
             cpu: "30m"
