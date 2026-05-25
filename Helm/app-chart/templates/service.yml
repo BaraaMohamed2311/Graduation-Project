@@ -146,4 +146,9 @@ spec:
       port: {{ .Values.services.nginx.hospital_nginx_port}}          # ← ClusterIP port
       targetPort: {{ .Values.services.nginx.hospital_nginx_port}}    # ← Container port (NGINX listens here)
       nodePort: {{ .Values.services.nginx.hospital_nodePort}}   # ← External access port (Kubernetes maps this)
+    - name: storage
+      protocol: TCP
+      port: {{ .Values.services.nginx.storage_nginx_port}}          # ← ClusterIP port
+      targetPort: {{ .Values.services.nginx.storage_nginx_port}}    # ← Container port (NGINX listens here)
+      nodePort: {{ .Values.services.nginx.storage_nodePort}}   # ← External access port (Kubernetes maps this)
 
