@@ -39,7 +39,7 @@ spec:
 
           limits:
             memory: "165Mi"
-            cpu: "60m"
+
         env:
         - name: NODE_ENV
           value: "production"
@@ -87,7 +87,7 @@ spec:
 
           limits:
             memory: "255Mi"
-            cpu: "300m"
+
 
 # ── Hospital Deployments ──────────────────────────────────────────────────────
 
@@ -130,7 +130,7 @@ spec:
   
           limits:
             memory: "275Mi"
-            cpu: "120m"
+            
         env:
         - name: NODE_ENV
           value: "production"
@@ -178,7 +178,7 @@ spec:
   
           limits:
             memory: "342Mi"
-            cpu: "300m"
+
 
 # ── Storage Deployments ──────────────────────────────────────────────────────────
 
@@ -222,7 +222,7 @@ spec:
 
           limits:
             memory: "220Mi"
-            cpu: "90m"
+
         env:
         - name: NODE_ENV
           value: "production"
@@ -271,7 +271,7 @@ spec:
 
           limits:
             memory: "300Mi"
-            cpu: "300m"
+
 
 # ── DB Deployment ──────────────────────────────────────────────────────────
 
@@ -305,7 +305,7 @@ spec:
 
           limits:
             memory: "930Mi"
-            cpu: "150m"
+
         env:
         - name: MYSQL_DATABASE
           value: "ems_db"
@@ -347,7 +347,7 @@ spec:
 
           limits:
             memory: "48Mi"
-            cpu: "30m"
+
         volumeMounts:
           - name: nginx-config-volume
             mountPath: /etc/nginx/nginx.conf
