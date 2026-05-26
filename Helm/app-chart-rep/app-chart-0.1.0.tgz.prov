@@ -1,0 +1,26 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+apiVersion: v2
+appVersion: 1.0.0
+description: A Helm chart for Kubernetes Hospital and Management APPs
+name: app-chart
+type: application
+version: 0.1.0
+
+...
+files:
+  app-chart-0.1.0.tgz: sha256:1f19bf08b9a982eb75cf539b05de7687204806a5032272279d1db976b6e3fb52
+-----BEGIN PGP SIGNATURE-----
+
+wsDcBAEBCgAQBQJqFVwRCRC03vrT6uNn7AAAY7cMAJNsTVMdg1DO6n0jqZ9VwLff
+8o1KtRU4TsbhtOwhPCwKHU1NuVH6nuktsr9hfgiTYDVUHPHXyNGcfD8GR/b8v3Ww
+R42fyLeNUqpriT9ftH0HtrBoTuqKMKNmr5kc9yRkWOFSdeP3PzX5bzBhbzL8/GJB
+3HLW1S5caaPNHauFPXEcgDh/3WUjd1bBHfmzt3IxdKZSv2gtYzBjTpuQkcB4clWt
+Y38I98XwygM/wjdl3IpZUImb1iaRi/SpQPgXC3VMjUzACKZYmiHmHbDYd0obAhkj
+t5FovCMeSnaIc3k7LApXCIEuDL0dU2QO9+LsouE5OQ9XQKX5+vzZR0V5oCsG0O9g
+QxBnrPfFz+yr7F/3ih1EEOujDsX5P2qt2w5nrbA1OYR+Y1//nRX2JJX+8KiuXiXV
+sGR+H7cm4Qoh7kmO02cS1pyqMIHrHUX6rZqNWWx4FiiAy337rRqlxYSt9Lp91W8d
+Kz5GJRXtuLwOSdy0P3xJQr/4UYmidaD9Et0QJS1Hhg==
+=bwqj
+-----END PGP SIGNATURE-----
