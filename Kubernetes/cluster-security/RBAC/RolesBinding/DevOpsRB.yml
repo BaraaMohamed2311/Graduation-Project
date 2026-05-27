@@ -1,0 +1,35 @@
+apiVersion: rbac.authorization.k8s.io/v1
+# This role binding allows "jane" to read pods in the "default" namespace.
+# You need to already have a Role named "DevOps" in that namespace.
+kind: RoleBinding
+metadata:
+  name: DevOpsRoleBinding
+  namespace: staging
+subjects:
+# You can specify more than one "subject"
+- kind: User
+  name: devops # "name" is case sensitive
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  # "roleRef" specifies the binding to a Role / ClusterRole
+  kind: Role #this must be Role or ClusterRole
+  name: devops # this must match the name of the Role or ClusterRole you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+# This role binding allows "jane" to read pods in the "default" namespace.
+# You need to already have a Role named "DevOps" in that namespace.
+kind: RoleBinding
+metadata:
+  name: DevOpsRoleBinding
+  namespace: production
+subjects:
+# You can specify more than one "subject"
+- kind: User
+  name: devops # "name" is case sensitive
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  # "roleRef" specifies the binding to a Role / ClusterRole
+  kind: Role #this must be Role or ClusterRole
+  name: devops # this must match the name of the Role or ClusterRole you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
