@@ -1,0 +1,51 @@
+# ── Namespace Scoped ──────────────────────────────────────────────────────────
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-deployer-binding
+  namespace: staging
+
+subjects:
+- kind: ServiceAccount
+  name: jenkins-deployer
+  namespace: staging
+
+roleRef:
+  kind: Role
+  name: jenkins-deployer-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-deployer-binding
+  namespace: production
+
+subjects:
+- kind: ServiceAccount
+  name: jenkins-deployer
+  namespace: production
+
+roleRef:
+  kind: Role
+  name: jenkins-deployer-role
+  apiGroup: rbac.authorization.k8s.io
+
+# ── Cluster Scoped ──────────────────────────────────────────────────────────
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jenkins-deployer-binding
+subjects:
+- kind: ServiceAccount
+  name: jenkins-deployer
+  namespace: staging
+- kind: ServiceAccount
+  name: jenkins-deployer
+  namespace: production
+roleRef:
+  kind: ClusterRole
+  name: namespace-manager
+  apiGroup: rbac.authorization.k8s.io

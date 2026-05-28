@@ -1,0 +1,17 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: block-kube-system-deployments
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: deny-kube-system
+    match:
+      resources:
+        kinds:
+        - Deployment
+        namespaces:
+        - kube-system
+    validate:
+      message: "Deployments in kube-system are forbidden"
+      deny: {}

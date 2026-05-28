@@ -16,5 +16,5 @@ metadata:
   name: devops
 rules:
 - apiGroups: [""] # "" indicates the core API group
-  resources: ["deployments","pods","services"]
+  resources: ["deployments","pods","services","configmap"]
   verbs: ["get", "list", "create", "update","patch"]

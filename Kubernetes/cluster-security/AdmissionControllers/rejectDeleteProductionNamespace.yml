@@ -1,0 +1,22 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-namespace-deletion
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: allow-only-specific-namespaces-delete
+    match:
+      resources:
+        kinds:
+        - Namespace
+        operations:
+        - DELETE
+    validate:
+      message: "Only staging and dev namespaces can be deleted"
+      deny: # Denies if ->
+        conditions:
+        - key: "{{ request.object.metadata.name }}"
+          operator: In # if namespace is one of the list below
+          value:
+          - production
