@@ -4,14 +4,23 @@ metadata:
   name: block-kube-system-deployments
 spec:
   validationFailureAction: Enforce
+  background: true
   rules:
-  - name: deny-kube-system
-    match:
-      resources:
-        kinds:
-        - Deployment
-        namespaces:
-        - kube-system
-    validate:
-      message: "Deployments in kube-system are forbidden"
-      deny: {}
+    - name: deny-kube-system
+      match:
+        resources:
+          kinds:
+            - Deployment
+          namespaces:
+            - kube-system
+      exclude:         # exclude specific deployments from the policy as we dont want to block them                
+        resources:
+          names:
+            - coredns
+            - metrics-server
+            - kube-proxy
+            - kyverno*                  
+      validate:
+        allowExistingViolations: false  
+        message: "Deployments in kube-system are forbidden"
+        deny: {}
