@@ -6,6 +6,8 @@ const nextConfig = {
         APIKEY: process.env.NODE_ENV === "production" ? "/api" : "http://localhost:5500/api",
       },
       reactStrictMode: false,
+      basePath: "/production/ems",
+      assetPrefix: "/production/ems"
 };
 
 export default nextConfig;
