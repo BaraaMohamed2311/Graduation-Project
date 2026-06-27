@@ -17,7 +17,7 @@ else if(dev === 'production-kube') {
   console.log("Running in production-kube environment");
 }
 else{
-  require('dotenv').config({ path: './.env.dev' });  // Load development environment variables
+  require('dotenv').config({ path: './.env.dev' });  // Load development environment variables 
   console.log("Running in development environment");
 }
 /**********Crons************/
