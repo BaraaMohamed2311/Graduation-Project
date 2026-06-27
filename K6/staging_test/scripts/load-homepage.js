@@ -5,6 +5,7 @@ import { sleep, check } from 'k6';
 export let options = {
     vus: 10,
     duration: '30s',
+    setupTimeout: '5m',
     thresholds: {
         http_req_failed: ['rate<0.05'], // <5% failures → ≥95% success
     }
