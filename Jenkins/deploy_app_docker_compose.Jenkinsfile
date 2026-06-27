@@ -1,3 +1,4 @@
+
 // Global helper functions
 
 // exports to exist on deployment shell, not pipeline env, so we can use them in docker stack deploy commands
@@ -138,7 +139,7 @@ def getCurrentRunningVersions(
 // Global Variables
 def resolvedVersions = [:]
 def servicesToCreate = [:]
-def imageNameToDeploymentName = [
+def imageNameToServiceName = [
     "baraamohamed/gradproj:ems-server"      : "ems_server",
     "baraamohamed/gradproj:ems-client"      : "ems_client",
     "baraamohamed/gradproj:hospital-server" : "hospital_server",
@@ -155,6 +156,8 @@ def imageNameToENV = [
     'baraamohamed/gradproj:storage-server'   : 'STORAGE_SERVER_VERSION',
     'baraamohamed/gradproj:storage-client'   : 'STORAGE_CLIENT_VERSION'  
 ]
+
+
 
 
 // -------------------------------------------------------
