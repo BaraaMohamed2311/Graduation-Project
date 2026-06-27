@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import useLogOut from "@/hooks/useLogOut";
 import { useIsLoginContext } from "@/contexts/isLogin";
+import { useAlerts } from "@/contexts/alert"; 
 
 export default function Nav() {
     const [displayed, setDisplayed] = useState(false);
     const { isLogin } = useIsLoginContext();
     const logOut = useLogOut();
     const NAV_UL_REF = useRef();
+    const { unread, clearUnread } = useAlerts();
 
     function handleBurger() {
         setDisplayed(prev => !prev);
@@ -60,6 +62,18 @@ export default function Nav() {
                     <li className={styles["nav-li"]}><Link href="/private_routes/booking-list"><i className="fa-solid fa-user-doctor"></i></Link></li>
                     <li className={styles["nav-li"]}><Link href="/private_routes/books-schedule"><i className="fa-solid fa-calendar-days"></i></Link></li>
                     <li className={styles["nav-li"]}><Link href="/private_routes/employees-list"><i className="fa-solid fa-users"></i></Link></li>
+                    <li className={styles["nav-li"]}>
+                        <Link href="/private_routes/alerts" onClick={clearUnread}>
+                            <span className={`${styles["bell-icon"]} ${unread > 0 ? styles["ringing"] : ""}`}>
+                                <i className="fa-regular fa-bell"></i>
+                            </span>
+                            {unread > 0 && (
+                                <span key={unread} className={styles["alert-badge"]}>
+                                    {unread > 99 ? "99+" : unread}
+                                </span>
+                            )}
+                        </Link>
+                    </li>
                     
                     {isLogin ? (
                         <li className={styles["nav-li"]}><Link href="/private_routes/profile"><i className="fa-solid fa-user"></i></Link></li>

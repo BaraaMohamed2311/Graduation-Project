@@ -196,18 +196,7 @@ useEffect(()=>{
           <p><strong>Status:</strong> {parseInt(roomData.isOccupied) ? "Occupied" : "Empty"}</p>
         </div>
 
-        <div className={styles.chartWrapper}>
-          <h3>Room Activity</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={graphData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="occupancy" stroke="#2563eb" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+       
       </section>
 
       {/* === Section 2: Patient info === */}

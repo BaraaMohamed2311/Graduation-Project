@@ -45,6 +45,7 @@
 .nav-li {
     font-weight: 600;
     font-size: 1.6rem;
+    position: relative; /* badge anchors to the li, not nav-wrapper */
 }
 
 
@@ -54,6 +55,52 @@
     align-items: center;
     justify-content: center;
     color: var(--sec);
+    position: relative; /* also set here so inline style on Link is redundant-safe */
+}
+
+/* Bell shake when a new alert arrives */
+@keyframes bell-shake {
+    0%,100% { transform: rotate(0deg); }
+    15%      { transform: rotate(15deg); }
+    30%      { transform: rotate(-12deg); }
+    45%      { transform: rotate(10deg); }
+    60%      { transform: rotate(-8deg); }
+    75%      { transform: rotate(5deg); }
+}
+
+/* Badge pop-in */
+@keyframes badge-pop {
+    0%   { transform: scale(0); opacity: 0; }
+    70%  { transform: scale(1.25); opacity: 1; }
+    100% { transform: scale(1); }
+}
+
+.bell-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bell-icon.ringing {
+    animation: bell-shake 0.6s ease;
+}
+
+.alert-badge {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    background: #e53e3e;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    animation: badge-pop 0.3s ease-out;
+    /* re-trigger animation on each count change via key prop in JSX */
 }
 
 .nav-li:hover > a {

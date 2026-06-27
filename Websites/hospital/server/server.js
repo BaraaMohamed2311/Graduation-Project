@@ -1,4 +1,6 @@
 // configuring dotenv to access variables
+
+
 const dev = process.env.NODE_ENV ;
  
 if (dev === 'local') {
@@ -27,6 +29,8 @@ const app = express();
 const consoleLog = require("./Utils/consoleLog.js");
 const appUses = require("./Startup/appUses.js");
 const mongoose =require("mongoose")
+const dns = require("dns")
+dns.setServers(['8.8.8.8', '1.1.1.1'])
 // environment vars
 const PORT = process.env.PORT;
 

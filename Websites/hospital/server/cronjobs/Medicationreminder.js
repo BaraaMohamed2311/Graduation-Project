@@ -1,6 +1,8 @@
 const cron = require("node-cron");
 const nodemailer = require("nodemailer");
 const executeQuery = require("../Utils/executeMySqlQuery");
+const { broadcast } = require("../Utils/alertBroadcaster");
+const Alert = require("../Models/alert");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -10,16 +12,15 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Runs every hour
-cron.schedule("0 * * * *", async () => {
+// Runs every 30mins
+cron.schedule("*/30 * * * *", async () => {
   try {
-    console.log("[cronjob]: Medicationreminder")
+    console.log("[cronjob]: Medicationreminder");
     const now = new Date();
     const hh = String(now.getHours()).padStart(2, "0");
     const mm = String(now.getMinutes()).padStart(2, "0");
     const currentTime = `${hh}:${mm}`;
 
-    // Join through patient_med_times to match the current minute
     const dueMeds = await executeQuery(
       `
       SELECT
@@ -62,17 +63,34 @@ cron.schedule("0 * * * *", async () => {
         continue;
       }
 
-      const nurseEmails = nurses.map((n) => n.user_email).join(", ");
       const medList = meds
-        .map((m) => `  - Patient: ${m.patient_name} → Medicine ID: ${m.med_id}`)
+        .map((m) => `  - Patient: ${m.user_name} → Medicine ID: ${m.med_id}`)
         .join("\n");
 
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: nurseEmails,
-        subject: `💊 Medication Reminder — Floor ${floor} — ${currentTime}`,
-        text: `Hello,\n\nThe following patients on Floor ${floor} need their medication at ${currentTime}:\n\n${medList}\n\nPlease administer the medicines promptly.\n\nHospital System`,
+      // Save + broadcast FIRST — email failure must never block the real-time alert
+      const newAlert = await Alert.create({
+        alert_name: `Medication Reminder — Floor ${floor}`,
+        alert_type: "medication",
+        alert_time: new Date(),
+        alert_status: "active",
+        alert_details: meds
+          .map((m) => `Patient: ${m.user_name} → Med ID: ${m.med_id}`)
+          .join(" | "),
       });
+
+      broadcast(newAlert.toObject());
+
+      // Email is best-effort — its failure must never crash the loop iteration
+      try {
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: nurses.map((n) => n.user_email).join(", "),
+          subject: `💊 Medication Reminder — Floor ${floor} — ${currentTime}`,
+          text: `Hello,\n\nThe following patients on Floor ${floor} need their medication at ${currentTime}:\n\n${medList}\n\nPlease administer the medicines promptly.\n\nHospital System`,
+        });
+      } catch (mailErr) {
+        console.error(`[CRON] Email failed for floor ${floor}:`, mailErr.message);
+      }
 
       console.log(
         `[CRON] Reminder sent → floor ${floor} | ${nurses.length} nurse(s) | ${meds.length} patient(s)`

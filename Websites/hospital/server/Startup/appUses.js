@@ -11,6 +11,8 @@ const BookingApis = require("../Routers/booking.js");
 const DetailsApis = require("../Routers/details.js");
 const SyncApis = require("../Routers/sync.js")
 const medsApis = require("../Routers/meds.js")
+const devicesApis = require("../Routers/devices.js")
+const alertsApis = require("../Routers/alertsRouter.js")
 
 function appUses(express ,app){
 
@@ -69,7 +71,8 @@ function appUses(express ,app){
     app.use("/api/booking",BookingApis)
     app.use("/api/details",DetailsApis)
     app.use("/api/sync",SyncApis)
-
+    app.use("/api/alerts", alertsApis); // add this
+    app.use("/api/devices", devicesApis);
 
 }
 
