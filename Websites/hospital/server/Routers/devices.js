@@ -21,7 +21,7 @@ const transporter = nodemailer.createTransport({
 // POST /api/alerts/critical-alert — triggered by devices/staff for critical room events
 router.post("/critical-alert", async (req, res) => {
   try {
-    const { room_num, floor_num, time_of_alert, user_id } = req.body;
+    const { room_num, floor_num, time_of_alert } = req.body;
 
     if (!room_num || !floor_num || !time_of_alert) {
       return res.status(400).json({
@@ -30,14 +30,6 @@ router.post("/critical-alert", async (req, res) => {
       });
     }
 
-    const tokenFields = extractUserFromToken(req);
-    const Modifier_role = await User.getUserRole(tokenFields.user_id);
-    if (Modifier_role === "NormalUser")
-      return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
-
-    const ModifierUserType = await User.getUserTitleByID(user_id);
-    if (ModifierUserType === "patient")
-      return res.status(403).json({ success: false, messages: [{ message: "You Are A Patient Not An Employee" }] });
 
     // Save to MongoDB
     const newAlert = await Alert.create({
