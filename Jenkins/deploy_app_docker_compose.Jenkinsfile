@@ -388,8 +388,8 @@ pipeline {
         stage("Targeted Update/Deployment: Staging") {
             when {
                 expression {
-                    def imagesProvided = params.IMAGES_VERSIONS?.trim() && params.IMAGES_VERSIONS != '{}'
-                    return env.STAGING_STACK_EXISTS == 'yes' && imagesProvided
+                    def noImagesProvided = !params.IMAGES_VERSIONS?.trim() || params.IMAGES_VERSIONS == '{}'
+                    return env.STAGING_STACK_EXISTS == 'yes' && !noImagesProvided
                 }
             }
             steps {
@@ -477,8 +477,9 @@ pipeline {
         stage("Targeted Update: Production") {
             when {
                 expression {
-                    def imagesProvided = params.IMAGES_VERSIONS?.trim() && params.IMAGES_VERSIONS != '{}'
-                    return env.PRODUCTION_STACK_EXISTS == 'yes' && imagesProvided
+                    def noImagesProvided = !params.IMAGES_VERSIONS?.trim() || params.IMAGES_VERSIONS == '{}'
+
+                    return env.PRODUCTION_STACK_EXISTS == 'yes' && !noImagesProvided
                 }
             }
             steps {
