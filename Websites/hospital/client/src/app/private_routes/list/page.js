@@ -6,7 +6,9 @@ import { useUserDataContext } from "@/contexts/user_data";
 function ListPage() {
   const router = useRouter();
   const {user_data} = useUserDataContext();
-  const Access = user_data?.emp_title?.toLowerCase() == "manager" || user_data?.emp_title?.toLowerCase() == "nurse"
+  const AccessAllPatients = user_data?.emp_title?.toLowerCase() == "manager" || user_data?.emp_title?.toLowerCase() == "nurse"
+  const AccessMyPatient = user_data?.emp_title?.toLowerCase() !== "manager" && user_data?.emp_title?.toLowerCase() !== "nurse" && user_data?.emp_title?.toLowerCase() !== "hr"
+
 
   return (
     <main className={`${styles["list-page"]} wrapper`}>
@@ -15,7 +17,7 @@ function ListPage() {
       </h1>
 
       <div className={styles["cards-container"]}>
-        {Access && <div
+        {AccessAllPatients && <div
           className={styles["nav-card"]}
           onClick={() => router.push("/private_routes/patients-list")}
         >
@@ -24,14 +26,14 @@ function ListPage() {
           <p>View and manage all hospital patients</p>
         </div>}
 
-        <div
+        {AccessMyPatient && <div
           className={styles["nav-card"]}
           onClick={() => router.push("/private_routes/mypatients-list")}
         >
           <i className={`fa-solid fa-user-doctor ${styles["card-icon"]}`}></i>
           <h2>My Patients</h2>
           <p>See only patients assigned to you</p>
-        </div>
+        </div>}
       </div>
     </main>
   );

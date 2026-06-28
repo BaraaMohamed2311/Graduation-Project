@@ -19,8 +19,8 @@ export default function Nav() {
     console.log("noAccessOthersEmp",noAccessOthersEmp)
     const notNurse = user_data?.emp_title?.toLowerCase() !== "nurse"
     const canAccessSchedule = user_data?.emp_title?.toLowerCase() == "doctor" || user_data?.emp_title?.toLowerCase() == "surgeon" 
-    const canAccessPatients = user_data?.emp_title?.toLowerCase() == "doctor" || user_data?.emp_title?.toLowerCase() == "surgeon"  || user_data?.emp_title?.toLowerCase() == "manager" 
-
+    const canAccessPatients = user_data?.emp_title?.toLowerCase() == "doctor" || user_data?.emp_title?.toLowerCase() == "surgeon"  || user_data?.emp_title?.toLowerCase() == "manager" || user_data?.emp_title?.toLowerCase() =="nurse" 
+    const canAccessAlert = user_data?.emp_title?.toLowerCase() == "doctor" || user_data?.emp_title?.toLowerCase() == "surgeon" || user_data?.emp_title?.toLowerCase() == "nurse"
     function handleBurger() {
         setDisplayed(prev => !prev);
     }
@@ -72,7 +72,7 @@ export default function Nav() {
                     
                     
                     {!noAccessOthersEmp && <li className={styles["nav-li"]}><Link href="/private_routes/employees-list"><i className="fa-solid fa-users"></i></Link></li>}
-                    <li className={styles["nav-li"]}>
+                    {canAccessAlert &&<li className={styles["nav-li"]}>
                         <Link href="/private_routes/alerts" onClick={clearUnread}>
                             <span className={`${styles["bell-icon"]} ${unread > 0 ? styles["ringing"] : ""}`}>
                                 <i className="fa-regular fa-bell"></i>
@@ -83,7 +83,7 @@ export default function Nav() {
                                 </span>
                             )}
                         </Link>
-                    </li>
+                    </li>}
                 </>}
                     
                     
