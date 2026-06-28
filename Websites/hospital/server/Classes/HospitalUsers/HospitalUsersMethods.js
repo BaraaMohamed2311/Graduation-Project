@@ -109,7 +109,7 @@ static async getAllHospitalEmployeesFullData(limit = 10, offset = 0, filtering_s
     const perms_CONDITION = emp_perms 
         ? `HAVING FIND_IN_SET('${emp_perms}', GROUP_CONCAT(DISTINCT hp.perm_name)) > 0` 
         : "";
-
+    console.log("filtering",filtering_string)
     const query = `
         SELECT 
             u.user_id,
@@ -168,7 +168,7 @@ static async getAllHospitalEmployeesFullData(limit = 10, offset = 0, filtering_s
         LEFT JOIN hospital_roles hr ON eh.hosp_emp_id = hr.hosp_emp_id
 
         WHERE u.user_type = 'employee' 
-        AND eh.emp_title IN ('Doctor', 'Surgeon', 'Nurse')
+        AND eh.emp_id = e.emp_id
         ${filtering_string ? "AND " + filtering_string : ""}
 
         -- Minimal GROUP BY
@@ -182,6 +182,8 @@ static async getAllHospitalEmployeesFullData(limit = 10, offset = 0, filtering_s
     const result = await executeMySqlQuery(query);
     return result;
 }
+
+
 }
 
 module.exports = HospitalUsersMethods;

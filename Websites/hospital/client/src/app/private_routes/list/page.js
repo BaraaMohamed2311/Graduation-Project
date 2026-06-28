@@ -2,9 +2,11 @@
 import { useRouter } from "next/navigation";
 import styles from "./listpage.module.css";
 import private_routes from "../page";
-
+import { useUserDataContext } from "@/contexts/user_data";
 function ListPage() {
   const router = useRouter();
+  const {user_data} = useUserDataContext();
+  const Access = user_data?.emp_title?.toLowerCase() == "manager" || user_data?.emp_title?.toLowerCase() == "nurse"
 
   return (
     <main className={`${styles["list-page"]} wrapper`}>
@@ -13,14 +15,14 @@ function ListPage() {
       </h1>
 
       <div className={styles["cards-container"]}>
-        <div
+        {Access && <div
           className={styles["nav-card"]}
           onClick={() => router.push("/private_routes/patients-list")}
         >
           <i className={`fa-solid fa-users ${styles["card-icon"]}`}></i>
           <h2>All Patients</h2>
           <p>View and manage all hospital patients</p>
-        </div>
+        </div>}
 
         <div
           className={styles["nav-card"]}

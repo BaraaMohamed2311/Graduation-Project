@@ -110,7 +110,7 @@ function PatientDetailsPage() {
 
 
   /***************************************update_handler***************************************/
-     function update_handler(e, url, token) {
+     async function update_handler(e, url, token) {
         e.preventDefault();
         // get updated user data and actions that were made
         let {updatedPatientData , actionString} = checkActionsMade();
@@ -125,7 +125,10 @@ function PatientDetailsPage() {
 
           updateUserFetch( url, token, reqBody ,actionString  );
         
-
+          await fetch(`${process.env.APIKEY}/sync/patients`, {
+        method: "PUT",
+        headers: { Authorization: `BEARER ${token}` },
+      });
         
       }
 /***************************************checkActionsMade***************************************/

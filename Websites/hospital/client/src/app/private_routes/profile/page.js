@@ -14,7 +14,7 @@ function ProfilePage() {
   let {user_data} = useUserDataContext();
   let [blobURL , setBlobURL] = useState("/avatar.jpg");
 
-  const ProfileComponent = profileComponents[user_data.emp_title?.toLowerCase()] || profileComponents.patient;
+  const ProfileComponent = profileComponents[user_data.emp_title?.toLowerCase()] || profileComponents.default;
 
 
   // fetch on first render if wasn't stored in  

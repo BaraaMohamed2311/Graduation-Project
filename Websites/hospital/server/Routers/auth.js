@@ -12,6 +12,7 @@ const crypto = require("crypto");
 const consoleLog = require("../Utils/consoleLog.js");
 const HospitalUsersMethods = require("../Classes/HospitalUsers/HospitalUsersMethods.js");
 const stringifyFields = require("../Utils/stringifyFields.js");
+const sqlTransaction = require("../Utils/sqlTransaction.js");
 // =================================
 //  Login User (Employees or Patients)
 // =================================
@@ -39,7 +40,7 @@ const stringifyFields = require("../Utils/stringifyFields.js");
             
             // If employee, make sure he is hospital employee
             const isHospitalUser = userIsEmployee?  HospitalUsersMethods.isHospitalUser(await User.getUserTitleByEmail(user_email)) : false;
- 
+                console.log("HospitalUsersMethods.isHospitalUser(await User.getUserTitleByEmail(user_email))",HospitalUsersMethods.isHospitalUser(await User.getUserTitleByEmail(user_email)))
                 // If he's employee but not as hospital staff then he has to register as patient first
                     if(!isHospitalUser && userIsEmployee){
                         return res.status(404).json({
@@ -59,7 +60,7 @@ const stringifyFields = require("../Utils/stringifyFields.js");
             const user_title =await User.getUserTitleByEmail(user_email);
             const isHospitalEmployee = HospitalUsersMethods.isHospitalUser(user_title)
             user = await HospitalUsersMethods.MapUserToGETSpecificDataFunction(user_id, user_title);
-
+                    console.log("logging user",user ,user_title )
             // User must register as patient if he is not an employee and not registered as patient
             if(!userIsEmployee && !isHospitalEmployee && userIsPatient){
                 return res.status(404).json({
@@ -74,13 +75,14 @@ const stringifyFields = require("../Utils/stringifyFields.js");
                 user.emp_perms =  Array.from (await User.getSetUserperms(user_id));
                 user.role_name = await User.getUserRole(user_id)
             }
-
+            console.log(password , user.user_password)
             if (!user || !user.user_password) {
                 return res.status(401).json({
                     success: false,
                     message: 'Invalid credentials'
                 });
             }
+            
             match = await bcrypt.compare(password, user.user_password);
             
             // Compare request's password with hashed password
@@ -126,37 +128,34 @@ const stringifyFields = require("../Utils/stringifyFields.js");
                 if(!user_name || !user_email || !user_password) return res.status(400 ).json({success:false,message:"Bad Request"});
 
                 const userType = await User.getUserTypeByEmail(user_email);
-                const userIsPatient = userType === "patient";
+                const userExists = await User.checkIfUserExistsByEmail(user_email);
 
                 // User is not patient
-                if (userIsPatient) {
+                if (userExists) {
                     return res.json({ success: false, message: "This email has been used before" });
                 } 
 
                 // assign hashed to user before preparing for inserting into db 
                 const hashedPassword = await User.hashPassword(user_password);
                 if(!hashedPassword) return res.status().json({success: false, message: "Failed To Hash Password"})
-                
-                // First Insert to users table
-                const queryPatients = `INSERT INTO users (${columns_field},user_type) VALUES (${values_field},'patient')`
-                const InsertedToPatients = await executeMySqlQuery( queryPatients );
 
-                if(InsertedToPatients.affectedRows == 0) return res.status().json({success:false,message:"Failed To Register User"})
-
-                
-
+                const user = {user_name , user_email , user_password:hashedPassword} 
                 // make entries array of hashed user
                 let request_entries = Object.entries(user);
 
                 const {columns_field , values_field} = stringifyFields("seperate", request_entries)
                 
-                // Register by inserting to patients table
-                const query = `INSERT INTO users (${columns_field}) VALUES (${values_field})`
+                // First Insert to users table
+                const queryUsers = `INSERT INTO users (${columns_field},user_type) VALUES (${values_field},'patient')`
+                const InsertedToUsers = await executeMySqlQuery( queryUsers );
+                const user_id = await User.getUserIDByEmail(user_email)
+                const queryPatients = `INSERT INTO patients (user_id) values (${user_id})`
+                
 
+                const InsertedToPatients = await sqlTransaction( [queryUsers, queryPatients]  );
+                const allInserted = InsertedToUsers && InsertedToPatients
 
-                const registered = await executeMySqlQuery( query );
-
-                if(registered){
+                if(allInserted){
                     res.json({success:true,message:"Successfully Registered as Patient"})
                 }
                 else{

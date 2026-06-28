@@ -4,13 +4,16 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import useLogOut from "@/hooks/useLogOut";
 import { useIsLoginContext } from "@/contexts/isLogin";
+import { useUserDataContext } from "@/contexts/user_data";
 
 export default function Nav() {
     const [displayed, setDisplayed] = useState(false);
     const { isLogin } = useIsLoginContext();
+    const {user_data} = useUserDataContext()
     const logOut = useLogOut();
     const NAV_UL_REF = useRef();
-
+    const canAccess = user_data?.emp_title?.toLowerCase() === "hr" || user_data?.emp_title?.toLowerCase() === "manager" || user_data?.emp_title?.toLowerCase() === "ceo" || user_data?.emp_title?.toLowerCase() === "it"
+    console.log("canAccess",canAccess,  user_data?.emp_title?.toLowerCase())
     function handleBurger() {
         setDisplayed(prev => !prev);
     }
@@ -55,10 +58,15 @@ export default function Nav() {
                     }}
                 >
                 
+                    {canAccess && <>
                     <li className={styles["nav-li"]}><Link href="/private_routes/registered-approve"><ion-icon name="add-outline"></ion-icon></Link></li>
                     <li className={styles["nav-li"]}><Link href="/private_routes/list"><ion-icon name="list-outline"></ion-icon></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/mailer"><ion-icon name="mail-outline"></ion-icon></Link></li>
                     <li className={styles["nav-li"]}><Link href="/private_routes/dashboard"><ion-icon name="analytics-outline"></ion-icon></Link></li>
+                    </>
+                    
+                    }
+                    <li className={styles["nav-li"]}><Link href="/private_routes/mailer"><ion-icon name="mail-outline"></ion-icon></Link></li>
+                    
                     {isLogin ? (
                         <li className={styles["nav-li"]}><Link href="/private_routes/profile"><ion-icon name="person-outline"></ion-icon></Link></li>
                     ) : (

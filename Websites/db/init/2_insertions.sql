@@ -268,7 +268,7 @@ INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_r
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (9,0,0,0,0,'Scientist','Data');
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (10,0,0,0,0,'Engineer','Cloud');
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (11,0,0,0,0,'DevOps Engineer','Automation');
-INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (12,0,0,0,0,'Doctor','Neurology (Brain)');
+INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (12,0,0,0,0,'Manager','Hospital');
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (13,0,0,0,0,'Doctor','Neurology (Brain)');
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (14,0,0,0,0,'Manager','Storage');
 INSERT INTO `employees` (`emp_id`,`emp_salary`,`emp_abscence`,`emp_bonus`,`emp_rate`,`emp_title`,`emp_specialty`) VALUES (16,0,0,0,0,'Engineer','Front-End');
@@ -522,6 +522,18 @@ LIMIT 0, 1000
 
 -- Date: 2026-01-30 18:12
 */
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (2,2,'HR');
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (6,6,'HR');
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (26,26,'HR');
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (48,48,'HR');
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (59,59,'HR');
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (94,94,'HR');
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (102,102,'HR');
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (178,178,'HR');
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (179,179,'HR');
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (181,181,'HR');
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (197,197,'HR');
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (164,164,'HR');
 INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (4,4,'Nurse');
 INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (8,8,'Doctor');
 INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (12,12,'Doctor');

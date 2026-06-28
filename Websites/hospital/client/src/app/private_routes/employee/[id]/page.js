@@ -97,7 +97,7 @@ const originalEmployee = cached_employees?.find(
 
 
   /***************************************update_handler***************************************/
-     function update_handler(e, url, token ,fieldDefinitions) {
+     async function update_handler(e, url, token ,fieldDefinitions) {
         e.preventDefault();
         // get updated user data and actions that were made
         let {updatedEmployeeData , actionString} = checkActionsMade(fieldDefinitions);
@@ -112,7 +112,11 @@ const originalEmployee = cached_employees?.find(
 
           updateUserFetch( url, token, reqBody ,actionString );
         
-
+                     // ← ADD THIS: tell the server to bump the version
+      await fetch(`${process.env.APIKEY}/sync/employees`, {
+        method: "PUT",
+        headers: { Authorization: `BEARER ${token}` },
+      });
         
       }
 /***************************************checkActionsMade***************************************/
@@ -238,7 +242,11 @@ const {inputs_info , select_def , check_box} = fieldDefinitions || {};
 
                   if(data && data.success){
                       
-                      
+                      // ← ADD THIS: tell the server to bump the version
+      await fetch(`${process.env.APIKEY}/sync/employees`, {
+        method: "PUT",
+        headers: { Authorization: `BEARER ${token}` },
+      });
                       
                   }
                   

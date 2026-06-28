@@ -24,6 +24,9 @@ const app = express();
 const consoleLog = require("./Utils/consoleLog.js");
 const appUses = require("./Startup/appUses.js");
 const mongoose = require("mongoose")
+const dns = require("node:dns");
+
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 // environment vars
 const PORT = process.env.PORT;
 

@@ -37,6 +37,7 @@ class PatientMethods {
     }
 
     static async getPatientSpecificData(user_id){
+        console.log("get specific patient data triggered" , user_id)
         const query = `SELECT 
                             -- from users
                             u.user_email,

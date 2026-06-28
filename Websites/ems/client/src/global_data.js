@@ -25,7 +25,8 @@ const global_title = [
     { value: "CEO", text: "CEO" },
     { value: "Doctor", text: "Doctor" },
     { value: "Nurse", text: "Nurse" },
-    { value: "Surgeon", text: "Surgeon" }
+    { value: "Surgeon", text: "Surgeon" },
+    { value: "Manager", text: "Manager" }
 ];
 
 const global_specialty = [
@@ -46,6 +47,8 @@ const global_specialty = [
     { value: "Back-End", text: "Back-End" },
     { value: "Full-Stack", text: "Full-Stack" },
     { value: "Management", text: "Management" },
+    { value: "Hospital", text: "Hospital" },
+    { value: "Storage", text: "Storage" },
 
     // Hospital specialities
     { value: "Pediatrics (Kids)", text: "Pediatrics (Kids)" },

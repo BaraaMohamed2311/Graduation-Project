@@ -2,13 +2,14 @@ const DoctorMethods = require("../../Utils/methods/DoctorMethods");
 const NurseMethods = require("../../Utils/methods/NurseMethods");
 const SurgeonMethods = require("../../Utils/methods/SurgeonMethods");
 const PatientMethods = require("../../Utils/methods/PatientMethods");
+const generalUserMethods = require("../../Utils/methods/generalUserMethods");
 
 /**
  * Factory class for mapping user titles to their respective method classes
  * Centralizes all user-type-specific operations
  */
 class HospitalUserFactory {
-    static #hospital_users = new Set(["doctor", "nurse", "surgeon", "patient"]);
+    static #hospital_users = new Set(["doctor", "nurse", "surgeon", "patient","manager","hr"]);
 
     // ========================================
     // Method Class Mapping
@@ -18,6 +19,8 @@ class HospitalUserFactory {
         "Surgeon": SurgeonMethods,
         "Nurse": NurseMethods,
         "Patient": PatientMethods,
+        "Manager": generalUserMethods,
+        "HR": generalUserMethods,
     };
 
     // ========================================
@@ -28,6 +31,8 @@ class HospitalUserFactory {
         "Surgeon": SurgeonMethods.getSurgeonSpecificData,
         "Nurse": NurseMethods.getNurseSpecificData,
         "Patient": PatientMethods.getPatientSpecificData,
+        "Manager": generalUserMethods.getUserSpecific,
+        "HR": generalUserMethods.getUserSpecific,
     };
 
     // ========================================
@@ -38,6 +43,8 @@ class HospitalUserFactory {
         "Surgeon": SurgeonMethods.getSurgeonFullData,
         "Nurse": NurseMethods.getNurseFullData,
         "Patient": PatientMethods.getPatientFullData,
+        "Manager": generalUserMethods.getUserFullData,
+        "HR": generalUserMethods.getUserFullData,
     };
 
     // ========================================
@@ -78,6 +85,7 @@ class HospitalUserFactory {
         "Surgeon": SurgeonMethods.updateSurgeonFullCore,
         "Nurse": NurseMethods.updateNurseFullCore,
         "Patient": PatientMethods.updatePatientFullCore,
+        "default": generalUserMethods.updateUserFullCore
     };
 
     // ========================================
@@ -181,12 +189,17 @@ static async getSpecificData(user_id, user_title) {
     /**
      * Update user data (full/core update)
      */
-    static async updateFullCore(user_id, user_title, updatingObj ) {
-        this.#validateUserTitle(user_title);
-        const method = this.#fullUpdateMethods[user_title];
-        if (!method) return false;
-        return await method.call(this.#methodClassMap[user_title], user_id, updatingObj);
-    }
+    static async updateFullCore(user_id, user_title, updatingObj) {
+    this.#validateUserTitle(user_title);
+
+    // Fallback to "default" if the specific user_title isn't registered
+    const method = this.#fullUpdateMethods[user_title] || this.#fullUpdateMethods["default"];
+    const targetClass = this.#methodClassMap[user_title] || this.#methodClassMap["default"];
+
+    if (!method || !targetClass) return false;
+
+    return await method.call(targetClass, user_id, updatingObj);
+}
 
     // ========================================
     // Specialized Methods

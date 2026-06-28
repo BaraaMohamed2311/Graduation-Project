@@ -138,6 +138,55 @@ const NurseProfile = ({ user_data, permissions }) => {
           {`${user_data.emp_title} | ${user_data.emp_specialty}`}
         </p>
         <p><strong>Email:</strong> {user_data.user_email}</p>
+        <p><strong>Experience:</strong> {user_data.years_of_exp} years</p>
+      </div>
+
+    <div className="further-info-wrapper">
+      <div className={"details-card"}>
+        <ul className={"clean-list"}>
+          <li><strong>Salary:</strong> {MoneyShortner(user_data.emp_salary)}</li>
+          <li><strong>This Month Bonus:</strong> {MoneyShortner(user_data.emp_bonus)}</li>
+          <li><strong>This Month Absence:</strong> {user_data.emp_abscence}</li>
+
+          <li className={styles.role_box}>
+            <strong>Role:</strong> {user_data.role_name}
+            <Image src={pickRoleIcon(user_data.role_name)} width={30} height={30} alt="nurse role" />
+          </li>
+
+          <li className={styles.availability_box}>
+            <AvailabilityList availability_schedule={user_data.availability_schedule} />
+          </li>
+
+          <li className={styles.perms_box}>
+            <PermsList permissions={permissions} />
+          </li>
+        </ul>
+      </div>
+
+      <ProfileEditManager
+        role="nurse"
+        userData={user_data}
+        references={{ inputsBoxsRef }}
+        selfEditableFields={selfEditableFields} 
+        approvalRequiredFields={approvalRequiredFields}
+      />
+    </div>
+    </>
+  );
+};
+
+// ===================================================
+//            Patient
+const DefaultEmpProfile = ({ user_data, permissions }) => {
+  const inputsBoxsRef = useRef({})
+  return (
+    <>
+      <div className={"user-info"}>
+        <h1 className={"user-name"} id="user_name">{user_data.user_name}</h1>
+        <p className={styles["profile-position"]}>
+          {`${user_data.emp_title} | ${user_data.emp_specialty}`}
+        </p>
+        <p><strong>Email:</strong> {user_data.user_email}</p>
         <p><strong>Shift:</strong> {user_data.shift_type}</p>
         <p><strong>Department:</strong> {user_data.department}</p>
         <p><strong>Experience:</strong> {user_data.years_of_exp} years</p>
@@ -276,5 +325,6 @@ export const profileComponents = {
   doctor: DoctorProfile,
   surgeon: SurgeonProfile,
   nurse: NurseProfile,
-  patient: PatientProfile
+  patient: PatientProfile,
+  default: DefaultEmpProfile
 };

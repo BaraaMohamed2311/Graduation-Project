@@ -108,7 +108,7 @@ function PatientDetailsPage() {
 
 
    /***************************************update_handler***************************************/
-       function update_handler(e, url, token) {
+       async function update_handler(e, url, token) {
           e.preventDefault();
           // get updated user data and actions that were made
           let {updatedPatientData , actionString} = checkActionsMade();
@@ -123,7 +123,10 @@ function PatientDetailsPage() {
   
             updateUserFetch( url, token, reqBody ,actionString );
           
-  
+                      await fetch(`${process.env.APIKEY}/sync/mypatients`, {
+        method: "PUT",
+        headers: { Authorization: `BEARER ${token}` },
+      });
           
         }
   /***************************************checkActionsMade***************************************/
@@ -165,7 +168,7 @@ function PatientDetailsPage() {
 
         // Check assigned to room flag
           // isAssignedToRoom
-          if (selectBoxsRef.current[select_def.isAssignedToRoom_select.name] && (selectBoxsRef.current[select_def.isAssignedToRoom_select.name].value !== patient[select_def.isAssignedToRoom_select.name])) {
+          if (selectBoxsRef.current[select_def.isAssignedToRoom_select.name] && (selectBoxsRef.current[select_def.isAssignedToRoom_select.name].value !== mypatient[select_def.isAssignedToRoom_select.name])) {
               updatedPatientData[select_def.isAssignedToRoom_select.name] = selectBoxsRef.current[select_def.isAssignedToRoom_select.name].value;
               if (!actions.includes("Modify Other Patient")) actions.push("Modify Other Patient");
           }
@@ -174,7 +177,7 @@ function PatientDetailsPage() {
           const isAssigned =
               selectBoxsRef.current[select_def.isAssignedToRoom_select.name]
                   ? selectBoxsRef.current[select_def.isAssignedToRoom_select.name].value == 1
-                  : patient[select_def.isAssignedToRoom_select.name] == 1;
+                  : mypatient[select_def.isAssignedToRoom_select.name] == 1;
 
 
           // floor number (ONLY if assigned)
@@ -183,7 +186,7 @@ function PatientDetailsPage() {
                   userNotification("error", "Input fields cannot be empty");
                   return
               }
-              else if (selectBoxsRef.current[select_def.floorNum_select.name] && (selectBoxsRef.current[select_def.floorNum_select.name].value !== patient[select_def.floorNum_select.name])) {
+              else if (selectBoxsRef.current[select_def.floorNum_select.name] && (selectBoxsRef.current[select_def.floorNum_select.name].value !== mypatient[select_def.floorNum_select.name])) {
                   updatedPatientData[select_def.floorNum_select.name] = selectBoxsRef.current[select_def.floorNum_select.name].value;
                   if (!actions.includes("Modify Other Patient")) actions.push("Modify Other Patient");
               }
@@ -193,7 +196,7 @@ function PatientDetailsPage() {
                   userNotification("error", "Input fields cannot be empty");
                   return
               }
-              else if (selectBoxsRef.current[select_def.RoomNum_select.name] && (selectBoxsRef.current[select_def.RoomNum_select.name].value !== patient[select_def.RoomNum_select.name])) {
+              else if (selectBoxsRef.current[select_def.RoomNum_select.name] && (selectBoxsRef.current[select_def.RoomNum_select.name].value !== mypatient[select_def.RoomNum_select.name])) {
                   updatedPatientData[select_def.RoomNum_select.name] = selectBoxsRef.current[select_def.RoomNum_select.name].value;
                   if (!actions.includes("Modify Other Patient")) actions.push("Modify Other Patient");
               }

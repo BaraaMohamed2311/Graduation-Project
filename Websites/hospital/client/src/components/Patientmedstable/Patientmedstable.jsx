@@ -89,7 +89,7 @@ export default function PatientMedsTable({ token, user_id , setPatientMedsParent
   }
 
   if (loading) return <p className={styles.emptyCell}>Loading patient medicines…</p>;
-  if (error) return <p className={styles.errorBanner}>{error}</p>;
+  if (error) return <></>;
 
   return (
     <div className={styles.tableWrap}>

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAlerts } from "@/contexts/alert"; // was wrongly imported from "../layout"
 import styles from "./alerts.module.css";
 import private_routes from "../page";
+import { useUserDataContext } from "@/contexts/user_data";
 
 const LIMIT = 10;
 
@@ -15,6 +16,8 @@ function AlertPage() {
   const [page,       setPage]       = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [newCount,   setNewCount]   = useState(0);
+  const {user_data} = useUserDataContext()
+  const notNurse = user_data?.emp_title?.toLowerCase() !== "nurse"
 
   const isFirstPage = page === 1;
 
@@ -77,7 +80,7 @@ function AlertPage() {
 
       <div className={styles["columns"]}>
         {/* Medication Reminders column */}
-        <section className={styles["column"]}>
+        {!notNurse && <section className={styles["column"]}>
           <h2 className={styles["column-title"]}>
             <i className="fa-solid fa-pills"></i> Medication Reminders
           </h2>
@@ -85,7 +88,7 @@ function AlertPage() {
             ? <p className={styles["empty"]}>No medication alerts</p>
             : medication.map(renderCard)
           }
-        </section>
+        </section>}
 
         {/* Critical Conditions column */}
         <section className={styles["column"]}>

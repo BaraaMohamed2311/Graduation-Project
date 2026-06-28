@@ -18,7 +18,7 @@ class perms {
     // ================ Actual Execution of Perms ================= //
 
     static async executeChangeOtherUserData(other_user_id, other_user_title, updatingObj){
-
+        
         return await HospitalUsersMethods.MapUserToFullUpdateFunction(other_user_id, other_user_title, updatingObj)
     }
 
@@ -29,7 +29,7 @@ class perms {
 
 
     static async executeChangeOtherPerms(hosp_emp_id , newpermsSet , oldUserpermsSet){
-        
+        console.log("perms triggered executeChangeOtherPerms",hosp_emp_id , newpermsSet , oldUserpermsSet)
         const permsHash =  await perms.getAllpermsInTable(); // fetch map hash of perms and their ids
         const ArrayOfNewPerms = newpermsSet ? Array.from(newpermsSet) : []
         const StringOfNewperms = ArrayOfNewPerms.length > 0 ? ArrayOfNewPerms.join(", ") : "None"
@@ -59,13 +59,16 @@ class perms {
         /******************* Stage 3 = Add All New Perms *******************/
         let addingpermsQuery = [];
         // if perm wasn't exist in old perms and exists in all hashed perms then insert it 
+        console.log(StringOfNewperms)
         StringOfNewperms.split(", ").forEach((perm)=>{
             if(permsHash.has(perm) && !oldUserpermsSet.has(perm))
                 addingpermsQuery.push(`(${hosp_emp_id},${permsHash.get(perm)})`); // to get perm id
         })
-
-        if(addingpermsQuery.length > 0)
-            await executeMySqlQuery("INSERT INTO hospital_emp_perms (hosp_emp_id , perm_id) VALUES" + addingpermsQuery.join(",") ,"Error Updating User perms");
+console.log("perms triggered executeChangeOtherPerms addingpermsQuery",addingpermsQuery)
+        if(addingpermsQuery.length > 0){
+            const addquery = "INSERT INTO hospital_emp_perms (hosp_emp_id , perm_id) VALUES" + addingpermsQuery.join(",") 
+            console.log()
+            await executeMySqlQuery("INSERT INTO hospital_emp_perms (hosp_emp_id , perm_id) VALUES" + addingpermsQuery.join(",") ,"Error Updating User perms");}
     }
 
     // need other_user_Role as parameter 

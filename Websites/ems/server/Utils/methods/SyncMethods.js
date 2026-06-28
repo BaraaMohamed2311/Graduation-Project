@@ -16,7 +16,7 @@ class SyncMethods {
         `;
         const versionResult = await executeMySqlQuery(versionQuery);
         const globalVersion = versionResult[0]?.current_version ?? 0;
-
+        console.log("max_version < globalVersion",max_version , globalVersion)
         return {
             needsSync: fallbackToDB || (max_version < globalVersion),
             latest_version: globalVersion

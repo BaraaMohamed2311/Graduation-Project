@@ -17,10 +17,10 @@ export const useEmployeesCache = () => {
         if (Array.isArray(storedEmployees)) {
           setCached_Employees(storedEmployees);
         }
-        // After we try loading, set the flag to true
         setIsIndexedDBLoaded(true);
       } catch (err) {
         console.error("Failed to load employees from IndexedDB:", err);
+        setIsIndexedDBLoaded(true); // still unblock the app on error
       }
     })();
   }, []);
@@ -59,34 +59,36 @@ export const useEmployeesCache = () => {
     }
   }, [fetched_employee_pages]);
 
-  // Save employees to IndexedDB
-  const saveEmployeesToStore = async (employees) => {
+  // FIX: Merge new employees into IndexedDB instead of replacing
+  const saveEmployeesToStore = async (newEmployees) => {
     try {
-      if (Array.isArray(employees) && employees.length > 0) {
-        await putIndexDB("employees", employees);
-      } else {
+      if (!Array.isArray(newEmployees) || newEmployees.length === 0) {
         await clearStore("employees");
+        return;
       }
+      // Merge with whatever is already in IndexedDB
+      const existing = await getAllFromStore("employees");
+      const map = new Map(
+        Array.isArray(existing) ? existing.map((e) => [e.user_id, e]) : []
+      );
+      newEmployees.forEach((e) => map.set(e.user_id, e));
+      await putIndexDB("employees", Array.from(map.values()));
     } catch (err) {
       console.error("Failed to save employees to IndexedDB:", err);
       throw err;
     }
   };
 
-   
-
-   // Check if a specific page needs sync
-  const checkPageSync = async ( max_version) => {
-
+  const checkPageSync = async (max_version) => {
     try {
-      const response = await fetch(`${process.env.APIKEY}/sync/employees?max_version=${max_version}`);
+      const response = await fetch(
+        `${process.env.APIKEY}/sync/employees?max_version=${max_version}`
+      );
       const data = await response.json();
-      console.log(data.needsSync);
-
-      return {needsSync : data.needsSync , latest_version:data.latest_version}; 
+      return { needsSync: data.needsSync, latest_version: data.latest_version };
     } catch (err) {
       console.error("Failed to check page sync:", err);
-      return {needsSync : true, latest_version:0}; 
+      return { needsSync: true, latest_version: 0 };
     }
   };
 

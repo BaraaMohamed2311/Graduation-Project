@@ -8,7 +8,7 @@ const SyncMethods = require("../Utils/methods/SyncMethods.js");
 router.get("/employees", async (req, res) => {
     try {
         const {  max_version } = req.query;
-
+        
         const { needsSync, latest_version } =
             await SyncMethods.syncAllEmployeesFullData( max_version);
 

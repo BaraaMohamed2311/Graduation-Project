@@ -26,7 +26,6 @@ function EmployeesListPage() {
   let [needsSync , setNeedsSync] = useState(false);
 
 
-
   // Refrences
   const inputsBoxsRef= useRef({});
   const selectBoxsRef= useRef({});
@@ -183,7 +182,7 @@ function handleFilterOption(e , cause="button"){
         .then((data) => {
             if (data && data.success) {
                 setIsFiltered(true);
-                setFilteredResults(data.body);
+                setFilteredResults(data.body.filter(emp => emp.user_id !== user_data.user_id));
             } else if (data && !data.success) {
                 setIsFiltered(false);
                 userNotification("error", data.message);

@@ -71,10 +71,13 @@ useEffect(() => {
           if (data?.success) {
 
             setNumOfPages(data.numOfPages || 1);
+            // Filter the incoming batch right away
+            const filteredBatch = data.body.filter(emp => emp.user_id !== user_data.user_id);
+
             setCached_Employees((prev) => {
               const map = new Map(prev.map((emp) => [emp.user_id, emp])); 
-              data.body.forEach((emp) => {
-                map.set(emp.user_id, emp); // replaces existing or inserts new
+              filteredBatch.forEach((emp) => {
+                map.set(emp.user_id, emp); 
               });
               return Array.from(map.values());
             });
@@ -85,6 +88,7 @@ useEffect(() => {
           });
           // save to indexedDB
           saveEmployeesToStore(data.body)
+          setNeedsSync(false); // ← ADD THIS — clears the sync flag after fresh data is saved
           
           } else if (data && !data.success) {
             userNotification("error", data.message);
@@ -176,7 +180,7 @@ function handleFilterOption(e , cause){
     .then(data=>{
         if(data && data.success){
             setIsFiltered(true)
-            setFilteredResults(data.body); //to remove previous cached and cache filtered users
+            setFilteredResults(data.body.filter(emp => emp.user_id !== user_data.user_id)); //to remove previous cached and cache filtered users
         }
         else if(data && !data.success) {
             setIsFiltered(false); // if failed then we display regular cached_employees by setting back to false

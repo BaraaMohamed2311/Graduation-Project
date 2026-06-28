@@ -5,13 +5,21 @@ import Link from "next/link";
 import useLogOut from "@/hooks/useLogOut";
 import { useIsLoginContext } from "@/contexts/isLogin";
 import { useAlerts } from "@/contexts/alert"; 
-
+import { useUserDataContext } from "@/contexts/user_data";
 export default function Nav() {
     const [displayed, setDisplayed] = useState(false);
     const { isLogin } = useIsLoginContext();
     const logOut = useLogOut();
     const NAV_UL_REF = useRef();
     const { unread, clearUnread } = useAlerts();
+    const {user_data} = useUserDataContext()
+    const isPatient = user_data?.emp_title === undefined || !(user_data?.emp_title) 
+    console.log("isPatient",isPatient)
+    const noAccessOthersEmp = user_data?.emp_title?.toLowerCase() !== "hr" && user_data?.emp_title?.toLowerCase() !== "manager"
+    console.log("noAccessOthersEmp",noAccessOthersEmp)
+    const notNurse = user_data?.emp_title?.toLowerCase() !== "nurse"
+    const canAccessSchedule = user_data?.emp_title?.toLowerCase() == "doctor" || user_data?.emp_title?.toLowerCase() == "surgeon" 
+    const canAccessPatients = user_data?.emp_title?.toLowerCase() == "doctor" || user_data?.emp_title?.toLowerCase() == "surgeon"  || user_data?.emp_title?.toLowerCase() == "manager" 
 
     function handleBurger() {
         setDisplayed(prev => !prev);
@@ -56,12 +64,14 @@ export default function Nav() {
                         pointerEvents: displayed ? 'all' : 'none'
                     }}
                 >
-                
-                    <li className={styles["nav-li"]}><Link href="/private_routes/rooms"><i className="fa-solid fa-bed-pulse"></i></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/list"><i className="fa-solid fa-head-side-cough"></i></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/booking-list"><i className="fa-solid fa-user-doctor"></i></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/books-schedule"><i className="fa-solid fa-calendar-days"></i></Link></li>
-                    <li className={styles["nav-li"]}><Link href="/private_routes/employees-list"><i className="fa-solid fa-users"></i></Link></li>
+                    {isPatient  &&  <li className={styles["nav-li"]}><Link href="/private_routes/booking-list"><i className="fa-solid fa-user-doctor"></i></Link></li>}
+                { !isPatient && 
+                <>
+                    { !notNurse && <li className={styles["nav-li"]}><Link href="/private_routes/rooms"><i className="fa-solid fa-bed-pulse"></i></Link></li>}
+                    {canAccessPatients && <li className={styles["nav-li"]}><Link href="/private_routes/list"><i className="fa-solid fa-head-side-cough"></i></Link></li>}
+                    
+                    
+                    {!noAccessOthersEmp && <li className={styles["nav-li"]}><Link href="/private_routes/employees-list"><i className="fa-solid fa-users"></i></Link></li>}
                     <li className={styles["nav-li"]}>
                         <Link href="/private_routes/alerts" onClick={clearUnread}>
                             <span className={`${styles["bell-icon"]} ${unread > 0 ? styles["ringing"] : ""}`}>
@@ -74,7 +84,10 @@ export default function Nav() {
                             )}
                         </Link>
                     </li>
+                </>}
                     
+                    
+                    { canAccessSchedule && <li className={styles["nav-li"]}><Link href="/private_routes/books-schedule"><i className="fa-solid fa-calendar-days"></i></Link></li>}
                     {isLogin ? (
                         <li className={styles["nav-li"]}><Link href="/private_routes/profile"><i className="fa-solid fa-user"></i></Link></li>
                     ) : (

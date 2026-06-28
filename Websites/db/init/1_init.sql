@@ -9,9 +9,9 @@ CREATE TABLE table_version (
 
 CREATE TABLE audit_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    site_id VARCHAR(50) NOT NULL,       -- new column
+    site_id VARCHAR(100) NOT NULL,       -- new column
     modifier_id INT NOT NULL,
-    method VARCHAR(50) NOT NULL,
+    method VARCHAR(255) NOT NULL,
     affects_who JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

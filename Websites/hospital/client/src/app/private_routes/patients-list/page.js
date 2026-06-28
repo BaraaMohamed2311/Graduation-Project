@@ -72,9 +72,12 @@ useEffect(() => {
         if (data?.success) {
 
           setNumOfPages(data.numOfPages || 1);
+          // ─── FILTER CURRENT USER FROM THE INCOMING BATCH ───
+          const filteredBatch = data.body.filter(emp => emp.user_id !== user_data.user_id);
+
           setCached_Patients((prev) => {
             const map = new Map(prev.map((emp) => [emp.user_id, emp])); 
-              data.body.forEach((emp) => {
+              filteredBatch.forEach((emp) => {
                 map.set(emp.user_id, emp); // replaces existing or inserts new
               });
               return Array.from(map.values());
@@ -194,7 +197,7 @@ useEffect(() => {
     })
     .then((data) => {
       if (data?.success) {
-        setFilteredResults(data.body);
+        setFilteredResults(data.body.filter(emp => emp.user_id !== user_data.user_id));
         setNumOfPages(data.numOfPages || 1);
       } else {
         userNotification("error", data.message);
