@@ -40,7 +40,7 @@ useEffect(() => {
     const needsSyncObj = await checkPageSync(max_version)
     setNeedsSync(needsSyncObj?.needsSync);
     if(max_version <  needsSyncObj.latest_version)
-    setLastSync("employees",needsSyncObj.latest_version);
+    setLastSync("mypatients",needsSyncObj.latest_version);
   })();
 }, [currPage]);
 // ===========================================

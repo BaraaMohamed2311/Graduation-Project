@@ -51,7 +51,7 @@ function PatientDetailsPage() {
   useEffect(() => {
   if (!isIndexedDBLoaded || mypatient) return;
 
-  fetch(`${process.env.APIKEY}/details/employee/${user_id}`, {
+  fetch(`${process.env.APIKEY}/details/mypatient/${user_id}`, {
     mode: "cors",
     method: "GET",
     headers: {

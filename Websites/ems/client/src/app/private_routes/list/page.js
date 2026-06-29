@@ -45,6 +45,7 @@ useEffect(() => {
 }, [currPage]);
 
 
+
   // ===========================================
   //         Fetch Pages
   // ===========================================
@@ -54,7 +55,7 @@ useEffect(() => {
     if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
   
     if (!fetched_employee_pages.has(currPage) || needsSync) {
-
+      setNeedsSync(false); // ✅ Clear BEFORE the async fetch to prevent re-trigger
       fetch(`${process.env.APIKEY}/list/employees?user_id=${user_data.user_id}&pagination=${currPage}&size=${sizeOfPage}`, {
         mode: "cors",
         headers: {
@@ -70,10 +71,12 @@ useEffect(() => {
           if (data?.success) {
 
             setNumOfPages(data.numOfPages || 1);
+            const filteredBatch = data.body.filter(emp => emp.user_id !== user_data.user_id);
+
             setCached_Employees((prev) => {
               const map = new Map(prev.map((emp) => [emp.user_id, emp])); 
-              data.body.forEach((emp) => {
-                map.set(emp.user_id, emp); // replaces existing or inserts new
+              filteredBatch.forEach((emp) => {
+                map.set(emp.user_id, emp); 
               });
               return Array.from(map.values());
             });

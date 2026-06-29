@@ -20,7 +20,7 @@ let inputs_info = [
     {
 
         label:"Phone",
-        type:"number",
+        type:"text",
         name:"patient_phone",
         
 

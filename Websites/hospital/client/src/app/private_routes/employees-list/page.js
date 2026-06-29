@@ -46,6 +46,7 @@ useEffect(() => {
 }, [currPage]);
 
 
+
   // ===========================================
   //         Fetch Pages
   // ===========================================
@@ -55,7 +56,7 @@ useEffect(() => {
     if(!isIndexedDBLoaded) return; // wait till indexedDB is loaded to avoid overwriting cached data
   
     if (!fetched_employee_pages.has(currPage) || needsSync) {
-
+      setNeedsSync(false); // ✅ Clear BEFORE the async fetch to prevent re-trigger
       fetch(`${process.env.APIKEY}/list/employees?user_id=${user_data.user_id}&pagination=${currPage}&size=${sizeOfPage}`, {
         mode: "cors",
         headers: {
@@ -88,7 +89,7 @@ useEffect(() => {
           });
           // save to indexedDB
           saveEmployeesToStore(data.body)
-          setNeedsSync(false); // ← ADD THIS — clears the sync flag after fresh data is saved
+
           
           } else if (data && !data.success) {
             userNotification("error", data.message);
