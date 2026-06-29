@@ -292,24 +292,34 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
         const tokenFields = extractUserFromToken(req);
         const Modifier_role = await User.getUserRole(tokenFields.user_id);
 
-        if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
 
         // Ceck if list page can be accessible
         const filtering_string = Object.keys(restFilters).length > 0 ? padBoth(buildJoinedFilters(restFilters),1) :null; 
         
         const whereClause = filtering_string ?  padBoth(`WHERE ${filtering_string}`,1) : ""; 
-
+            const userTitle = await User.getUserTitleByID(user_id)
         // =====================================
         // Cache Count on Server Side - ONLY for non-filtered queries
         // =====================================
         
-        const patientsCount = await cacheCountNodeCache("totalNumOfMyPatients",DoctorMethods.getDoctorAllPatientsCOUNT,whereClause,isFiltered)
+        // Count — pass the bound function reference directly to your cache wrapper
+            const patientsCount = await cacheCountNodeCache(
+                "totalNumOfMyPatients",
+                HospitalUsersMethods.getMyPatientCountMethod(userTitle),
+                whereClause,
+                isFiltered
+            );
         const numOfPages = Math.max(1,Math.ceil(patientsCount / size));
 
-
-    
-      const my_rangedpatients = await DoctorMethods.getDoctorRangedPatients(user_id,parseInt(size),parseInt((pagination - 1) * size ),filtering_string);
-
+            // Ranged list
+            const my_rangedpatients = await HospitalUsersMethods.getStaffRangedPatients(
+                user_id,
+                parseInt(size),
+                parseInt((pagination - 1) * size),
+                filtering_string,
+                userTitle  // "Doctor" or "Surgeon"
+            );
+        console.log("my_rangedpatients", my_rangedpatients , "params", user_id,parseInt(size),parseInt((pagination - 1) * size ),filtering_string)
         // =====================================
         // Send Response
         // =====================================

@@ -361,12 +361,6 @@ router.post(
       if (!isAuthorized)
         return res.status(401).json({ success: false, message: "Permission Is Required For This Action" });
 
-      const belongsToModifier = my
-        ? await HospitalUsersMethods.patientBelongsToStaff(modifier_id, other_user_id)
-        : true;
-
-      if (!belongsToModifier)
-        return res.status(401).json({ success: false, message: "This Isn't Your Patient" });
 
       const session = await mongoose.startSession();
       session.startTransaction();

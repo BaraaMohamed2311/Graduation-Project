@@ -10,6 +10,19 @@ class HospitalUsersMethods {
     // ========================================
     // Delegation to Factory Methods
     // ========================================
+    /**
+ * Get the raw count function bound to the correct class (for cache wrappers)
+ */
+static getMyPatientCountMethod(user_title) {
+    return HospitalUserFactory.getMyPatientCountMethod(user_title);
+}
+
+/**
+ * Get ranged patients for Doctor or Surgeon
+ */
+static async getStaffRangedPatients(staff_id, limit, offset, filtering_string = null, user_title) {
+    return await HospitalUserFactory.getStaffRangedPatients(staff_id, limit, offset, filtering_string, user_title);
+}
     
     static isHospitalUser(user_title) {
         return HospitalUserFactory.isHospitalUser(user_title);

@@ -18,6 +18,61 @@ const extractUserFromToken = require("../Utils/extractUserFromToken.js")
 // =================================
 //  Get One Patient Data MySQL
 // =================================
+
+// =================================
+//  Get Employee by Email (for Nurse → Assign-to-Staff flow)
+//  Only returns the employee if their title is Doctor or Surgeon
+// =================================
+router.get("/employees", jwtVerify, async (req, res) => {
+    try {
+        const { user_email } = req.query;
+
+        // Bad Request if email is missing
+        if (!user_email) return res.status(400).json({ success: false, message: "Bad Request: user_email is required" });
+
+        // Check that the requester is a Nurse
+        const tokenFields = extractUserFromToken(req);
+        const requesterTitle = await User.getUserTitleByID(tokenFields.user_id);
+
+        if (requesterTitle?.toLowerCase() !== "nurse") {
+            return res.status(403).json({ success: false, message: "Only Nurses can use this lookup" });
+        }
+
+        // Resolve user_id from email
+        const emp_title = await User.getUserTitleByEmail(user_email);
+        const staff_id = await User.getUserIDByEmail(user_email)
+        
+        console.log("emp_title",emp_title)
+        // Enforce title restriction — must be Doctor or Surgeon
+        const targetTitle = emp_title?.toLowerCase();
+        const isAssignable = targetTitle === "doctor" || targetTitle === "surgeon";
+
+        if (!isAssignable) {
+            return res.status(422).json({
+                success: false,
+                message: `Employee is a "${emp_title}" — only Doctors and Surgeons can be assigned patients`
+            });
+        }
+
+        // Fetch full employee data
+        const employeeData = await HospitalUsersMethods.MapUserToGETFullDataFunction(staff_id, emp_title);
+console.log("employeeData",employeeData)
+        if (!employeeData) {
+            return res.status(404).json({ success: false, message: "No Users Found!" });
+        }
+
+        return res.status(200).json({ success: true, body: employeeData, message: "Successfully Fetched Data" });
+
+    } catch (err) {
+        console.error("Error GET Employee by Email", err);
+        res.status(500).json({
+            success: false,
+            message: err.message || "Error GET Employee by Email"
+        });
+    }
+});
+
+
 router.get("/employee/:id",jwtVerify,async (req,res)=>{
     try{
         const {  id : user_id } = req.params;

@@ -35,8 +35,6 @@ const fetchPatientDetails = async (patientId, roomId) => {
     return null;
   }
 
-
-
   try {
     const response = await fetch(`${process.env.APIKEY}/rooms/patient/${patientId}/details`,{
       mode:"cors",
@@ -92,7 +90,6 @@ const fetchPatientDetails = async (patientId, roomId) => {
       Authorization: `BEARER ${user_data.token}`
     } })
       .then(res => {
-        statusNotification(res.status);
         return res.json();
       })
       .then(data => {
@@ -136,17 +133,21 @@ const fetchPatientDetails = async (patientId, roomId) => {
 
     if (!assignData.success) {
       userNotification("error", assignData.message);
-      return; // Stop here if assignment failed
+      return;
     }
 
     userNotification("success", "Patient assigned successfully");
 
-    // Then grab patient's data (only if assignment was successful)
-    const result = await fetchPatientDetails(user_id, room_id);
+    // ✅ Use selectedUser.user_id directly — user_id from URL is the old occupant
+    const result = await fetchPatientDetails(selectedUser.user_id, room_id);
     if (result) {
       setPatient(result.patient);
       setGraphData(result.graphData);
     }
+
+    setIsAssigningModalDisplayed(false);
+    setIsConfirmed(false);
+    setSelectedUser(null);
 
   } catch (error) {
     userNotification("error", "Failed to assign patient");

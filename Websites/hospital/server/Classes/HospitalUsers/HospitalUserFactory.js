@@ -120,6 +120,31 @@ class HospitalUserFactory {
     // ========================================
     // Execute Methods by Title
     // ========================================
+// ========================================
+// My Patients Count Methods (staff-scoped)
+// ========================================
+static #myPatientCountMethods = {
+    "Doctor":  DoctorMethods.getDoctorAllPatientsCOUNT.bind(DoctorMethods),
+    "Surgeon": SurgeonMethods.getSurgeonAllPatientsCOUNT.bind(SurgeonMethods),
+};
+
+// ========================================
+// My Patients Ranged Methods (staff-scoped)
+// ========================================
+static #myPatientRangedMethods = {
+    "Doctor":  DoctorMethods.getDoctorRangedPatients.bind(DoctorMethods),
+    "Surgeon": SurgeonMethods.getSurgeonRangedPatients.bind(SurgeonMethods),
+};
+
+static getMyPatientCountMethod(user_title) {
+    return this.#myPatientCountMethods[user_title] || null;
+}
+
+static async getStaffRangedPatients(staff_id, limit, offset, filtering_string = null, user_title) {
+    const method = this.#myPatientRangedMethods[user_title];
+    if (!method) return [];
+    return await method(staff_id, limit, offset, filtering_string);
+}
 
     /**
  * Get specific data for a user

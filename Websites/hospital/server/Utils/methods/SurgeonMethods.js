@@ -339,9 +339,81 @@ class SurgeonMethods {
     return result[0];
     }
 
-    static async getListedSurgeonsDataForPaitent(){
-        
+    static async getSurgeonAllPatients(staff_id){
+        const query = `SELECT 
+                        -- from users
+                        u.user_email,
+                        u.user_name,
+                        -- from patients
+                        p.user_id AS user_id,
+                        p.patient_phone,
+                        p.patient_address,
+                        p.isAssignedToRoom,
+                        p.floor_number,
+                        p.date_of_birth,
+                        p.next_check_date,
+                        p.patient_gender,
+                        p.emergency_contact,
+                        p.created_at,
+                        sp.assigned_date
+                    FROM staff_patient sp
+                    JOIN patients p ON sp.user_id = p.user_id
+                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.user_id
+                    WHERE sp.staff_id = ? AND relation_type = 'Surgeon';
+                    `;
+            const result = await executeMySqlQuery(query,[staff_id]);
+            
+            return result;
     }
+
+    static async getSurgeonRangedPatients(staff_id,limit, offset,filtering_string=null){
+        let query = `SELECT 
+                        -- from users
+                        u.user_email,
+                        u.user_name,
+
+                        -- from patients
+                        p.user_id AS user_id,
+                        p.patient_phone,
+                        p.patient_address,
+                        p.isAssignedToRoom,
+                        p.floor_number,
+                        p.date_of_birth,
+                        p.next_check_date,
+                        p.patient_gender,
+                        p.emergency_contact,
+                        p.created_at,
+                        sp.assigned_date
+                    FROM staff_patient sp
+                    JOIN patients p ON sp.user_id = p.user_id
+                    JOIN users u ON u.user_type = 'patient' AND u.user_id = p.user_id
+                    WHERE sp.staff_id = ?  AND relation_type = 'Surgeon'
+                    `;
+            if(filtering_string){
+                query += " AND " + filtering_string
+            }
+
+            if(limit> 0 &&  offset > -1){
+                query += " LIMIT ? OFFSET ? "
+            }
+            const result = await executeMySqlQuery(query,[staff_id,limit, offset]);
+            
+            return result;
+    }
+
+    static async getSurgeonAllPatientsCOUNT(staff_id){
+        const query = `SELECT 
+                        COUNT(p.user_id) as count
+                    FROM staff_patient sp
+                    JOIN patients p 
+                        ON sp.user_id = p.user_id
+                    WHERE sp.staff_id = ?  AND relation_type = 'Surgeon';
+                    `;
+            const result = await executeMySqlQuery(query,[staff_id]);
+            
+            return result[0];
+    }
+
     
     // ============================
     //              Update
