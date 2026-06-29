@@ -20,7 +20,7 @@ const Profile_PIC_Schema = new mongoose.Schema({
       
     
     
-},{timestamps:true , collection:"EMS_Images"})
+},{timestamps:true , collection:"Users_Images"})
 
 module.exports = mongoose.model("Image",Profile_PIC_Schema);
 

@@ -19,7 +19,7 @@ import userNotification from "@/utils/userNotification";
 import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
 import MapToEmployeeDetails from "./employee_fields"
 import AvailabilityList from "@/components/AvailabilityList/AvailabilityList";
-
+// EMS Version
 function EmployeeDetailsPage() {
 
   let [blobURL , setBlobURL] = useState("/avatar.jpg");
@@ -281,7 +281,7 @@ if (!employee) return <p>Loading employee...</p>; // Better loading message
             <div className={"avatar-wrapper"}>
               <Image
                 priority={false}
-                src={blobURL || "/avatar.jpg"}
+                src={blobURL}
                 className={"avatar"}
                 width="192"
                 height="192"

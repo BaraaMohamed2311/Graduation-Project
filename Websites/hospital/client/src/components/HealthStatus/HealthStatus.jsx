@@ -174,28 +174,7 @@ useEffect(() => {
       </div>
     </div>
 
-    {/* Device Logs (editable values) */}
-    <div>
-      <h4>Health Device Logs</h4>
-      {formData.patient_health_devices.map((d, idx) => (
-        <div key={idx} className={styles.deviceCard}>
-          <span>{d.device.replaceAll("_"," ")}</span>
-          <input
-            type="number"
-            value={d.value}
-            onChange={(e) => {
-              const val = e.target.value;
-              setFormData(prev => {
-                const devices = [...prev.patient_health_devices];
-                devices[idx].value = val;
-                return { ...prev, patient_health_devices: devices };
-              });
-            }}
-          />
-          <span>{d.unit}</span>
-        </div>
-      ))}
-    </div>
+    
 
     <div className={styles.editActions}>
       <button
