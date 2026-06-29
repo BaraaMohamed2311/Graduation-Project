@@ -424,14 +424,14 @@ class SurgeonMethods {
        INSERT INTO table_version (table_name, current_version)
         VALUES ('ems_employees', 1)
         ON DUPLICATE KEY UPDATE
-        current_version = current_version + 1'
+        current_version = current_version + 1
     `);
         // it's related to hospital, so we need to keep hospital's website synced
     queries.push(`
        INSERT INTO table_version (table_name, current_version)
         VALUES ('hospital_employees', 1)
         ON DUPLICATE KEY UPDATE
-        current_version = current_version + 1'
+        current_version = current_version + 1
     `);
 
     const result = await sqlTransaction(queries,params);

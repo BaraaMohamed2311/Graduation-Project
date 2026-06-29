@@ -21,6 +21,7 @@ import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
 import EditableSection from "@/components/EditableSection/EditableSection";
 import Patientmedstable from "@/components/Patientmedstable/Patientmedstable"
 import ExportPdfButton from "@/components/ExportPdfButton/ExportPdfButton";
+
 function PatientDetailsPage() {
   const [files_meta , setFilesMeta] = useState([]);
   const [blobURL, setBlobURL] = useState("/avatar.jpg");
@@ -35,11 +36,18 @@ function PatientDetailsPage() {
   const [ healthStatus, setHealthStatusParent] = useState(null);
   const [ patientMeds, setPatientMedsParent] = useState([]);
 
+
   // Efficiently find the patient from cache
   
   const patient = cached_patients?.find(
           p => p.user_id === parseInt(user_id) || p.user_id === user_id || String(p.user_id) === user_id
         );
+
+        useEffect(()=>{
+                // fetch image
+                getUserImage('/files/profile', patient?.user_id ,user_data.token ,setBlobURL )
+              
+          } ,[user_data.user_email,user_data.token,patient?.user_id ])
 
   const modifierObj = patient ? {
           other_user_email: patient.user_email,

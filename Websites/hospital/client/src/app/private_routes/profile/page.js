@@ -8,22 +8,25 @@ import updateImg from "@/utils/updateImg";
 
 import getUserImage from "@/utils/getUserImg";
 import {profileComponents} from "./Profile_Fields";
+import { usePathname } from "next/navigation";
 function ProfilePage() {
   
 
   let {user_data} = useUserDataContext();
   let [blobURL , setBlobURL] = useState("/avatar.jpg");
 
-  const ProfileComponent =  !('emp_title' in user_data) 
-  ? profileComponents.patient 
-  : (profileComponents[user_data.emp_title?.toLowerCase()] || profileComponents.default);
+  const ProfileComponent = !('emp_title' in user_data) 
+    ? profileComponents.patient 
+    : (profileComponents[user_data.emp_title?.toLowerCase()] || profileComponents.default);
+
 
   // fetch on first render if wasn't stored in  
-  useEffect(()=>{
-      // fetch image
-      getUserImage('/files/profile', user_data.user_id ,user_data.token ,setBlobURL )
-    
-} ,[user_data.user_email,user_data.token])
+  const pathname = usePathname();
+
+useEffect(() => {
+  if (!user_data?.user_id) return;
+  getUserImage('/files/profile', user_data?.user_id, user_data.token, setBlobURL);
+}, [pathname]);
 
 
   function handleImginput(e){

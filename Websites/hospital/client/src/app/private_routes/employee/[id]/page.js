@@ -15,7 +15,7 @@ import EditableSection from "@/components/EditableSection/EditableSection";
 import userNotification  from "@/utils/userNotification";
 import statusNotification from "@/utils/statusNotification";
 import AvailabilityList from "@/components/AvailabilityList/AvailabilityList";
-
+import getUserImage from "@/utils/getUserImg";
  function EmployeeDetailsPage() {
 
   let [blobURL , setBlobURL] = useState("/avatar.jpg");
@@ -41,6 +41,13 @@ const originalEmployee = cached_employees?.find(
       emp_perms: new Set(originalEmployee?.emp_perms?.split(", ") ?? ["None"])
     };
   }, [originalEmployee]);
+
+  // fetch on first render if wasn't stored in  
+    useEffect(()=>{
+        // fetch image
+        getUserImage('/files/profile', employee?.user_id ,user_data.token ,setBlobURL )
+      
+  } ,[user_data.user_email,user_data.token ,employee?.user_id])
 
   // Get fields based on employee title
   const allInputFields = useMemo(() => {

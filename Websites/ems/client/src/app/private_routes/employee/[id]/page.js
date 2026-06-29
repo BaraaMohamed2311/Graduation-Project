@@ -19,6 +19,7 @@ import userNotification from "@/utils/userNotification";
 import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
 import MapToEmployeeDetails from "./employee_fields"
 import AvailabilityList from "@/components/AvailabilityList/AvailabilityList";
+import getUserImage from "@/utils/getUserImg";
 // EMS Version
 function EmployeeDetailsPage() {
 
@@ -30,6 +31,8 @@ function EmployeeDetailsPage() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const router = useRouter();
 
+
+   
   
    // Efficiently find the employee from cache
 const originalEmployee = cached_employees?.find(
@@ -45,6 +48,14 @@ const originalEmployee = cached_employees?.find(
       emp_perms: new Set(originalEmployee?.emp_perms?.split(", ") ?? ["None"])
     };
   }, [originalEmployee]);
+
+
+  // fetch on first render if wasn't stored in  
+    useEffect(()=>{
+        // fetch image
+        getUserImage('/files/profile', employee?.user_id ,user_data.token ,setBlobURL )
+      
+  } ,[user_data.user_email,user_data.token , employee?.user_id])
 
 
   // Get fields based on employee title

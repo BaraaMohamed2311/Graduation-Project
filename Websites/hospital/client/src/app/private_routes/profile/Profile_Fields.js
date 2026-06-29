@@ -232,6 +232,7 @@ const PatientProfile = ({ user_data }) => {
   const [files_meta, setFilesMeta] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [ patientMeds, setPatientMedsParent] = useState([]);
   const inputsBoxsRef = useRef({})
 
 
@@ -299,7 +300,7 @@ const PatientProfile = ({ user_data }) => {
       {/* Cannot modify it urself */}
       <HealthStatus user_id={user_data.user_id} isEditable={false} />
 
-      <Patientmedstable token={user_data.token} user_id={user_data.user_id} />
+      <Patientmedstable token={user_data.token} user_id={user_data.user_id} setPatientMedsParent={setPatientMedsParent} isPatientProfile={true}/>
     </div>
       <button className="red-button" onClick={() => setShowDeleteModal(true)}>
         Delete Account

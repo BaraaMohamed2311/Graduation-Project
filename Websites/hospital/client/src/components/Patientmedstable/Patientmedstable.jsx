@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import styles from "./Patientmedstable.module.css";
 import userNotification from "@/utils/userNotification";
 
-export default function PatientMedsTable({ token, user_id , setPatientMedsParent}) {
+export default function PatientMedsTable({ token, user_id , setPatientMedsParent , isPatientProfile=false}) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -23,6 +23,7 @@ export default function PatientMedsTable({ token, user_id , setPatientMedsParent
       }
 
       setRows(data); // or data.rows if your API returns { success, rows }
+      
       setPatientMedsParent(data);
     } catch (err) {
       setError(err.message);
@@ -117,7 +118,7 @@ export default function PatientMedsTable({ token, user_id , setPatientMedsParent
                     ))
                   : "—"}
               </td>
-              <td>
+              {!isPatientProfile && <td>
                 <button
                   className={styles.btnEdit}
                   onClick={() => {
@@ -128,13 +129,13 @@ export default function PatientMedsTable({ token, user_id , setPatientMedsParent
                   Edit Times
                 </button>
                 <button className={styles.btnDelete} onClick={() => handleDelete(row.assignment_id)}>Delete</button>
-              </td>
+              </td>}
             </tr>
           ))}
         </tbody>
       </table>
 
-      <div className={styles.addMedForm}>
+      {!isPatientProfile && <div className={styles.addMedForm}>
         <input
           type="text"
           placeholder="Medicine ID"
@@ -148,7 +149,7 @@ export default function PatientMedsTable({ token, user_id , setPatientMedsParent
           onChange={e => setNewMed({ ...newMed, times: e.target.value })}
         />
         <button className={styles.btnAdd} onClick={handleAddNewMed}>Add Medicine</button>
-      </div>
+      </div>}
     </div>
   );
 }

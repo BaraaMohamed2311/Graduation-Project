@@ -20,6 +20,7 @@ import EditableSection from "@/components/EditableSection/EditableSection";
 import Patientmedstable from "@/components/Patientmedstable/Patientmedstable"
 import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
 import ExportPdfButton from "@/components/ExportPdfButton/ExportPdfButton";
+
 function PatientDetailsPage() {
   const [files_meta , setFilesMeta] = useState([]);
   const [blobURL, setBlobURL] = useState("/avatar.jpg");
@@ -39,6 +40,14 @@ function PatientDetailsPage() {
   const mypatient = cached_my_patients?.find(
           mp => mp.user_id === parseInt(user_id) || mp.user_id === user_id || String(mp.user_id) === user_id
         );
+
+
+        // fetch on first render if wasn't stored in  
+    useEffect(()=>{
+        // fetch image
+        getUserImage('/files/profile', mypatient?.user_id ,user_data.token ,setBlobURL )
+      
+  } ,[user_data.user_email,user_data.token,mypatient?.user_id])
   const modifierObj = mypatient ? {
       other_user_email: mypatient.user_email,
       modifier_email: user_data.user_email,
