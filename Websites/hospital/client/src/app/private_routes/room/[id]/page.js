@@ -232,6 +232,16 @@ useEffect(()=>{
           >
             Assign Patient
           </button>
+          {/* New Link Button styled with your existing actionBtn properties */}
+          <a
+            href="https://trichromatic-shirlee-nonenthusiastically.ngrok-free.dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${styles.actionBtn} ${styles.linkBtn || ""}`}
+            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            Visit Device
+          </a>
         </div>
       </section>
     </main>

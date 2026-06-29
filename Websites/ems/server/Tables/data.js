@@ -228,6 +228,6 @@ const roleToEntityMap = {
   nurse: 'nurses',
 };
 
-const hospitalJobs = new Set(["Doctor", "Nurse", "Surgeon"]);
+const hospitalJobs = new Set(["Doctor", "Nurse", "Surgeon" , "HR","Hr","Manager"]);
 
 module.exports = {TableAliases , Tables ,setOfPerms ,approvalRequiredFields,roleToEntityMap , hospitalJobs};
