@@ -20,6 +20,39 @@ const extractUserFromToken = require("../Utils/extractUserFromToken.js")
 // =================================
 
 // =================================
+//  Get Employee Availability Only (for refresh after update)
+// =================================
+router.get("/employee/availability/:id", jwtVerify, async (req, res) => {
+    try {
+        const { id: user_id } = req.params;
+
+        if (!user_id) return res.status(400).json({ success: false, message: "Bad Request" });
+
+        const tokenFields = extractUserFromToken(req);
+        const Modifier_role = await User.getUserRole(tokenFields.user_id);
+
+        if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
+
+        const employeeTitle = await User.getUserTitleByID(user_id);
+
+        if (!employeeTitle || !HospitalUsersMethods.isHospitalUser(employeeTitle)) {
+            return res.status(404).json({ success: false, message: "No Users Found !" });
+        }
+
+        const availability_schedule = await HospitalUsersMethods.getAvailability(user_id, employeeTitle);
+
+        return res.status(200).json({ success: true, body: { availability_schedule }, message: "Successfully Fetched Availability" });
+
+    } catch (err) {
+        console.error("Error Get Employee Availability", err);
+        res.status(500).json({
+            success: false,
+            message: err.message || "Error Get Employee Availability"
+        });
+    }
+});
+
+// =================================
 //  Get Employee by Email (for Nurse → Assign-to-Staff flow)
 //  Only returns the employee if their title is Doctor or Surgeon
 // =================================
@@ -56,7 +89,7 @@ router.get("/employees", jwtVerify, async (req, res) => {
 
         // Fetch full employee data
         const employeeData = await HospitalUsersMethods.MapUserToGETFullDataFunction(staff_id, emp_title);
-console.log("employeeData",employeeData)
+
         if (!employeeData) {
             return res.status(404).json({ success: false, message: "No Users Found!" });
         }

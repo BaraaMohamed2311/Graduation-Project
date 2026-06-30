@@ -2,7 +2,7 @@
 
 .columns {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   align-items: start;
 }
@@ -23,10 +23,55 @@
 .alert-card {
   position: relative;
   border: 1px solid #e2e8f0;
+  border-left: 5px solid #cbd5e0;
   border-radius: 8px;
   padding: 0.875rem 1rem;
   background: #fff;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+/* ---- Type-based styling: left accent + tint sets the "what kind" signal ---- */
+.alert-card--critical {
+  border-left-color: #e53e3e;
+  background: linear-gradient(to right, rgba(229,62,62,0.05), #fff 12%);
+}
+
+.alert-card--medication {
+  border-left-color: #3182ce;
+  background: linear-gradient(to right, rgba(49,130,206,0.05), #fff 12%);
+}
+
+.alert-card--consultation {
+  border-left-color: #38a169;
+  background: linear-gradient(to right, rgba(56,161,105,0.05), #fff 12%);
+}
+
+/* ---- Status-based styling: layered on top, signals urgency/state ---- */
+.alert-card--status-cancelled,
+.alert-card--status-completed {
+  opacity: 0.6;
+  filter: grayscale(40%);
+}
+
+.alert-card--status-urgent,
+.alert-card--status-critical,
+.alert-card--status-overdue {
+  box-shadow: 0 0 0 2px rgba(229,62,62,0.35);
+  animation: urgentPulse 2s ease-in-out infinite;
+}
+
+.alert-card--status-scheduled,
+.alert-card--status-pending {
+  border-left-style: dashed;
+}
+
+.alert-card--status-rescheduled {
+  border-left-color: #d69e2e;
+}
+
+@keyframes urgentPulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(229,62,62,0.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(229,62,62,0.15); }
 }
 
 .alert-card--new {
@@ -50,6 +95,14 @@
   padding: 2px 6px;
   border-radius: 4px;
   letter-spacing: 0.5px;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #edf2f7;
+  font-size: 0.8rem;
 }
 
 .new-banner {

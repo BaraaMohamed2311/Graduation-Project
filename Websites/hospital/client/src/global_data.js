@@ -3,14 +3,13 @@
     { value: "Modify Patient Files", text: "Modify Patient Files" },
     { value: "Modify Employee Perms", text: "Modify Employee Perms" },
     { value: "Modify Employee Role", text: "Modify Employee Role" },
-    { value: "Modify Employee Role", text: "Modify Employee Role" },
     { value: "Modify Other Patient", text: "Modify Other Patient" },
-    { value: "Modify Patient Data", text: "Modify Patient Data" },
+    { value: "Modify My Patient", text: "Modify My Patient" },
     { value: "Delete Patient", text: "Delete Patient" },
     { value: "Access Rooms", text: "Access Rooms" },
-    { value: "Modify Rooms", text: "Modify Rooms" }
-
-
+    { value: "Modify Rooms", text: "Modify Rooms" },
+    { value: "Modify Health Status", text: "Modify Health Status" },
+    { value: "Modify Availability", text: "Modify Availability" },
 
     ]
     

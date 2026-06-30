@@ -18,9 +18,11 @@ export default function Nav() {
     const noAccessOthersEmp = user_data?.emp_title?.toLowerCase() !== "hr" && user_data?.emp_title?.toLowerCase() !== "manager"
     console.log("noAccessOthersEmp",noAccessOthersEmp)
     const notNurse = user_data?.emp_title?.toLowerCase() !== "nurse"
-    const canAccessSchedule = user_data?.emp_title?.toLowerCase() == "doctor" || user_data?.emp_title?.toLowerCase() == "surgeon" 
+    const canAccessSchedule = user_data?.emp_title?.toLowerCase() == "doctor" || user_data?.emp_title?.toLowerCase() == "surgeon" || isPatient
     const canAccessPatients = user_data?.emp_title?.toLowerCase() == "doctor" || user_data?.emp_title?.toLowerCase() == "surgeon"  || user_data?.emp_title?.toLowerCase() == "manager" || user_data?.emp_title?.toLowerCase() =="nurse" 
-    const canAccessAlert = user_data?.emp_title?.toLowerCase() == "doctor" || user_data?.emp_title?.toLowerCase() == "surgeon" || user_data?.emp_title?.toLowerCase() == "nurse"
+
+    const canAccessAlert = user_data?.emp_title?.toLowerCase() == "doctor" || user_data?.emp_title?.toLowerCase() == "surgeon" || user_data?.emp_title?.toLowerCase() == "nurse" || isPatient
+    console.log("canAccessAlert",canAccessAlert , isPatient)
     function handleBurger() {
         setDisplayed(prev => !prev);
     }
@@ -72,7 +74,10 @@ export default function Nav() {
                     
                     
                     {!noAccessOthersEmp && <li className={styles["nav-li"]}><Link href="/private_routes/employees-list"><i className="fa-solid fa-users"></i></Link></li>}
-                    {canAccessAlert &&<li className={styles["nav-li"]}>
+                    
+                </>}
+
+                {canAccessAlert &&<li className={styles["nav-li"]}>
                         <Link href="/private_routes/alerts" onClick={clearUnread}>
                             <span className={`${styles["bell-icon"]} ${unread > 0 ? styles["ringing"] : ""}`}>
                                 <i className="fa-regular fa-bell"></i>
@@ -84,7 +89,6 @@ export default function Nav() {
                             )}
                         </Link>
                     </li>}
-                </>}
                     
                     
                     { canAccessSchedule && <li className={styles["nav-li"]}><Link href="/private_routes/books-schedule"><i className="fa-solid fa-calendar-days"></i></Link></li>}

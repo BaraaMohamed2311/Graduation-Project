@@ -55,6 +55,8 @@ class HospitalUserFactory {
         "Surgeon": SurgeonMethods.getAllSurgeonsFullData,
         "Nurse": NurseMethods.getAllNursesFullData,
         "Patient": PatientMethods.getAllPatientsSpecificData, // Patients use specific data
+        "Manager": generalUserMethods.getAllUsersFullData,
+        "HR": generalUserMethods.getAllUsersFullData,
     };
 
     // ========================================
@@ -65,6 +67,8 @@ class HospitalUserFactory {
         "Surgeon": SurgeonMethods.getAllSurgeonsCOUNT,
         "Nurse": NurseMethods.getAllNursesCOUNT,
         "Patient": PatientMethods.getAllPatientsCOUNT,
+        "Manager": generalUserMethods.getAllUsersCOUNT,
+        "HR": generalUserMethods.getAllUsersCOUNT,
     };
 
     // ========================================
@@ -89,8 +93,50 @@ class HospitalUserFactory {
     };
 
     // ========================================
+// Availability Methods (Get)
+// ========================================
+static #availabilityGetMethods = {
+    "Doctor":  DoctorMethods.getDoctorAvailability,
+    "Surgeon": SurgeonMethods.getSurgeonAvailability,
+    "Nurse":   NurseMethods.getNurseAvailability,
+    "Manager": generalUserMethods.getUserAvailability,
+    "HR":      generalUserMethods.getUserAvailability,
+};
+
+// ========================================
+// Availability Methods (Update)
+// ========================================
+static #availabilityUpdateMethods = {
+    "Doctor":  DoctorMethods.updateDoctorAvailability,
+    "Surgeon": SurgeonMethods.updateSurgeonAvailability,
+    "Nurse":   NurseMethods.updateNurseAvailability,
+    "Manager": generalUserMethods.updateUserAvailability,
+    "HR":      generalUserMethods.updateUserAvailability,
+};
+
+static async getAvailability(hosp_emp_id, user_title) {
+    this.#validateUserTitle(user_title);
+    const method = this.#availabilityGetMethods[user_title];
+    if (!method) return "None";
+    try {
+        return (await method.call(this.#methodClassMap[user_title], hosp_emp_id)) || "None";
+    } catch (err) {
+        console.error(`Error in getAvailability for ${user_title}:`, err);
+        return "None";
+    }
+}
+
+static async updateAvailability(hosp_emp_id, user_title, availabilityString) {
+    this.#validateUserTitle(user_title);
+    const method = this.#availabilityUpdateMethods[user_title];
+    if (!method) return false;
+    return await method.call(this.#methodClassMap[user_title], hosp_emp_id, availabilityString);
+}
+
+    // ========================================
     // Validation Methods
     // ========================================
+
     
 
     static isHospitalUser(user_title) {

@@ -334,8 +334,7 @@ router.post(
         return res.status(400).json({ success: false, messages: [{ success: false, message: "Bad Request" }] });
 
       const Modifier_role = await User.getUserRole(modifier_id);
-      if (Modifier_role === "NormalUser")
-        return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
+
 
       const bucket = getBucket();
       if (!bucket) {

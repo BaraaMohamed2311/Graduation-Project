@@ -5,8 +5,16 @@ const sqlTransaction = require("../sqlTransaction");
 const parseUpdatingStringByTable = require("../parseUpdatingStringByTable");
 const parsedUpdatesToObjects = require("../parsedUpdatesToObjects");
 const generatePlaceholders = require("../generatePlaceholders")
+const AvailabilityMethods = require("../methods/AvailabilityMethods");
 class SurgeonMethods {
 
+    static async getSurgeonAvailability(hosp_emp_id) {
+    return await AvailabilityMethods.getAllAvailabilityDays(hosp_emp_id);
+}
+
+static async updateSurgeonAvailability(hosp_emp_id, availabilityString) {
+    return await AvailabilityMethods.updateAvailability(hosp_emp_id, availabilityString);
+}
     // ============================
     //              COUNT
     // ============================

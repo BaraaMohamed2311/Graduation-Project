@@ -25,6 +25,7 @@ const isSameDay = require("../Utils/isSameDay.js");
 const createOrderByClause = require("../Utils/createOrderByClause.js");
 const padBoth = require("../Utils/padBoth.js");
 const buildJoinedFilters = require("../Utils/buildJoinedFilters.js")
+const createConsultationAlert = require("../Utils/createConsultationAlert.js");
 
 // =================================
 //  Get  Availability Details
@@ -347,6 +348,15 @@ router.post("/book-consultation",jwtVerify,async (req,res)=>{
             });
         }
 
+        // === Notify patient + employee that a consultation was booked
+        await createConsultationAlert({
+            alert_name: "Consultation Booked",
+            alert_details: `New ${consultation_type.replace("_consultation_price","")} consultation scheduled for ${consultation_date} at ${start_time}.`,
+            alert_status: "Scheduled",
+            hosp_emp_id,
+            user_id,
+        });
+
 
 
         // =============================
@@ -414,6 +424,14 @@ router.put("/update-consultation-status",jwtVerify,async (req,res)=>{
         const result = await ConsultationMethods.updateAppointmentStatus(consultation_id, new_status);
 
         if (result) {
+        await createConsultationAlert({
+            alert_name: "Consultation Status Updated",
+            alert_details: `Consultation #${consultation_id} status changed to ${new_status}.`,
+            alert_status: new_status,
+            consultation_id,
+            hosp_emp_id: existingAppointment.hosp_emp_id,
+            user_id: existingAppointment.user_id,
+        });
         res.status(200).json({
             success: true,
             message: "Appointment updated successfully.",
@@ -474,6 +492,14 @@ router.put("/update-consultation-patient",jwtVerify,async (req,res)=>{
         const result = await ConsultationMethods.updateConsultationPatient(consultation_id, user_id);
 
         if (result) {
+        await createConsultationAlert({
+            alert_name: "Consultation Booked",
+            alert_details: `You were assigned to consultation #${consultation_id}.`,
+            alert_status: "Scheduled",
+            consultation_id,
+            hosp_emp_id: existingAppointment.hosp_emp_id,
+            user_id,
+        });
         res.status(200).json({
             success: true,
             message: "Appointment Patient updated successfully.",
@@ -562,6 +588,14 @@ router.put("/reschedule-appointment",jwtVerify,async (req,res)=>{
         const result = await ConsultationMethods.updateAppointmentSchedule(consultation_id, availability.availability_id,new_consultation_date , new_start_time,new_end_time);
 
         if (result) {
+        await createConsultationAlert({
+            alert_name: "Consultation Rescheduled",
+            alert_details: `Consultation #${consultation_id} moved to ${new_consultation_date} at ${new_start_time}.`,
+            alert_status: "Rescheduled",
+            consultation_id,
+            hosp_emp_id,
+            user_id,
+        });
         res.status(200).json({
             success: true,
             message: "Appointment rescheduled successfully.",
@@ -620,6 +654,14 @@ router.delete("/delete-appointment",jwtVerify,async (req,res)=>{
         const isdeleted = await ConsultationMethods.deleteConsultation(consultation_id);
 
         if (isdeleted) {
+        await createConsultationAlert({
+            alert_name: "Consultation Cancelled",
+            alert_details: `Consultation #${consultation_id} was deleted.`,
+            alert_status: "Cancelled",
+            consultation_id,
+            hosp_emp_id: existingAppointment.hosp_emp_id,
+            user_id: existingAppointment.user_id,
+        });
         res.status(200).json({
             success: true,
             message: "Appointment deleted successfully.",
@@ -640,5 +682,3 @@ router.delete("/delete-appointment",jwtVerify,async (req,res)=>{
 })
 
 module.exports = router;
-
-

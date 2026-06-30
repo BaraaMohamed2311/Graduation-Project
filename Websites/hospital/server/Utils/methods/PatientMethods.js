@@ -354,6 +354,30 @@ class PatientMethods {
 
     
 }
+
+static async updatePatientRoomStatus(user_id, room_number, floor_number) {
+    try {
+        const query = `
+            UPDATE patients
+            SET
+                isAssignedToRoom = TRUE,
+                room_number = ?,
+                floor_number = ?
+            WHERE user_id = ?;
+        `;
+
+        const result = await executeMySqlQuery(query, [
+            room_number,
+            floor_number,
+            user_id,
+        ]);
+
+        return result.affectedRows > 0;
+    } catch (err) {
+        console.error("Error updating patient room status:", err);
+        return false;
+    }
+}
     
 
 

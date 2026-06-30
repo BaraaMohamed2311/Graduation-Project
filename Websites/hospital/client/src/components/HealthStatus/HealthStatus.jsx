@@ -8,6 +8,7 @@ import statusNotification from "@/utils/statusNotification";
 
 export default function HealthState({ user_id, modifierObj, isEditable = true, setHealthStatusParent }) {
   const [healthStatus, setHealthStatus] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   const {
     patient_allergic = [],
@@ -66,7 +67,7 @@ export default function HealthState({ user_id, modifierObj, isEditable = true, s
       .catch(err => {
         userNotification("error", "Error Fetching Health Status");
       });
-  }, [user_id, user_data?.token, setHealthStatusParent]);
+  }, [user_id, user_data?.token, setHealthStatusParent, refreshTrigger]);
 
   function handleSaveNewHealthStatus() {
     setEditMode(false);
@@ -86,6 +87,8 @@ export default function HealthState({ user_id, modifierObj, isEditable = true, s
       .then((data) => {
         if (data?.success) {
           // Success code logic if needed
+          setRefreshTrigger(prev => prev + 1);
+          userNotification(data.success ? "success" : "error", data.message);
         } else if (data && !data.success) {
           userNotification("error", data.message);
         }

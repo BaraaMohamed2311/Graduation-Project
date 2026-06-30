@@ -588,7 +588,7 @@ INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (16
 INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (171,171,'Nurse');
 INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (185,185,'Nurse');
 INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (200,200,'Nurse');
-
+INSERT INTO `employees_hospital` (`hosp_emp_id`,`emp_id`,`emp_title`) VALUES (14,14,'Manager');
 
 /*
 -- Query: select * from hospital_roles

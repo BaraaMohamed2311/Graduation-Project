@@ -74,7 +74,7 @@ function PatientDetailsPage() {
     })
     .then((data) => {
       if (data && data.success && data.body) {
-        setCached_Employees((prev) => {
+        setCached_My_Patients((prev) => {
   const updated = [...prev, data.body];
 
   return updated;

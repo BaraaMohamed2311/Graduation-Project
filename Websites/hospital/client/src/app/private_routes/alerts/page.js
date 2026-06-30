@@ -10,14 +10,21 @@ const LIMIT = 10;
 function AlertPage() {
   const { clearUnread } = useAlerts();
 
-  const [medication, setMedication] = useState([]);
-  const [critical,   setCritical]   = useState([]);
+  const [medication,    setMedication]    = useState([]);
+  const [critical,      setCritical]      = useState([]);
+  const [consultation,  setConsultation]  = useState([]);
 
   const [page,       setPage]       = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [newCount,   setNewCount]   = useState(0);
   const {user_data} = useUserDataContext()
-  const notNurse = user_data?.emp_title?.toLowerCase() !== "nurse"
+
+  // NOTE: assuming emp_title also carries "patient" for non-staff accounts.
+  // If patients are tracked on a different field, swap this out accordingly.
+  const role = user_data?.emp_title?.toLowerCase();
+  const isPatient = !(user_data?.emp_title);
+  const notNurse = role !== "nurse";
+  const canSeeConsultations = isPatient || role === "doctor" || role === "surgeon";
 
   const isFirstPage = page === 1;
 
@@ -32,6 +39,7 @@ function AlertPage() {
         setTotalPages(tp);
         setMedication(alerts.filter((a) => a.alert_type === "medication"));
         setCritical(alerts.filter((a) => a.alert_type === "critical"));
+        setConsultation(alerts.filter((a) => a.alert_type === "consultation"));
         if (page !== 1) setNewCount(0);
       });
   }, [page]);
@@ -45,6 +53,8 @@ function AlertPage() {
       if (isFirstPage) {
         if (alert.alert_type === "medication")
           setMedication((prev) => [{ ...alert, isNew: true }, ...prev]);
+        else if (alert.alert_type === "consultation")
+          setConsultation((prev) => [{ ...alert, isNew: true }, ...prev]);
         else
           setCritical((prev) => [{ ...alert, isNew: true }, ...prev]);
       }
@@ -55,18 +65,21 @@ function AlertPage() {
     return () => es.close();
   }, [isFirstPage]);
 
-  const renderCard = (alert) => (
-    <div
-      key={alert._id}
-      className={`${styles["alert-card"]} ${alert.isNew ? styles["alert-card--new"] : ""}`}
-    >
-      {alert.isNew && <span className={styles["new-badge"]}>NEW</span>}
-      <h3>{alert.alert_name}</h3>
-      <p><strong>Details:</strong> {alert.alert_details}</p>
-      <p><strong>Status:</strong> {alert.alert_status}</p>
-      <p><strong>Time:</strong> {new Date(alert.alert_time).toLocaleString()}</p>
-    </div>
-  );
+  const renderCard = (alert) => {
+    const status = alert.alert_status?.toLowerCase() || "";
+    return (
+      <div
+        key={alert._id}
+        className={`${styles["alert-card"]} ${styles[`alert-card--${alert.alert_type}`] || ""} ${styles[`alert-card--status-${status}`] || ""} ${alert.isNew ? styles["alert-card--new"] : ""}`}
+      >
+        {alert.isNew && <span className={styles["new-badge"]}>NEW</span>}
+        <h3>{alert.alert_name}</h3>
+        <p><strong>Details:</strong> {alert.alert_details}</p>
+        <p><strong>Status:</strong> <span className={styles["status-pill"]}>{alert.alert_status}</span></p>
+        <p><strong>Time:</strong> {new Date(alert.alert_time).toLocaleString()}</p>
+      </div>
+    );
+  };
 
   return (
     <main className={`${styles["alerts-page"]} wrapper`}>
@@ -100,6 +113,17 @@ function AlertPage() {
             : critical.map(renderCard)
           }
         </section>
+
+        {/* Consultation Alerts column — patients, doctors, and surgeons */}
+        {canSeeConsultations && <section className={styles["column"]}>
+          <h2 className={styles["column-title"]}>
+            <i className="fa-solid fa-stethoscope"></i> Consultation Alerts
+          </h2>
+          {consultation.length === 0
+            ? <p className={styles["empty"]}>No consultation alerts</p>
+            : consultation.map(renderCard)
+          }
+        </section>}
       </div>
 
       {/* Pagination controls */}

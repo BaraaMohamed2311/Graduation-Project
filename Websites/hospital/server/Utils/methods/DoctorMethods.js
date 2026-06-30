@@ -5,9 +5,20 @@ const stringifyFields = require("../stringifyFields");
 const parseUpdatingStringByTable = require("../parseUpdatingStringByTable");
 const parsedUpdatesToObjects = require("../parsedUpdatesToObjects");
 const generatePlaceholders = require("../generatePlaceholders")
+const AvailabilityMethods = require("../methods/AvailabilityMethods");
 class DoctorMethods {
 
 
+// ============================
+//   Availability (delegated)
+// ============================
+static async getDoctorAvailability(hosp_emp_id) {
+    return await AvailabilityMethods.getAllAvailabilityDays(hosp_emp_id);
+}
+
+static async updateDoctorAvailability(hosp_emp_id, availabilityString) {
+    return await AvailabilityMethods.updateAvailability(hosp_emp_id, availabilityString);
+}
     // ============================
     //              Count
     // ============================

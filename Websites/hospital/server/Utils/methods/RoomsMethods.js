@@ -152,8 +152,9 @@ class RoomsMethods {
                     user_id = ?
                 WHERE room_id = ?;
             `;
-            await executeMySqlQuery(query,[user_id,room_id]);
-            return true;
+            const result = await executeMySqlQuery(query, [user_id, room_id]);
+
+            return result.affectedRows > 0;
         }
         catch(err){
             console.error("Error updating nurse data:", err);

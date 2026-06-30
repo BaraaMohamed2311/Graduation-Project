@@ -22,7 +22,7 @@ import getUserImage from "@/utils/getUserImg";
    const { id :user_id ,currPage} = useParams(); // Get user_id from URL
    const { cached_employees , setCached_Employees,isIndexedDBLoaded } = useEmployeesCache();
    const { user_data } = useUserDataContext();
-
+  const [availabilityUpdated, setAvailabilityUpdated] = useState(0); 
   
 
   
@@ -242,22 +242,21 @@ const {inputs_info , select_def , check_box} = fieldDefinitions || {};
                 other_user_email: employee.user_email
               })
           }).then((res)=>{
-              statusNotification(res.status)
               return res.json()
           })
           .then(async (data)=>{
 
                   if(data && data.success){
-                      
+                      setAvailabilityUpdated(prev=> prev +1); 
                       // ← ADD THIS: tell the server to bump the version
-      await fetch(`${process.env.APIKEY}/sync/employees`, {
-        method: "PUT",
-        headers: { Authorization: `BEARER ${token}` },
-      });
-                      
-                  }
+                      await fetch(`${process.env.APIKEY}/sync/employees`, {
+                        method: "PUT",
+                        headers: { Authorization: `BEARER ${user_data.token}` },
+                      });
+                          
+                      }
                   
-                userNotification(data.message.success ?"success" : "error", data.message.message);
+                userNotification(data.success ?"success" : "error", data.message);
               
           })
           .catch((err)=>{
@@ -311,7 +310,11 @@ const {inputs_info , select_def , check_box} = fieldDefinitions || {};
               <li><strong>Rating:</strong> {employee.emp_rate}</li>
                {/* Availability Schedule */}
               <li className={styles.availability_box}>
-                <AvailabilityList availability_schedule={employee.availability_schedule} />
+                <AvailabilityList
+                  user_id={employee?.user_id}
+                  availability_schedule={employee.availability_schedule}
+                  availabilityUpdated={availabilityUpdated}
+                />
               </li>
               <li><strong>Role:</strong> {employee.role_name || "NormalUser"}</li>
               <li className={styles.perms_box}><strong className={styles.perms_header}>Permissions </strong>

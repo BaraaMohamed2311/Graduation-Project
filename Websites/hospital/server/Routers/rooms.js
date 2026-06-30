@@ -6,6 +6,7 @@ const JoinFiltering = require("../Utils/JoinFiltering.js");
 const AuditLogs = require("../Utils/methods/AuditLogs.js");
 const extractUserFromToken = require("../Utils/extractUserFromToken.js");
 const User = require("../Classes/User.js");
+const PatientMethods = require("../Utils/methods/PatientMethods.js");
 // ============================
 //              GET
 // ============================
@@ -397,6 +398,9 @@ router.put("/:roomId/assign",jwtVerify, async function (req, res) {
         // 2. Proceed with update
         const updated = await RoomsMethods.assignPatientToRoom(user_id, roomId);
         
+        if (updated){
+            await PatientMethods.updatePatientRoomStatus(user_id,room_number,floor_id)
+        }
         //===3. Add Audit Log
         await AuditLogs.addLog(
             "hospital",

@@ -49,12 +49,14 @@ export default function uploadPatientFileXHR(url, files, modifier_data, token, s
     xhr.onload = function () {
       if (xhr.status >= 200 && xhr.status < 300) {
         const res = xhr.response;
+        console.log("file res",res)
         if (res.success !== undefined && res.message) {
           userNotification(res.success ? "success" : "error", res.message);
         }
         resolve(res);
       } else {
-        userNotification("error", `Upload failed with status ${xhr.status}`);
+        const res = xhr.response;
+        userNotification("error", res.message);
         reject(xhr.statusText);
       }
     };

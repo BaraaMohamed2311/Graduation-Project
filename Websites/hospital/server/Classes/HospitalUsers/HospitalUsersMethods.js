@@ -6,6 +6,15 @@ const executeMySqlQuery = require("../../Utils/executeMySqlQuery");
  * Keeps only methods that work across multiple user types
  */
 class HospitalUsersMethods {
+
+
+    static async getAvailability(hosp_emp_id, user_title) {
+    return await HospitalUserFactory.getAvailability(hosp_emp_id, user_title);
+}
+
+static async updateAvailability(hosp_emp_id, user_title, availabilityString) {
+    return await HospitalUserFactory.updateAvailability(hosp_emp_id, user_title, availabilityString);
+}
     
     // ========================================
     // Delegation to Factory Methods

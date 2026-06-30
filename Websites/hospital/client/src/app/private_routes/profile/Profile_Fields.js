@@ -53,7 +53,12 @@ const DoctorProfile = ({ user_data, permissions }) => {
           </li>
 
           <li className={styles.availability_box}>
-            <AvailabilityList availability_schedule={user_data.availability_schedule} />
+            
+            <AvailabilityList
+              user_id={user_data?.user_id}
+              availability_schedule={user_data.availability_schedule}
+            />
+
           </li>
 
           <li className={styles.perms_box}>
@@ -105,7 +110,11 @@ const SurgeonProfile = ({ user_data, permissions }) => {
             </li>
 
             <li className={styles.availability_box}>
-              <AvailabilityList availability_schedule={user_data.availability_schedule} />
+              <AvailabilityList
+              user_id={user_data?.user_id}
+              availability_schedule={user_data.availability_schedule}
+            />
+              
             </li>
 
             <li className={styles.perms_box}>
@@ -154,7 +163,10 @@ const NurseProfile = ({ user_data, permissions }) => {
           </li>
 
           <li className={styles.availability_box}>
-            <AvailabilityList availability_schedule={user_data.availability_schedule} />
+            <AvailabilityList
+              user_id={user_data?.user_id}
+              availability_schedule={user_data.availability_schedule}
+            />
           </li>
 
           <li className={styles.perms_box}>
@@ -205,7 +217,10 @@ const DefaultEmpProfile = ({ user_data, permissions }) => {
           </li>
 
           <li className={styles.availability_box}>
-            <AvailabilityList availability_schedule={user_data.availability_schedule} />
+            <AvailabilityList
+              user_id={user_data?.user_id}
+              availability_schedule={user_data.availability_schedule}
+            />
           </li>
 
           <li className={styles.perms_box}>

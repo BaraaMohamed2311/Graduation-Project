@@ -4,11 +4,18 @@ const sqlTransaction = require("../sqlTransaction");
 const parseUpdatingStringByTable = require("../parseUpdatingStringByTable");
 const parsedUpdatesToObjects = require("../parsedUpdatesToObjects");
 const generatePlaceholders = require("../generatePlaceholders");
-
+const AvailabilityMethods = require("../methods/AvailabilityMethods");
 // ================================================================================================================
 //              This class is to fetch general data about any user even if they don't have a implemented class
 // ================================================================================================================
 class generalUserMethods {
+    static async getUserAvailability(hosp_emp_id) {
+    return await AvailabilityMethods.getAllAvailabilityDays(hosp_emp_id);
+}
+
+static async updateUserAvailability(hosp_emp_id, availabilityString) {
+    return await AvailabilityMethods.updateAvailability(hosp_emp_id, availabilityString);
+}
 
     // ============================
     //              COUNT

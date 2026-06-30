@@ -495,8 +495,8 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
                 const ModifierUserType = await User.getUserTypeByEmail(modifier_email);
                 const OtherUserType = await User.getUserTypeByEmail(other_user_email);
 
-                if(ModifierUserType === 'patient')  return res.status(403).json({success:false,messages:[{success:false,message:"You Are A Patient Not An Employee"}]});
-                if(OtherUserType === 'patient')  return res.status(403).json({success:false,messages:[{success:false,message:"That User Is A Patient Not An Employee"}]});
+                if(ModifierUserType === 'patient')  return res.status(403).json({success:false,message:"You Are A Patient Not An Employee"});
+                if(OtherUserType === 'patient')  return res.status(403).json({success:false,message:"That User Is A Patient Not An Employee"});
                 // Get fresh title and id from db
                 const other_user_id = await User.getUserIDByEmail(other_user_email)
                 const other_user_title = await User.getUserTitleByID(other_user_id);
@@ -526,7 +526,7 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
                     let isUpdated = false;
                     if(permsRequestedSet.has("Modify Availability")){
                         if(modifierSetperms.has("Modify Availability")){
-                            isUpdated = await AvailabilityMethods.updateAvailability(other_user_id, newAvailabilityString);
+                            isUpdated = await HospitalUsersMethods.updateAvailability(other_user_id, other_user_title, newAvailabilityString);
                         }
                     }
                     
@@ -595,7 +595,7 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
                     const  modifierSetperms = await User.getSetUserperms(modifier_id);
 
                     // Check Authorization using perms
-                    const isAuthorized = modifierSetperms.has("Modify Other Patient") && modifierSetperms.has("Access Other Patients");
+                    const isAuthorized = modifierSetperms.has("Modify Other Patient");
 
                     // Check that user can modify patients that do not belong to him
                     if(!isAuthorized) return res.status(403).json({success:false,messages:[{success:false ,message:"Permission Is Required For This Action"}]});
@@ -757,7 +757,7 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
                 // Ceck if list page can be accessible
                 const Modifier_role = await User.getUserRole(modifier_id);
 
-                if (Modifier_role === "NormalUser") return res.status(403).json({ success: false, message: "NormalUser Role cannot access The list" });
+
 
 
                 //  ===3. Check that all requested perms are valid
@@ -791,7 +791,7 @@ router.get("/my-patients",jwtVerify,async (req,res)=>{
                     const isAuthorized = modifierSetperms.has('Modify Health Status')
 
                     // Check that user can modify patients that do not belong to him
-                    if(!isAuthorized) return res.status(403).json({success:false,messages:[{success:false ,message:"Permission Is Required For This Action"}]});
+                    if(!isAuthorized) return res.status(403).json({success:false,message:"Permission Is Required For This Action"});
                     //===5. Check if modifier have perm to update other users data & action is requested
 
                     
