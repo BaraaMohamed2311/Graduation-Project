@@ -25,7 +25,7 @@ function AlertPage() {
   const isPatient = !(user_data?.emp_title);
   const notNurse = role !== "nurse";
   const canSeeConsultations = isPatient || role === "doctor" || role === "surgeon";
-
+  const canSeeCritical = role === "doctor"  || role === "nurse";
   const isFirstPage = page === 1;
 
   // Clear bell badge when nurse opens the alerts page
@@ -33,7 +33,7 @@ function AlertPage() {
 
   // Fetch paginated history from MongoDB whenever page changes
   useEffect(() => {
-    fetch(`${process.env.APIKEY}/alerts?page=${page}&limit=${LIMIT}`)
+    fetch(`${process.env.APIKEY}/alerts?page=${page}&user_id=${user_data.user_id}&limit=${LIMIT}`)
       .then((r) => r.json())
       .then(({ alerts, totalPages: tp }) => {
         setTotalPages(tp);
@@ -104,7 +104,7 @@ function AlertPage() {
         </section>}
 
         {/* Critical Conditions column */}
-        <section className={styles["column"]}>
+        {canSeeCritical && <section className={styles["column"]}>
           <h2 className={styles["column-title"]}>
             <i className="fa-solid fa-triangle-exclamation"></i> Critical Conditions
           </h2>
@@ -112,7 +112,7 @@ function AlertPage() {
             ? <p className={styles["empty"]}>No critical alerts</p>
             : critical.map(renderCard)
           }
-        </section>
+        </section>}
 
         {/* Consultation Alerts column — patients, doctors, and surgeons */}
         {canSeeConsultations && <section className={styles["column"]}>

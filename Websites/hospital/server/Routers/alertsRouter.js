@@ -8,28 +8,34 @@ const Alert = require("../Models/alert.js"); // your mongoose model
 
 
 
-// GET /api/alerts/stream  — nurses connect here to listen
 router.get("/stream", (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders();
 
-  addClient(res);
-
+  addClient(res, req.query.user_id); // was req.body.user_id — GET has no body
   req.on("close", () => removeClient(res));
 });
 
-// GET /api/alerts?page=1&limit=10 — paginated history from MongoDB
 router.get("/", async (req, res) => {
   try {
     const page  = Math.max(1, parseInt(req.query.page)  || 1);
     const limit = Math.max(1, parseInt(req.query.limit) || 10);
     const skip  = (page - 1) * limit;
+    const userId = req.query.user_id;
+    console.log("user)id",userId)
+    const visibilityFilter = {
+      $or: [
+        { alert_type: { $ne: "consultation" } },
+        { alert_type: "consultation", hosp_emp_id: userId },
+        { alert_type: "consultation", user_id: userId },
+      ],
+    };
 
     const [alerts, total] = await Promise.all([
-      Alert.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
-      Alert.countDocuments(),
+      Alert.find(visibilityFilter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Alert.countDocuments(visibilityFilter),
     ]);
 
     res.json({ success: true, alerts, total, page, totalPages: Math.ceil(total / limit) });

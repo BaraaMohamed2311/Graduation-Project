@@ -18,8 +18,8 @@ const AvailabilityList = ({availability_schedule})=>{
 
                 <strong className={styles.availability_header}>Availability</strong>
                 <div className={styles.availability_wrapper}>
-                  {availability_schedule ? (
-                    availability_schedule.split("; ").map((schedule) => {
+                  {availability_schedule && availability_schedule.length  > 0 && availability_schedule != "None" ? (
+                    availability_schedule?.split("; ")?.map((schedule) => {
                       const [dayIndex, timeRange] = schedule.split(": ");
                       const [startTime, endTime] = timeRange.split("-");
                       const days = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 0: "Sun"};

@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
 
 const WINDOW_MINUTES = 60; // ±1hr
 
-cron.schedule("5 * * * *", async () => {
+cron.schedule("* * * * *", async () => {
   try {
     console.log("[cronjob]: Medicationreminder");
     const now = new Date();
