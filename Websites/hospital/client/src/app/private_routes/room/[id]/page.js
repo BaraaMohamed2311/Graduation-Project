@@ -85,7 +85,7 @@ const fetchPatientDetails = async (patientId, roomId) => {
   }, [room_id, user_id]);
 
   function handleEmptyRoom() {
-    fetch(`${process.env.APIKEY}/rooms/${room_id}/empty`, { method: "PUT", mode: "cors" , headers:{
+    fetch(`${process.env.APIKEY}/rooms/${room_id}/empty?patient_id=${patient.user_id}`, { method: "PUT", mode: "cors" , headers:{
       "Content-Type": "application/json",
       Authorization: `BEARER ${user_data.token}`
     } })

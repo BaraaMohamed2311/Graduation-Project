@@ -101,11 +101,7 @@ export default function PatientFiles({onUploadFile,onDeleteFile , urls,files_met
       <div className={styles["files-header"]}>
         <h2>Patient Files</h2>
 
-        {files_meta && files_meta.length > 0 && (
-          <button onClick={onDownloadAll} className="blue-button">
-            Download All
-          </button>
-        )}
+        
       </div>
 
       {/* ============================

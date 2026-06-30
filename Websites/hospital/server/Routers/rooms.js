@@ -7,6 +7,7 @@ const AuditLogs = require("../Utils/methods/AuditLogs.js");
 const extractUserFromToken = require("../Utils/extractUserFromToken.js");
 const User = require("../Classes/User.js");
 const PatientMethods = require("../Utils/methods/PatientMethods.js");
+const executeMySqlQuery = require("../Utils/executeMySqlQuery.js");
 // ============================
 //              GET
 // ============================
@@ -397,6 +398,12 @@ router.put("/:roomId/assign",jwtVerify, async function (req, res) {
         console.log("user_id, roomId",user_id, roomId)
         // 2. Proceed with update
         const updated = await RoomsMethods.assignPatientToRoom(user_id, roomId);
+        const querySync = `
+                            UPDATE table_version
+                            SET current_version = current_version + 1
+                            WHERE table_name = 'patients'
+                        `
+        await executeMySqlQuery(querySync)
         
         if (updated){
             await PatientMethods.updatePatientRoomStatus(user_id,room_number,floor_id)
@@ -424,6 +431,7 @@ router.put("/:roomId/assign",jwtVerify, async function (req, res) {
 router.put("/:roomId/empty",jwtVerify, async function (req, res) {
     try {
         const { roomId } = req.params;
+        const {patient_id} = req.query
 
         if(!roomId){
             return res.status(404).json({
@@ -461,8 +469,18 @@ router.put("/:roomId/empty",jwtVerify, async function (req, res) {
             result ? "Successful Room Emptying" : "Failed Room Emptying",
             result ? "info" : "failure"
         )
+        const emptied = await PatientMethods.emptyPatientRoomStatus(patient_id)
 
-        if (result && !room.isOccupied && room.user_id === null) {
+        const querySync = `
+                            UPDATE table_version
+                            SET current_version = current_version + 1
+                            WHERE table_name = 'patients'
+                        `
+        await executeMySqlQuery(querySync)
+
+        
+        if (result && !room.isOccupied && room.user_id === null && emptied) {
+            
             res.json({success:true, message: `Room ${room.room_number} floor ${room.floor_id} has been emptied successfully.` });
         } else {
             res.status(404).json({ success:false,message: "Room not found or already empty." });

@@ -393,7 +393,7 @@ function PatientDetailsPage() {
               <p><strong>Floor Number:</strong> 
                 {mypatient.floor_number !== -1 ? mypatient.floor_number : "Not Assigned"}
               </p>
-              <p><strong>Next Check Date:</strong> {mypatient.next_check_date || "Not Scheduled"}</p>
+              
               <p><strong>Registered On:</strong> {mypatient.created_at || "Unknown"}</p>
             </div>
           </div>

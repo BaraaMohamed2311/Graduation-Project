@@ -405,7 +405,7 @@ async function confirmDeleteAccount() {
               <p><strong>Floor Number:</strong> 
                 {patient.floor_number !== -1 ? patient.floor_number : "Not Assigned"}
               </p>
-              <p><strong>Next Check Date:</strong> {patient.next_check_date || "Not Scheduled"}</p>
+
               <p><strong>Registered On:</strong> {patient.created_at || "Unknown"}</p>
             </div>
           </div>

@@ -378,6 +378,28 @@ static async updatePatientRoomStatus(user_id, room_number, floor_number) {
         return false;
     }
 }
+
+static async emptyPatientRoomStatus(user_id) {
+    try {
+        const query = `
+            UPDATE patients
+            SET
+                isAssignedToRoom = FALSE,
+                room_number = -1,
+                floor_number = -1
+            WHERE user_id = ?;
+        `;
+
+        const result = await executeMySqlQuery(query, [
+            user_id,
+        ]);
+
+        return result.affectedRows > 0;
+    } catch (err) {
+        console.error("Error updating patient room status:", err);
+        return false;
+    }
+}
     
 
 
