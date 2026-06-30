@@ -77,18 +77,26 @@ export default function Nav() {
                     
                 </>}
 
-                {canAccessAlert &&<li className={styles["nav-li"]}>
-                        <Link href="/private_routes/alerts" onClick={clearUnread}>
-                            <span className={`${styles["bell-icon"]} ${unread > 0 ? styles["ringing"] : ""}`}>
-                                <i className="fa-regular fa-bell"></i>
-                            </span>
-                            {unread > 0 && (
-                                <span key={unread} className={styles["alert-badge"]}>
-                                    {unread > 99 ? "99+" : unread}
+                {canAccessAlert && (
+                        <li className={styles["nav-li"]}>
+                            <Link href="/private_routes/alerts" onClick={clearUnread}>
+                                {/* The Bell Icon (Always visible, rings when unread > 0) */}
+                                <span 
+                                    key={`bell-${unread > 0 ? "active" : "idle"}`} 
+                                    className={`${styles["bell-icon"]} ${unread > 0 ? styles["ringing"] : ""}`}
+                                >
+                                    <i className="fa-regular fa-bell"></i>
                                 </span>
-                            )}
-                        </Link>
-                    </li>}
+
+                                {/* The Badge (Only visible when unread > 0) */}
+                                {unread > 0 && (
+                                    <span key={`badge-${unread}`} className={styles["alert-badge"]}>
+                                        {unread > 99 ? "99+" : unread}
+                                    </span>
+                                )}
+                            </Link>
+                        </li>
+                    )}
                     
                     
                     { canAccessSchedule && <li className={styles["nav-li"]}><Link href="/private_routes/books-schedule"><i className="fa-solid fa-calendar-days"></i></Link></li>}

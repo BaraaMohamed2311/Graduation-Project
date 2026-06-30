@@ -13,8 +13,9 @@ export function AlertsProvider({ children }) {
 
   useEffect(() => {
     const es = new EventSource(`${process.env.APIKEY}/alerts/stream`);
+    es.onopen = () => console.log("nav SSE connected");
     es.onmessage = () => setUnread((prev) => prev + 1);
-    es.onerror = () => es.close();
+    es.onerror = (e) => console.log("nav SSE error", e);
     return () => es.close();
   }, []);
 

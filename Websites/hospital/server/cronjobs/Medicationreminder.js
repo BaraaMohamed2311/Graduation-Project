@@ -12,20 +12,36 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Runs every 30mins
-cron.schedule("*/30 * * * *", async () => {
+const WINDOW_MINUTES = 60; // ±1hr
+
+cron.schedule("5 * * * *", async () => {
   try {
     console.log("[cronjob]: Medicationreminder");
     const now = new Date();
-    const hh = String(now.getHours()).padStart(2, "0");
-    const mm = String(now.getMinutes()).padStart(2, "0");
-    const currentTime = `${hh}:${mm}`;
+
+    const windowStart = new Date(now.getTime() - WINDOW_MINUTES * 60000);
+    const windowEnd = new Date(now.getTime() + WINDOW_MINUTES * 60000);
+
+    const fmt = (d) =>
+      `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+
+    const startTime = fmt(windowStart);
+    const endTime = fmt(windowEnd);
+    const today = now.toISOString().slice(0, 10); // YYYY-MM-DD
+
+    // Handle windows that cross midnight (e.g. 23:30 -> 00:30 and 01:30)
+    const crossesMidnight = windowStart.getDate() !== windowEnd.getDate();
+
+    const timeCondition = crossesMidnight
+      ? `(TIME_FORMAT(pmt.take_at, '%H:%i') >= ? OR TIME_FORMAT(pmt.take_at, '%H:%i') <= ?)`
+      : `TIME_FORMAT(pmt.take_at, '%H:%i') BETWEEN ? AND ?`;
 
     const dueMeds = await executeQuery(
       `
       SELECT
           u.user_name,
           pm.med_id,
+          pmt.id AS patient_med_time_id,
           pmt.take_at,
           p.floor_number
       FROM patient_med_times pmt
@@ -33,9 +49,14 @@ cron.schedule("*/30 * * * *", async () => {
       JOIN patients     p   ON pm.user_id = p.user_id
       JOIN users        u   ON u.user_id = p.user_id
       WHERE p.isAssignedToRoom = 1
-        AND TIME_FORMAT(pmt.take_at, '%H:%i') = ?;
+        AND ${timeCondition}
+        AND NOT EXISTS (
+          SELECT 1 FROM med_alert_log mal
+          WHERE mal.patient_med_time_id = pmt.id
+            AND mal.alert_date = ?
+        );
       `,
-      [currentTime]
+      crossesMidnight ? [startTime, endTime, today] : [startTime, endTime, today]
     );
 
     if (dueMeds.length === 0) return;
@@ -63,30 +84,36 @@ cron.schedule("*/30 * * * *", async () => {
         continue;
       }
 
+      // Mark these as sent FIRST (idempotency guard against double-send on race)
+      // INSERT IGNORE relies on the UNIQUE KEY to skip dupes safely
+      const insertValues = meds.map((m) => [m.patient_med_time_id, today]);
+      await executeQuery(
+        `INSERT IGNORE INTO med_alert_log (patient_med_time_id, alert_date) VALUES ?`,
+        [insertValues]
+      );
+
       const medList = meds
-        .map((m) => `  - Patient: ${m.user_name} → Medicine ID: ${m.med_id}`)
+        .map((m) => `  - Patient: ${m.user_name} → Medicine ID: ${m.med_id} (scheduled ${m.take_at})`)
         .join("\n");
 
-      // Save + broadcast FIRST — email failure must never block the real-time alert
       const newAlert = await Alert.create({
         alert_name: `Medication Reminder — Floor ${floor}`,
         alert_type: "medication",
         alert_time: new Date(),
         alert_status: "active",
         alert_details: meds
-          .map((m) => `Patient: ${m.user_name} → Med ID: ${m.med_id}`)
+          .map((m) => `Patient: ${m.user_name} → Med ID: ${m.med_id} (${m.take_at})`)
           .join(" | "),
       });
 
       broadcast(newAlert.toObject());
 
-      // Email is best-effort — its failure must never crash the loop iteration
       try {
         await transporter.sendMail({
           from: process.env.EMAIL_USER,
           to: nurses.map((n) => n.user_email).join(", "),
-          subject: `💊 Medication Reminder — Floor ${floor} — ${currentTime}`,
-          text: `Hello,\n\nThe following patients on Floor ${floor} need their medication at ${currentTime}:\n\n${medList}\n\nPlease administer the medicines promptly.\n\nHospital System`,
+          subject: `💊 Medication Reminder — Floor ${floor}`,
+          text: `Hello,\n\nThe following patients on Floor ${floor} have medication due:\n\n${medList}\n\nPlease administer the medicines promptly.\n\nHospital System`,
         });
       } catch (mailErr) {
         console.error(`[CRON] Email failed for floor ${floor}:`, mailErr.message);

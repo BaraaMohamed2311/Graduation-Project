@@ -364,6 +364,15 @@ CREATE TABLE patient_med_times (
 
     FOREIGN KEY (patient_med_id) REFERENCES patient_meds(id) ON DELETE CASCADE
 );
+
+CREATE TABLE med_alert_log (
+    id                  INT AUTO_INCREMENT PRIMARY KEY,
+    patient_med_time_id INT NOT NULL,
+    alert_date          DATE NOT NULL,
+    sent_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_med_alert (patient_med_time_id, alert_date),
+    FOREIGN KEY (patient_med_time_id) REFERENCES patient_med_times(id) ON DELETE CASCADE
+);
 -- ====================================================================================
 --          INDEX For faster searching (many unique values for column)
 -- ====================================================================================
