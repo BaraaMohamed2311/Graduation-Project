@@ -3,7 +3,7 @@ const executeQuery = require("../Utils/executeMySqlQuery");
 const createConsultationAlert = require("../Utils/createConsultationAlert");
 
 // Runs every day at 04:05 (5 minutes after midnight)
-cron.schedule("5 16  * * *", async () => {
+cron.schedule("* *  * * *", async () => {
   try {
     console.log("Running daily consultation auto-complete job...");
 
