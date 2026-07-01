@@ -2,11 +2,19 @@ const express = require("express");
 const router = express.Router();
 const executeQuery = require("../Utils/executeMySqlQuery");
 
+const TIME_REGEX = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+
+function validateTimes(times) {
+  return Array.isArray(times) && times.length > 0 && times.every((t) => TIME_REGEX.test(t));
+}
+
 // GET /patient-meds
-// Returns every assignment with its scheduled times aggregated
+// Returns every assignment with its scheduled times aggregated.
+// NOTE: scheduled_times returned here are stored/returned as UTC "HH:MM" strings.
+// The client is responsible for converting to/from the user's local time.
 router.get("/patient-meds", async (req, res) => {
   try {
-    const {user_id} = req.query
+    const { user_id } = req.query;
     const rows = await executeQuery(`
       SELECT
         pm.id             AS assignment_id,
@@ -26,22 +34,24 @@ router.get("/patient-meds", async (req, res) => {
       WHERE p.isAssignedToRoom = 1 AND u.user_id = ?
       GROUP BY pm.id
       ORDER BY pm.user_id, pm.med_id
-    `,[user_id]);
+    `, [user_id]);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ success:false ,message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
 // POST /patient-meds
 // Body: { user_id, med_id, times: ["08:00", "14:00", "20:00"] }
+// IMPORTANT: `times` must already be converted to UTC by the caller (client) before this is called.
 router.post("/patient-meds", async (req, res) => {
   try {
     const { user_id, med_id, times } = req.body;
 
-    if (!user_id || !med_id || !Array.isArray(times) || times.length === 0) {
+    if (!user_id || !med_id || !validateTimes(times)) {
       return res.status(400).json({
-        success:false ,message: "user_id, med_id, and times[] are required",
+        success: false,
+        message: "user_id, med_id, and times[] (valid HH:MM strings, in UTC) are required",
       });
     }
 
@@ -51,7 +61,8 @@ router.post("/patient-meds", async (req, res) => {
     );
     if (!patient) {
       return res.status(404).json({
-        success:false ,message: "Patient not found or not currently assigned to a room",
+        success: false,
+        message: "Patient not found or not currently assigned to a room",
       });
     }
 
@@ -62,7 +73,7 @@ router.post("/patient-meds", async (req, res) => {
     );
     const patient_med_id = result.insertId;
 
-    // Insert one row per scheduled time
+    // Insert one row per scheduled time (already UTC)
     for (const time of times) {
       await executeQuery(
         `INSERT INTO patient_med_times (patient_med_id, take_at) VALUES (?, ?)`,
@@ -72,7 +83,7 @@ router.post("/patient-meds", async (req, res) => {
 
     res.status(201).json({ id: patient_med_id, user_id, med_id, times });
   } catch (err) {
-    res.status(500).json({ success:false ,message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -81,8 +92,11 @@ router.put("/patient-meds/:id", async (req, res) => {
     const { times } = req.body;
     const assignmentId = req.params.id;
 
-    if (!Array.isArray(times) || times.length === 0) {
-      return res.status(400).json({ success:false ,message: "times[] is required" });
+    if (!validateTimes(times)) {
+      return res.status(400).json({
+        success: false,
+        message: "times[] (valid HH:MM strings, in UTC) is required",
+      });
     }
 
     // Ensure assignment exists
@@ -90,7 +104,7 @@ router.put("/patient-meds/:id", async (req, res) => {
       `SELECT id FROM patient_meds WHERE id = ?`,
       [assignmentId]
     );
-    if (!assignment) return res.status(404).json({ success:false ,message: "Assignment not found" });
+    if (!assignment) return res.status(404).json({ success: false, message: "Assignment not found" });
 
     // Delete old times
     await executeQuery(
@@ -98,7 +112,7 @@ router.put("/patient-meds/:id", async (req, res) => {
       [assignmentId]
     );
 
-    // Insert new times
+    // Insert new times (already UTC)
     for (const time of times) {
       await executeQuery(
         `INSERT INTO patient_med_times (patient_med_id, take_at) VALUES (?, ?)`,
@@ -108,7 +122,7 @@ router.put("/patient-meds/:id", async (req, res) => {
 
     res.json({ message: "Times updated successfully", assignmentId, times });
   } catch (err) {
-    res.status(500).json({ success:false ,message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -121,11 +135,11 @@ router.delete("/patient-meds/:id", async (req, res) => {
       [req.params.id]
     );
     if (result.affectedRows === 0) {
-      return res.status(404).json({ success:false ,message: "Assignment not found" });
+      return res.status(404).json({ success: false, message: "Assignment not found" });
     }
     res.json({ message: "Deleted successfully" });
   } catch (err) {
-    res.status(500).json({ success:false ,message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

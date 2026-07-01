@@ -22,15 +22,19 @@ cron.schedule("* * * * *", async () => {
     const windowStart = new Date(now.getTime() - WINDOW_MINUTES * 60000);
     const windowEnd = new Date(now.getTime() + WINDOW_MINUTES * 60000);
 
+    // IMPORTANT: patient_med_times.take_at is stored in UTC (converted client-side
+    // before being saved). We must compare against UTC hours/minutes here too,
+    // otherwise the window shifts by the server host's local UTC offset and
+    // due meds are silently missed in production (where TZ often differs from dev).
     const fmt = (d) =>
-      `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
 
     const startTime = fmt(windowStart);
     const endTime = fmt(windowEnd);
-    const today = now.toISOString().slice(0, 10); // YYYY-MM-DD
+    const today = now.toISOString().slice(0, 10); // YYYY-MM-DD, UTC
 
-    // Handle windows that cross midnight (e.g. 23:30 -> 00:30 and 01:30)
-    const crossesMidnight = windowStart.getDate() !== windowEnd.getDate();
+    // Handle windows that cross midnight (e.g. 23:30 -> 00:30 and 01:30), in UTC
+    const crossesMidnight = windowStart.getUTCDate() !== windowEnd.getUTCDate();
 
     const timeCondition = crossesMidnight
       ? `(TIME_FORMAT(pmt.take_at, '%H:%i') >= ? OR TIME_FORMAT(pmt.take_at, '%H:%i') <= ?)`
@@ -92,21 +96,28 @@ cron.schedule("* * * * *", async () => {
         [insertValues]
       );
 
-      const medList = meds
-        .map((m) => `  - Patient: ${m.user_name} → Medicine ID: ${m.med_id} (scheduled ${m.take_at})`)
+      // take_at (from MySQL TIME_FORMAT) is "HH:MM:SS" in UTC — keep it as UTC in the
+      // stored alert, and give the client structured fields to localize with,
+      // instead of baking a pre-formatted, unlocalizable sentence into alert_details.
+      const medsPayload = meds.map((m) => ({
+        patient_name: m.user_name,
+        med_id: m.med_id,
+        take_at_utc: m.take_at, // "HH:MM:SS" UTC — client converts to local for display
+      }));
+
+      const medListForEmail = meds
+        .map((m) => `  - Patient: ${m.user_name} → Medicine ID: ${m.med_id} (scheduled ${m.take_at} UTC)`)
         .join("\n");
 
       const newAlert = await Alert.create({
-  alert_name: `Medication Reminder — Floor ${floor}`,
+        alert_name: `Medication Reminder — Floor ${floor}`,
         alert_type: "medication",
-        alert_time: new Date(),
+        alert_time: new Date(), // stored as UTC internally by MongoDB (BSON Date)
         alert_status: "active",
         floor_number: Number(floor),
-        alert_details: meds
-          .map((m) => `Patient: ${m.user_name} → Med ID: ${m.med_id} (${m.take_at})`)
-          .join(" | "),
+        alert_details: medListForEmail, // kept for backwards compatibility / logs
+        meds: medsPayload, // structured, UTC-based — use this for UI rendering
       });
-
 
       broadcast(newAlert.toObject());
 
@@ -115,7 +126,7 @@ cron.schedule("* * * * *", async () => {
           from: process.env.EMAIL_USER,
           to: nurses.map((n) => n.user_email).join(", "),
           subject: `💊 Medication Reminder — Floor ${floor}`,
-          text: `Hello,\n\nThe following patients on Floor ${floor} have medication due:\n\n${medList}\n\nPlease administer the medicines promptly.\n\nHospital System`,
+          text: `Hello,\n\nThe following patients on Floor ${floor} have medication due:\n\n${medListForEmail}\n\nPlease administer the medicines promptly.\n\nHospital System`,
         });
       } catch (mailErr) {
         console.error(`[CRON] Email failed for floor ${floor}:`, mailErr.message);

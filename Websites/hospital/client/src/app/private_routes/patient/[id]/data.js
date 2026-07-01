@@ -85,9 +85,6 @@ let RoomNum_select = {
 
 let select_def ={
     gender_select,
-    isAssignedToRoom_select,
-    floorNum_select,
-    RoomNum_select
 }
 
 
