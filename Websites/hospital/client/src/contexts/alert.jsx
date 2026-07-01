@@ -16,16 +16,18 @@ export function AlertsProvider({ children }) {
     if (!user_data?.user_id) return;
 
     const role = user_data?.emp_title?.toLowerCase();
-    const isPatient = !user_data?.emp_title;
+
 
     const shouldCountAlert = (alert) => {
       if (alert.alert_type === "medication") return role === "nurse";
-      if (alert.alert_type === "critical")   return role === "doctor" || role === "surgeon" || role === "nurse";
+      if (alert.alert_type === "critical")   return  role === "nurse";
       if (alert.alert_type === "consultation") return true; // already scoped server-side to this user's id
       return true;
     };
 
-    const es = new EventSource(`${process.env.APIKEY}/alerts/stream?user_id=${user_data.user_id}`);
+    const es = new EventSource(
+      `${process.env.APIKEY}/alerts/stream?user_id=${user_data.user_id}&floor_number=${user_data.floor_number ?? ""}`
+    );
     es.onopen = () => console.log("nav SSE connected");
     es.onmessage = (e) => {
       const alert = JSON.parse(e.data);
@@ -33,7 +35,7 @@ export function AlertsProvider({ children }) {
     };
     es.onerror = (e) => console.log("nav SSE error", e);
     return () => es.close();
-  }, [user_data?.user_id, user_data?.emp_title]);
+  }, [user_data?.user_id, user_data?.emp_title, user_data?.floor_number]);
 
   return (
     <AlertContext.Provider value={{ unread, clearUnread: () => setUnread(0) }}>

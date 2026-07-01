@@ -94,29 +94,34 @@ const AvailabilitySelector = ({ onSubmit, initialAvailability = "" }) => {
   };
 
   // Validate times
-  const validateTimes = () => {
-    for (const dayIndex in selectedDays) {
-      const { start, end } = selectedDays[dayIndex];
-      
-      if (!start || !end) {
-        userNotification('error', 'Please set both start and end times for all selected days');
-        return false;
-      }
+  // Validate times
+const validateTimes = () => {
+  for (const dayIndex in selectedDays) {
+    const { start, end } = selectedDays[dayIndex];
 
-      const [startHour, startMin] = start.split(':').map(Number);
-      const [endHour, endMin] = end.split(':').map(Number);
-      const startMinutes = startHour * 60 + startMin;
-      const endMinutes = endHour * 60 + endMin;
-
-      if (startMinutes >= endMinutes) {
-        const dayName = daysOfWeek.find(d => d.index === parseInt(dayIndex))?.name;
-        userNotification('error', `End time must be after start time for ${dayName}`);
-        return false;
-      }
+    if (!start || !end) {
+      userNotification('error', 'Please set both start and end times for all selected days');
+      return false;
     }
-    
-    return true;
-  };
+
+    // start/end are stored as UTC — convert back to local for correct same-day ordering
+    const startLocal = convertTimeUTCToLocal(start);
+    const endLocal = convertTimeUTCToLocal(end);
+
+    const [startHour, startMin] = startLocal.split(':').map(Number);
+    const [endHour, endMin] = endLocal.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+
+    if (startMinutes >= endMinutes) {
+      const dayName = daysOfWeek.find(d => d.index === parseInt(dayIndex))?.name;
+      userNotification('error', `End time must be after start time for ${dayName}`);
+      return false;
+    }
+  }
+
+  return true;
+};
 
   // Convert selectedDays to the required string format with UTC times
   const buildAvailabilityString = () => {

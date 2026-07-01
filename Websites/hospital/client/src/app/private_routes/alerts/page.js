@@ -25,7 +25,7 @@ function AlertPage() {
   const isPatient = !(user_data?.emp_title);
   const notNurse = role !== "nurse";
   const canSeeConsultations = isPatient || role === "doctor" || role === "surgeon";
-  const canSeeCritical = role === "doctor"  || role === "nurse";
+  const canSeeCritical = role === "nurse";
   const isFirstPage = page === 1;
 
   // Clear bell badge when nurse opens the alerts page
@@ -33,7 +33,7 @@ function AlertPage() {
 
   // Fetch paginated history from MongoDB whenever page changes
   useEffect(() => {
-    fetch(`${process.env.APIKEY}/alerts?page=${page}&user_id=${user_data.user_id}&limit=${LIMIT}`)
+    fetch(`${process.env.APIKEY}/alerts?page=${page}&user_id=${user_data.user_id}&floor_number=${user_data.floor_number ?? ""}&limit=${LIMIT}`)
       .then((r) => r.json())
       .then(({ alerts, totalPages: tp }) => {
         setTotalPages(tp);
@@ -42,11 +42,13 @@ function AlertPage() {
         setConsultation(alerts.filter((a) => a.alert_type === "consultation"));
         if (page !== 1) setNewCount(0);
       });
-  }, [page]);
+  }, [page, user_data.floor_number]);
 
   // SSE — prepend to correct column if on page 1, otherwise just bump banner count
   useEffect(() => {
-    const es = new EventSource(`${process.env.APIKEY}/alerts/stream`);
+    const es = new EventSource(
+      `${process.env.APIKEY}/alerts/stream?user_id=${user_data.user_id}&floor_number=${user_data.floor_number ?? ""}`
+    );
 
     es.onmessage = (e) => {
       const alert = JSON.parse(e.data);
@@ -63,10 +65,23 @@ function AlertPage() {
 
     es.onerror = () => es.close();
     return () => es.close();
-  }, [isFirstPage]);
+  }, [isFirstPage, user_data.user_id, user_data.floor_number]);
 
   const renderCard = (alert) => {
     const status = alert.alert_status?.toLowerCase() || "";
+    
+    // Format the time cleanly (e.g., "7/1/2026, 11:21 AM") instead of raw UTC syntax
+    const formattedTime = new Date(alert.alert_time).toLocaleString(undefined, {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+
+    // Clean up duplicate time tracking strings appended to details text
+    let cleanDetails = alert.alert_details;
+    if (cleanDetails && cleanDetails.includes(alert.alert_time)) {
+      cleanDetails = cleanDetails.replace(alert.alert_time, "").replace(/\s*:\s*$/, "").trim();
+    }
+
     return (
       <div
         key={alert._id}
@@ -74,9 +89,9 @@ function AlertPage() {
       >
         {alert.isNew && <span className={styles["new-badge"]}>NEW</span>}
         <h3>{alert.alert_name}</h3>
-        <p><strong>Details:</strong> {alert.alert_details}</p>
+        <p><strong>Details:</strong> {cleanDetails}</p>
         <p><strong>Status:</strong> <span className={styles["status-pill"]}>{alert.alert_status}</span></p>
-        <p><strong>Time:</strong> {new Date(alert.alert_time).toLocaleString()}</p>
+        <p><strong>Time:</strong> {formattedTime}</p>
       </div>
     );
   };

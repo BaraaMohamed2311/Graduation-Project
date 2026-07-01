@@ -8,13 +8,18 @@
 
 
 .table_btn_wrapper{
-    display: flex;
-    justify-content: space-evenly;
-    gap: 1rem;
-    background-color: var(--sec);
-    border-radius: 0.2rem;
-    border: 1px solid var(--sec-dark);
+     display: flex;
+  justify-content: center;
+  gap: 1rem;
+  background-color: var(--sec);
+  border-radius: .2rem;
+  border: 1px solid var(--sec-dark);
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0.3in;
 }
+
 
 .table_btn_wrapper button , .table_btn_wrapper span{
     width: 6rem;

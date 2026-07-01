@@ -104,13 +104,17 @@
 
 /* Pagination */
 .table_btn_wrapper {
-    display: flex;
-    justify-content: space-evenly;
-    gap: 1rem;
-    background-color: var(--sec);
-    border-radius: 0.2rem;
-    border: 1px solid var(--sec-dark);
-    padding: 0.3rem;
+
+  display: flex;
+  justify-content: space-evenly;
+  gap: 1rem;
+  background-color: var(--sec);
+  border-radius: .2rem;
+  border: 1px solid var(--sec-dark);
+  padding: .3rem;
+  width: fit-content;
+  margin: 0 auto;
+  border-radius: 1rem;
 }
 
 /* Buttons inside wrapper */

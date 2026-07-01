@@ -11,6 +11,7 @@ const Alert_Schema = new mongoose.Schema({
       alert_details: { type: String, required: true },
       hosp_emp_id: { type: Number, default: null }, // staff_id, set for consultation alerts
       user_id:     { type: Number, default: null }, // patient_id, set for consultation alerts
+      floor_number: { type: Number },
 
 
 },{timestamps:true , collection:"Alerts"})

@@ -97,14 +97,16 @@ cron.schedule("* * * * *", async () => {
         .join("\n");
 
       const newAlert = await Alert.create({
-        alert_name: `Medication Reminder — Floor ${floor}`,
+  alert_name: `Medication Reminder — Floor ${floor}`,
         alert_type: "medication",
         alert_time: new Date(),
         alert_status: "active",
+        floor_number: Number(floor),
         alert_details: meds
           .map((m) => `Patient: ${m.user_name} → Med ID: ${m.med_id} (${m.take_at})`)
           .join(" | "),
       });
+
 
       broadcast(newAlert.toObject());
 

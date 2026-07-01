@@ -156,6 +156,7 @@ const NurseProfile = ({ user_data, permissions }) => {
           <li><strong>Salary:</strong> {MoneyShortner(user_data.emp_salary)}</li>
           <li><strong>This Month Bonus:</strong> {MoneyShortner(user_data.emp_bonus)}</li>
           <li><strong>This Month Absence:</strong> {user_data.emp_abscence}</li>
+          <li><strong>Floor Number:</strong> {user_data.floor_number}</li>
 
           <li className={styles.role_box}>
             <strong>Role:</strong> {user_data.role_name}

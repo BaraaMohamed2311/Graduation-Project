@@ -30,7 +30,7 @@ router.post("/critical-alert", async (req, res) => {
       });
     }
 
-
+    
     // Save to MongoDB
     const newAlert = await Alert.create({
       alert_name: `Critical Alert — Room ${room_num}`,
@@ -38,6 +38,7 @@ router.post("/critical-alert", async (req, res) => {
       alert_time: new Date(time_of_alert),
       alert_status: "active",
       alert_details: `Room ${room_num}, Floor ${floor_num}`,
+      floor_number: Number(floor_num)
     });
 
     // Push to all connected SSE clients

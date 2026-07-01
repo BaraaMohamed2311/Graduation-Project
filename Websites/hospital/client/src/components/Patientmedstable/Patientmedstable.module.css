@@ -8,6 +8,9 @@
 .tableWrap table {
   width: 100%;
   border-collapse: collapse;
+  background-color: white;
+  color: black;
+  margin-bottom: 0.2in;
 }
 
 .tableWrap thead {
