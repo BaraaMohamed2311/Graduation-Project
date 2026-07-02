@@ -61,26 +61,7 @@ let gender_select = {
     options:[{value:"Male", text:"Male"},{value:"Female", text:"Female"}],
 }
 
-let isAssignedToRoom_select = {
-    key:"isAssignedToRoom",
-    label:"Assigned to a room?",
-    name:"isAssignedToRoom",
-    options:[{value:"1", text:"True"},{value:"0", text:"False"}],
-}
 
-let floorNum_select = {
-    key:"floor_number",
-    label:"Floor Number",
-    name:"floor_number",
-    options: global_floors,
-}
-
-let RoomNum_select = {
-    key:"room_number",
-    label:"Room Number",
-    name:"room_number",
-    options: global_rooms,
-}
 
 
 let select_def ={
