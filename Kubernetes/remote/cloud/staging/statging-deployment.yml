@@ -1,0 +1,316 @@
+# ── EMS Deployments ──────────────────────────────────────────────────────────
+
+---
+# EMS Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ems-server-deployment
+  namespace: staging
+  labels:
+    app: ems-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ems-server
+  template:
+    metadata:
+      labels:
+        app: ems-server
+    spec:
+      automountServiceAccountToken: false
+      volumes:
+      - name: app-secrets
+        secret:
+          secretName: prod-ems-server-config
+      containers:
+      - name: ems-server
+        image: baraamohamed/gradproj:ems-server-1.0.2
+        resources:
+          requests:
+            memory: "110Mi"
+            cpu: "40m"
+          limits:
+            memory: "165Mi"
+            cpu: "60m"
+        ports:
+        - containerPort: 5500
+        volumeMounts:
+        - name: app-secrets
+          mountPath: /run/secrets
+          readOnly: true
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DB_HOST
+          value: "db-service"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "ems_db"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: MYSQL_ROOT_PASSWORD
+
+---
+# EMS Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ems-client-deployment
+  namespace: staging
+  labels:
+    app: ems-client
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ems-client
+  template:
+    metadata:
+      labels:
+        app: ems-client
+    spec:
+      containers:
+      - name: ems-client
+        image: baraamohamed/gradproj:ems-client-1.0.1
+        resources:
+          requests:
+            memory: "170Mi"
+            cpu: "200m"
+          limits:
+            memory: "255Mi"
+            cpu: "300m"
+        ports:
+        - containerPort: 3000
+
+# ── Hospital Deployments ──────────────────────────────────────────────────────────
+
+---
+# Hospital Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hospital-server-deployment
+  namespace: staging
+  labels:
+    app: hospital-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hospital-server
+  template:
+    metadata:
+      labels:
+        app: hospital-server
+    spec:
+      automountServiceAccountToken: false
+      volumes:
+      - name: app-secrets
+        secret:
+          secretName: prod-hospital-server-config
+      containers:
+      - name: hospital-server
+        image: baraamohamed/gradproj:hospital-server-1.0.2
+        resources:
+          requests:
+            memory: "183Mi"
+            cpu: "80m"
+          limits:
+            memory: "275Mi"
+            cpu: "120m"
+        ports:
+        - containerPort: 8888
+        volumeMounts:
+        - name: app-secrets
+          mountPath: /run/secrets
+          readOnly: true
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DB_HOST
+          value: "db-service"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "ems_db"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: MYSQL_ROOT_PASSWORD
+
+---
+# Hospital Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hospital-client-deployment
+  namespace: staging
+  labels:
+    app: hospital-client
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hospital-client
+  template:
+    metadata:
+      labels:
+        app: hospital-client
+    spec:
+      containers:
+      - name: hospital-client
+        image: baraamohamed/gradproj:hospital-client-1.0.1
+        resources:
+          requests:
+            memory: "228Mi"
+            cpu: "200m"
+          limits:
+            memory: "342Mi"
+            cpu: "300m"
+        ports:
+        - containerPort: 3000
+
+# ── Storage Deployments ──────────────────────────────────────────────────────────
+
+---
+# Storage Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-server-deployment
+  namespace: staging
+  labels:
+    app: storage-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storage-server
+  template:
+    metadata:
+      labels:
+        app: storage-server
+    spec:
+      automountServiceAccountToken: false
+      volumes:
+      - name: app-secrets
+        secret:
+          secretName: prod-storage-server-config
+      containers:
+      - name: storage-server
+        image: baraamohamed/gradproj:storage-server-1.0.0
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "147Mi"
+            cpu: "60m"
+          limits:
+            memory: "220Mi"
+            cpu: "90m"
+        volumeMounts:
+        - name: app-secrets
+          mountPath: /run/secrets
+          readOnly: true
+        ports:
+        - containerPort: 5000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DB_HOST
+          value: "db-service"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "ems_db"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: MYSQL_ROOT_PASSWORD
+
+---
+# Storage Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-client-deployment
+  namespace: staging
+  labels:
+    app: storage-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storage-client
+  template:
+    metadata:
+      labels:
+        app: storage-client
+    spec:
+      containers:
+      - name: storage-client
+        image: baraamohamed/gradproj:storage-client-1.0.1
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "200Mi"
+            cpu: "200m"
+          limits:
+            memory: "300Mi"
+            cpu: "300m"
+        ports:
+        - containerPort: 3000
+
+# ── DB Deployment ──────────────────────────────────────────────────────────
+
+---
+# Database Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deployment
+  namespace: staging
+  labels:
+    app: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: db
+        image: baraamohamed/gradproj:db
+        resources:
+          requests:
+            memory: "600Mi"
+            cpu: "100m"
+          limits:
+            memory: "930Mi"
+            cpu: "150m"
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_DATABASE
+          value: "ems_db"
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: MYSQL_ROOT_PASSWORD

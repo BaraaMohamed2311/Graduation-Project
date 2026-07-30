@@ -1,0 +1,116 @@
+# ── EMS Services ──────────────────────────────────────────────────────────
+---
+# EMS Server Service (Internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ems-server-service
+  namespace: staging
+spec:
+  type: ClusterIP  # ← Internal only
+  selector:
+    app: ems-server  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5500
+
+---
+# EMS Client Service (Public access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ems-client-service
+  namespace: staging
+spec:
+  type: ClusterIP  # ← Publicly accessible
+  selector:
+    app: ems-client  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+
+# ── Hospital Services ──────────────────────────────────────────────────────────
+---
+# Hospital Server Service (Internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: hospital-server-service
+  namespace: staging
+spec:
+  type: ClusterIP  # ← Internal only
+  selector:
+    app: hospital-server  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8888
+
+---
+# Hospital Client Service (Public access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: hospital-client-service
+  namespace: staging
+spec:
+  type: ClusterIP  # ← Publicly accessible
+  selector:
+    app: hospital-client  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+
+# ── Storage Services ──────────────────────────────────────────────────────────
+---
+# Storage Server Service (Internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: storage-server-service
+  namespace: staging
+spec:
+  type: ClusterIP  # ← Internal only
+  selector:
+    app: storage-server  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+
+---
+# Storage Client Service (Public access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: storage-client-service
+  namespace: staging
+spec:
+  type: ClusterIP  # ← Publicly accessible
+  selector:
+    app: storage-client  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+
+# ── DB Services ──────────────────────────────────────────────────────────
+---
+# Database Service (Internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+  namespace: staging
+spec:
+  type: ClusterIP  # ← Internal only
+  selector:
+    app: db  # ← Match deployment labels
+  ports:
+    - protocol: TCP
+      port: 3306  # ← MySQL standard port
+      targetPort: 3306  # ← Container port (NOT 9376!)
+
