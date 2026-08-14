@@ -12,7 +12,7 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-  - host: ems.34.226.129.81.nip.io
+  - host: ems.100.55.144.231.nip.io
     http:
       paths:
       - path: /
@@ -23,7 +23,7 @@ spec:
             port:
               number: 80
 
-  - host: hospital.34.226.129.81.nip.io
+  - host: hospital.100.55.144.231.nip.io
     http:
       paths:
       - path: /
@@ -34,7 +34,7 @@ spec:
             port:
               number: 80
 
-  - host: storage.34.226.129.81.nip.io
+  - host: storage.100.55.144.231.nip.io
     http:
       paths:
       - path: /
