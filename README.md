@@ -1,4 +1,4 @@
-# Graduation Project — Infrastructure
+# Personal Projects — Infrastructure
 
 Multi-service app (EMS + Hospital Management) with evolving DevOps infrastructure: Docker Swarm → Kubernetes → Multi-Region EKS.
 
